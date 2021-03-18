@@ -1,0 +1,3 @@
+code/ss_lvb_temp/*.so
+code/ss_lvb_temp/*.o
+results/ss_lvb_temp/*.RDS
