@@ -1,0 +1,228 @@
+---
+title: "Translation of petrale into new data format"
+output:
+  html_document
+---
+
+```{r setup, warning=FALSE, message=FALSE}
+remotes::install_github("r4ss/r4ss", ref="development")
+require(r4ss)
+require(dplyr)
+require(tidyr)
+require(tibble)
+```
+
+Read in data and control files
+```{r read_files, warning=FALSE, message=FALSE}
+petrale_data <-r4ss::SS_readdat("./data/2019_petrale.dat")
+petrale_control <- r4ss::SS_readctl("./data/2019_petrale.ctl")
+
+#Look at quantities you can extract from list
+names(petrale_data)
+```
+
+# Bases and configuration
+
+The below chunk extracts `n_y` (number of years), `n_a` (number of ages)
+
+```{r}
+years<-  petrale_data$styr:petrale_data$endyr
+n_y <- length(years)
+
+n_a_ctl <- petrale_control$Nages
+n_a_dat <- petrale_data$Nages
+n_a_ctl == n_a_dat
+
+#Right now n_a is set to growth ages but can change
+ages_growth <- petrale_control$Growth_Age_for_L1:petrale_control$Growth_Age_for_L2
+n_a_growth <- ages_growth
+n_a <- length(n_a_growth)
+```
+There are a different number of ages in the data than in the control file.
+
+
+Next, extract `n_f` (number of fleets), `n_i` (number of indices).
+```{r}
+n_f <- petrale_data$Nfleet
+
+#Number of indices
+n_i <- length(unique(petrale_data$CPUE$index))
+```
+One thing to note here is if you look at the full `CPUE` matrix some appear to be dummy variables set to 1.
+
+# Parameters and blocks
+
+## Selectivity
+
+Getting the selectivity blocks is a bit more complicated. `blocks_per_pattern` will show how many time varying blocks there are across all parameters but not which parameters they are in or which years they span. To get which years the blocks cover, you need to use `Block_Design`. How do we figure out which parameter they are in again?
+```{r}
+#This will return TRUE if there are any parameters with >1 block
+param_blocks_true <- any(petrale_control$blocks_per_pattern>1)
+
+#This gives you the year of the blocks
+block_years <- petrale_control$Block_Design
+
+#Selectivity is all length based
+
+```
+
+# Natural mortality and EWAA
+
+Natural mortality is estimated but the initial value of 0.15 is pretty close to the estimate IIRC. Empirical weight-at-age is shown. This is generated from the initial values of the VBGF so it isn't data. Notes on 0 and negative fleet numbers:
+# fleet 0 contains begin season pop WT
+# fleet -1 contains mid season pop WT
+# fleet -2 contains maturity*fecundity
+```{r}
+#natM type = 0 means it is constant
+petrale_control$natM_type
+
+#Phase = 2 so it is estimated
+M_name <- "NatM_p_1_Fem_GP_1"
+natM_phase <- petrale_control$MG_parms[M_name,"PHASE"]
+natM_initial_value <- petrale_control$MG_parms[M_name, "INIT"]
+natM <- matrix(rep(natM_initial_value,n_y*n_a), nrow=n_y, ncol=n_a)
+
+waa_matrix <- r4ss::SS_readwtatage("./data/wtatage.ss_new")
+```
+
+## Spawning and Maturity
+
+Not sure if we want spawn timing as a month or fraction of year; both shown below.
+```{r}
+#TIming of spawning as a month
+spawning_timing <- petrale_data$spawn_month
+spawning_timing_yr_fraction <- spawning_timing/12
+
+
+#Maturity at age is a function
+maturity_names <- c("Mat50%_Fem_GP_1","Mat_slope_Fem_GP_1")
+#Phase < 0 so they are fixed
+petrale_control$MG_parms[maturity_names,"PHASE"]
+
+#Get the fixed maturity curve values
+a50 <- petrale_control$MG_parms["Mat50%_Fem_GP_1","INIT"]
+slope <- petrale_control$MG_parms["Mat_slope_Fem_GP_1","INIT"]
+
+```
+Maturity is a logistic function of length, not age
+
+# Age composition
+
+Let's look at catch and age composition. All catches are in units of biomass (tons I believe). Are the survey age composition data in numbers or biomass?
+```{r}
+#This is a matrix of catch with columns year, season, fleet, catch, and catch_se
+catch_matrix <- petrale_data$catch[,c(1,3,4)] %>% pivot_wider(names_from=fleet, values_from=catch)
+catch_se_matrix <- petrale_data$catch[,c(1,3,5)] %>% pivot_wider(names_from=fleet, values_from=catch_se)
+
+#Timing of the catch is here. The fishing fleets occur in the middle of the catch season (-1)
+#The surveys are all set to happen in July (month 7)
+catch_timing <- petrale_data$fleetinfo$surveytiming
+catch_timing_as_fraction <- c(rep(0.5,4),rep(7/12))
+
+total_age_comp <- petrale_data$agecomp
+fishing_fleets <- which(petrale_data$fleetinfo$type==1)
+survey_fleets <- which(petrale_data$fleetinfo$type==3)
+
+#' Function to process age composition inputs
+#'
+#' @param age_comp age comp data from Stock SYnthesis
+#' @param fleets - vector of fleet numbers that comprise the fishing or survey fleets you want
+#'
+#' @return a list with values age_comp (the composition proportions), Nsamp (matrix of sample sizes by yr(rows) and fleets(cols)), and indicator (matrix of 0 if age data exists or 1 if not by yr(rows) and fleets(cols))
+get_N_and_indicator <- function(age_comp, fleets){
+  #Filter to the fleets you want
+  age_comp <- filter(age_comp, FltSvy %in% fleets)
+  
+  #Aggregate across fleet and year
+  age_comp_fltyr <- age_comp %>% 
+    group_by(FltSvy,Yr) %>% 
+    select(Yr, FltSvy,Nsamp)  %>%
+    distinct()
+  
+  #Maybe worth noting two entries are duplicate
+  
+  Nsamp_yr_fleet <- age_comp_fltyr %>%
+    pivot_wider(names_from=FltSvy,values_from = Nsamp, values_fn=first) 
+  
+  fleets_w_data <- names(Nsamp_yr_fleet)[-1]
+  
+  indicator <- Nsamp_yr_fleet %>%
+    mutate(across(as.character(fleets_w_data), ~replace(., is.na(.),0))) %>%
+    mutate(across(as.character(fleets_w_data), ~replace(.,!is.na(.),1)))
+   
+  
+  if(ncol(indicator)!=(length(fleets)+1)){
+    index <- which(!(fleets %in% names(indicator)))
+    for(i in fleets[index]){
+      indicator[,as.character(i)] <-0
+    }
+  }
+  return(list("age_comp"=age_comp, "Nsamp"=Nsamp_yr_fleet, "indicator" = indicator))
+}
+
+age_comp_catch <- get_N_and_indicator(total_age_comp,fishing_fleets)
+age_comp_survey <- get_N_and_indicator(total_age_comp,survey_fleets)
+```
+
+# Indices
+
+The `CPUEinfo` table has units. Units of 1 = biomass.
+```{r}
+#CPUE_units = 1 or biomass for all
+CPUE_units <- petrale_data$CPUEinfo$Units
+
+#Remove season. Some of these appear to be dummy values
+CPUE_raw <- petrale_data$CPUE
+CPUE_data <- petrale_data$CPUE[,-c(2,5)] %>% pivot_wider(names_from=index,values_from=obs)
+CPUE_se_log <- petrale_data$CPUE[,-c(2,4)] %>% pivot_wider(names_from=index,values_from=se_log)
+#Create indicator table for which fleets have CPUE
+CPUE_indicator <- table(factor(CPUE_raw$year,levels=years),
+                        factor(CPUE_raw$index,levels=1:petrale_data$Nfleets))
+
+save.image("petrale_inputs.Rds")
+
+```
+
+# Q ballpark
+
+| Value | Parameter Name |
+| ----- | ---------------|
+|  -7.06261 |   WinterN(1) |
+|  -0.114972|  Q_power_WinterN(1)|
+|  -1.36181 |  LnQ_base_WinterS(3)|
+|  -0.850878|   Q_power_WinterS(3)|
+|   -0.857253|    LnQ_base_TriEarly(5)|
+|  0.216409 |  Q_extraSD_TriEarly(5)|
+| -0.425227 |  LnQ_base_TriLate(6)|
+| 0.313165  |  Q_extraSD_TriLate(6) |
+|  1.05559  |  LnQ_base_NWFSC(7)|
+
+# Guide to names of things
+
+1) years of the model (length = n_y) `n_y`
+2) ages (length = n_a) `n_a`
+3) number of fleets (n_f) `n_f`
+4) number of indices (n_i) `n_i`
+5) if any fleets or indices have multiple selectivity "blocks" or periods where selectivity assumptions are different, then describe those (which years, how many, etc.) - *all selectivity by length*
+6) when does spawning occur, possibly by year `spawning_timing_yr_fraction`
+7) maturity at age (n_y x n_a) *all maturity by length*
+8) aggregate catch by fleet (n_y x n_f) `catch_matrix`
+9) CV for aggregate catch by fleet (n_y x n_f) `catch_se_matrix`
+10) proportions at age (numbers not biomass) in catch (by fleet possibly) (n_f x n_y x n_a) `age_comp_catch$age_comp`
+11) 0/1 indicator for when age comp exists for each fleet (n_y x n_f) `age_comp_catch$indicator`
+12) Multinomial effective sample size for catch age comp (n_y x n_f) `age_comp_catch$Nsamp`
+13) 1/2 indicator for what the units of aggregate indices are (1=biomass, 2 = numbers) (n_i) `CPUE_units`
+14) when do indices/surveys occur (n_y x n_i) `catch_timing_as_fraction`
+15) aggregate indices (n_y x n_i) `CPUE_data`
+16) 0/1 indicator for when observations exist for each index (n_y x n_i) `CPUE_indicator`
+17) CV for aggregate indices (n_y x n_i) `CPUE_se_log`
+18) 1/2 indicator for what the units of index age comp are (1=biomass, 2 = numbers) (n_i) *I believe all numbers 2*
+19) proportions at age in each index (n_i x n_y x n_a) `age_comp_svy$age_comp`
+20) 0/1 indicator for when age comp observations exist for each index (n_y x n_i) `age_comp_svy$indicator`
+21) Multinomial effective sample size for index age comp (n_y x n_i) `age_comp_svy$Nsamp`
+22) natural mortality (n_y x n_a) `natM`
+23) what we expect q values to be might be helpful. *see above table*
+24) empirical weight at age for SSB and catch might be helpful for comparison with results using growth model-based estimates. `waa_matrix`
+
+
+
