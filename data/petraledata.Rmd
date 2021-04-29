@@ -14,8 +14,8 @@ require(tibble)
 
 Read in data and control files
 ```{r read_files, warning=FALSE, message=FALSE}
-petrale_data <-r4ss::SS_readdat("./data/2019_petrale.dat")
-petrale_control <- r4ss::SS_readctl("./data/2019_petrale.ctl")
+petrale_data <-r4ss::SS_readdat("./2019_petrale.dat")
+petrale_control <- r4ss::SS_readctl("./2019_petrale.ctl")
 
 #Look at quantities you can extract from list
 names(petrale_data)
@@ -27,6 +27,7 @@ The below chunk extracts `n_y` (number of years), `n_a` (number of ages)
 
 ```{r}
 years<-  petrale_data$styr:petrale_data$endyr
+years <- years[which(years>=1959)]
 n_y <- length(years)
 
 n_a_ctl <- petrale_control$Nages
@@ -82,7 +83,32 @@ natM_phase <- petrale_control$MG_parms[M_name,"PHASE"]
 natM_initial_value <- petrale_control$MG_parms[M_name, "INIT"]
 natM <- matrix(rep(natM_initial_value,n_y*n_a), nrow=n_y, ncol=n_a)
 
-waa_matrix <- r4ss::SS_readwtatage("./data/wtatage.ss_new")
+#Select only years >= 1959
+waa_matrix <- r4ss::SS_readwtatage("wtatage.ss_new") %>%
+  filter(Yr>=min(years)) 
+
+#Get weight length parameters
+fem_wl <- petrale_control$MG_parms[c("Wtlen_1_Fem_GP_1","Wtlen_2_Fem_GP_1"),"INIT"]
+
+#' Get length functions
+#'
+#' @param weight weight at age in kilograms
+#' @param a - coefficient of length-weight relationship
+#' @param b - exponent of length-weight relationship
+#'
+#' @return length of fish in cm
+#' @export
+#'
+get_length <- function(weight,a,b){
+  return(exp((log(weight)-log(a))/b))
+}
+
+#Weights - do we want only females?
+#Fleet = -1 is the mid year population weight at age
+#this has all of the ages, so use n_a_dat
+growth_lengths <- filter(waa_matrix, Fleet==-1, Sex==1) %>%
+    mutate(across(num_range("",0:n_a_dat), ~get_length(.x,a=fem_wl[1],b=fem_wl[2])))
+
 ```
 
 ## Spawning and Maturity
@@ -100,8 +126,16 @@ maturity_names <- c("Mat50%_Fem_GP_1","Mat_slope_Fem_GP_1")
 petrale_control$MG_parms[maturity_names,"PHASE"]
 
 #Get the fixed maturity curve values
-a50 <- petrale_control$MG_parms["Mat50%_Fem_GP_1","INIT"]
+l50 <- petrale_control$MG_parms["Mat50%_Fem_GP_1","INIT"]
 slope <- petrale_control$MG_parms["Mat_slope_Fem_GP_1","INIT"]
+
+#First length greater than l50
+ind <- which(growth_lengths[1,]>l50)[2]
+ls <- growth_lengths[1,c(ind-1,ind)]
+as <- as.integer(names(ls))
+ls <- as.vector(ls)
+#linear interpolation
+a50 <- ((ls[2]-l50)*as[1]+(l50-ls[1])*as[2])/(ls[2]-ls[1])
 
 ```
 Maturity is a logistic function of length, not age
@@ -111,15 +145,17 @@ Maturity is a logistic function of length, not age
 Let's look at catch and age composition. All catches are in units of biomass (tons I believe). Are the survey age composition data in numbers or biomass?
 ```{r}
 #This is a matrix of catch with columns year, season, fleet, catch, and catch_se
-catch_matrix <- petrale_data$catch[,c(1,3,4)] %>% pivot_wider(names_from=fleet, values_from=catch)
-catch_se_matrix <- petrale_data$catch[,c(1,3,5)] %>% pivot_wider(names_from=fleet, values_from=catch_se)
+catch_matrix <- petrale_data$catch[,c(1,3,4)] %>% filter(year>=min(years)) %>%
+  pivot_wider(names_from=fleet, values_from=catch)
+catch_se_matrix <- petrale_data$catch[,c(1,3,5)] %>% filter(year>=min(years)) %>%
+  pivot_wider(names_from=fleet, values_from=catch_se)
 
 #Timing of the catch is here. The fishing fleets occur in the middle of the catch season (-1)
 #The surveys are all set to happen in July (month 7)
 catch_timing <- petrale_data$fleetinfo$surveytiming
 catch_timing_as_fraction <- c(rep(0.5,4),rep(7/12))
 
-total_age_comp <- petrale_data$agecomp
+total_age_comp <- petrale_data$agecomp %>% filter(Yr>=min(years))
 fishing_fleets <- which(petrale_data$fleetinfo$type==1)
 survey_fleets <- which(petrale_data$fleetinfo$type==3)
 
@@ -172,9 +208,11 @@ The `CPUEinfo` table has units. Units of 1 = biomass.
 CPUE_units <- petrale_data$CPUEinfo$Units
 
 #Remove season. Some of these appear to be dummy values
-CPUE_raw <- petrale_data$CPUE
-CPUE_data <- petrale_data$CPUE[,-c(2,5)] %>% pivot_wider(names_from=index,values_from=obs)
-CPUE_se_log <- petrale_data$CPUE[,-c(2,4)] %>% pivot_wider(names_from=index,values_from=se_log)
+CPUE_raw <- petrale_data$CPUE 
+CPUE_data <- petrale_data$CPUE[,-c(2,5)] %>% 
+  filter(year>=min(years)) %>% pivot_wider(names_from=index,values_from=obs)
+CPUE_se_log <- petrale_data$CPUE[,-c(2,4)] %>% 
+  filter(year>=min(years)) %>% pivot_wider(names_from=index,values_from=se_log)
 #Create indicator table for which fleets have CPUE
 CPUE_indicator <- table(factor(CPUE_raw$year,levels=years),
                         factor(CPUE_raw$index,levels=1:petrale_data$Nfleets))
@@ -205,7 +243,7 @@ save.image("petrale_inputs.Rds")
 4) number of indices (n_i) `n_i`
 5) if any fleets or indices have multiple selectivity "blocks" or periods where selectivity assumptions are different, then describe those (which years, how many, etc.) - *all selectivity by length*
 6) when does spawning occur, possibly by year `spawning_timing_yr_fraction`
-7) maturity at age (n_y x n_a) *all maturity by length*
+7) maturity at age (n_y x n_a) *all maturity by length, interpolated to get* `a50`= `r a50`
 8) aggregate catch by fleet (n_y x n_f) `catch_matrix`
 9) CV for aggregate catch by fleet (n_y x n_f) `catch_se_matrix`
 10) proportions at age (numbers not biomass) in catch (by fleet possibly) (n_f x n_y x n_a) `age_comp_catch$age_comp`

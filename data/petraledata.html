@@ -173,11 +173,11 @@ require(dplyr)
 require(tidyr)
 require(tibble)</code></pre>
 <p>Read in data and control files</p>
-<pre class="r"><code>petrale_data &lt;-r4ss::SS_readdat(&quot;./data/2019_petrale.dat&quot;)</code></pre>
+<pre class="r"><code>petrale_data &lt;-r4ss::SS_readdat(&quot;./2019_petrale.dat&quot;)</code></pre>
 <pre><code>## assuming version 3.30 based on first five lines of data file
 ## Char version is  3.30 
 ## Numeric version is  3.3</code></pre>
-<pre class="r"><code>petrale_control &lt;- r4ss::SS_readctl(&quot;./data/2019_petrale.ctl&quot;)</code></pre>
+<pre class="r"><code>petrale_control &lt;- r4ss::SS_readctl(&quot;./2019_petrale.ctl&quot;)</code></pre>
 <pre><code>## assuming version 3.30 based on first line of control file
 ## Char version is  3.30 
 ## Numeric version is  3.3 
@@ -349,6 +349,7 @@ names(petrale_data)</code></pre>
 <h1>Bases and configuration</h1>
 <p>The below chunk extracts <code>n_y</code> (number of years), <code>n_a</code> (number of ages)</p>
 <pre class="r"><code>years&lt;-  petrale_data$styr:petrale_data$endyr
+years &lt;- years[which(years&gt;=1959)]
 n_y &lt;- length(years)
 
 n_a_ctl &lt;- petrale_control$Nages
@@ -393,7 +394,31 @@ natM_phase &lt;- petrale_control$MG_parms[M_name,&quot;PHASE&quot;]
 natM_initial_value &lt;- petrale_control$MG_parms[M_name, &quot;INIT&quot;]
 natM &lt;- matrix(rep(natM_initial_value,n_y*n_a), nrow=n_y, ncol=n_a)
 
-waa_matrix &lt;- r4ss::SS_readwtatage(&quot;./data/wtatage.ss_new&quot;)</code></pre>
+#Select only years &gt;= 1959
+waa_matrix &lt;- r4ss::SS_readwtatage(&quot;wtatage.ss_new&quot;) %&gt;%
+  filter(Yr&gt;=min(years)) 
+
+#Get weight length parameters
+fem_wl &lt;- petrale_control$MG_parms[c(&quot;Wtlen_1_Fem_GP_1&quot;,&quot;Wtlen_2_Fem_GP_1&quot;),&quot;INIT&quot;]
+
+#' Get length functions
+#'
+#' @param weight weight at age in kilograms
+#' @param a - coefficient of length-weight relationship
+#' @param b - exponent of length-weight relationship
+#'
+#' @return length of fish in cm
+#' @export
+#'
+get_length &lt;- function(weight,a,b){
+  return(exp((log(weight)-log(a))/b))
+}
+
+#Weights - do we want only females?
+#Fleet = -1 is the mid year population weight at age
+#this has all of the ages, so use n_a_dat
+growth_lengths &lt;- filter(waa_matrix, Fleet==-1, Sex==1) %&gt;%
+    mutate(across(num_range(&quot;&quot;,0:n_a_dat), ~get_length(.x,a=fem_wl[1],b=fem_wl[2])))</code></pre>
 <div id="spawning-and-maturity" class="section level2">
 <h2>Spawning and Maturity</h2>
 <p>Not sure if we want spawn timing as a month or fraction of year; both shown below.</p>
@@ -408,8 +433,16 @@ maturity_names &lt;- c(&quot;Mat50%_Fem_GP_1&quot;,&quot;Mat_slope_Fem_GP_1&quot
 petrale_control$MG_parms[maturity_names,&quot;PHASE&quot;]</code></pre>
 <pre><code>## [1] -3 -3</code></pre>
 <pre class="r"><code>#Get the fixed maturity curve values
-a50 &lt;- petrale_control$MG_parms[&quot;Mat50%_Fem_GP_1&quot;,&quot;INIT&quot;]
-slope &lt;- petrale_control$MG_parms[&quot;Mat_slope_Fem_GP_1&quot;,&quot;INIT&quot;]</code></pre>
+l50 &lt;- petrale_control$MG_parms[&quot;Mat50%_Fem_GP_1&quot;,&quot;INIT&quot;]
+slope &lt;- petrale_control$MG_parms[&quot;Mat_slope_Fem_GP_1&quot;,&quot;INIT&quot;]
+
+#First length greater than l50
+ind &lt;- which(growth_lengths[1,]&gt;l50)[2]
+ls &lt;- growth_lengths[1,c(ind-1,ind)]
+as &lt;- as.integer(names(ls))
+ls &lt;- as.vector(ls)
+#linear interpolation
+a50 &lt;- ((ls[2]-l50)*as[1]+(l50-ls[1])*as[2])/(ls[2]-ls[1])</code></pre>
 <p>Maturity is a logistic function of length, not age</p>
 </div>
 </div>
@@ -417,15 +450,17 @@ slope &lt;- petrale_control$MG_parms[&quot;Mat_slope_Fem_GP_1&quot;,&quot;INIT&q
 <h1>Age composition</h1>
 <p>Let's look at catch and age composition. All catches are in units of biomass (tons I believe). Are the survey age composition data in numbers or biomass?</p>
 <pre class="r"><code>#This is a matrix of catch with columns year, season, fleet, catch, and catch_se
-catch_matrix &lt;- petrale_data$catch[,c(1,3,4)] %&gt;% pivot_wider(names_from=fleet, values_from=catch)
-catch_se_matrix &lt;- petrale_data$catch[,c(1,3,5)] %&gt;% pivot_wider(names_from=fleet, values_from=catch_se)
+catch_matrix &lt;- petrale_data$catch[,c(1,3,4)] %&gt;% filter(year&gt;=min(years)) %&gt;%
+  pivot_wider(names_from=fleet, values_from=catch)
+catch_se_matrix &lt;- petrale_data$catch[,c(1,3,5)] %&gt;% filter(year&gt;=min(years)) %&gt;%
+  pivot_wider(names_from=fleet, values_from=catch_se)
 
 #Timing of the catch is here. The fishing fleets occur in the middle of the catch season (-1)
 #The surveys are all set to happen in July (month 7)
 catch_timing &lt;- petrale_data$fleetinfo$surveytiming
 catch_timing_as_fraction &lt;- c(rep(0.5,4),rep(7/12))
 
-total_age_comp &lt;- petrale_data$agecomp
+total_age_comp &lt;- petrale_data$agecomp %&gt;% filter(Yr&gt;=min(years))
 fishing_fleets &lt;- which(petrale_data$fleetinfo$type==1)
 survey_fleets &lt;- which(petrale_data$fleetinfo$type==3)
 
@@ -476,9 +511,11 @@ age_comp_survey &lt;- get_N_and_indicator(total_age_comp,survey_fleets)</code></
 CPUE_units &lt;- petrale_data$CPUEinfo$Units
 
 #Remove season. Some of these appear to be dummy values
-CPUE_raw &lt;- petrale_data$CPUE
-CPUE_data &lt;- petrale_data$CPUE[,-c(2,5)] %&gt;% pivot_wider(names_from=index,values_from=obs)
-CPUE_se_log &lt;- petrale_data$CPUE[,-c(2,4)] %&gt;% pivot_wider(names_from=index,values_from=se_log)
+CPUE_raw &lt;- petrale_data$CPUE 
+CPUE_data &lt;- petrale_data$CPUE[,-c(2,5)] %&gt;% 
+  filter(year&gt;=min(years)) %&gt;% pivot_wider(names_from=index,values_from=obs)
+CPUE_se_log &lt;- petrale_data$CPUE[,-c(2,4)] %&gt;% 
+  filter(year&gt;=min(years)) %&gt;% pivot_wider(names_from=index,values_from=se_log)
 #Create indicator table for which fleets have CPUE
 CPUE_indicator &lt;- table(factor(CPUE_raw$year,levels=years),
                         factor(CPUE_raw$index,levels=1:petrale_data$Nfleets))
@@ -543,7 +580,7 @@ save.image(&quot;petrale_inputs.Rds&quot;)</code></pre>
 <li>number of indices (n_i) <code>n_i</code></li>
 <li>if any fleets or indices have multiple selectivity &quot;blocks&quot; or periods where selectivity assumptions are different, then describe those (which years, how many, etc.) - <em>all selectivity by length</em></li>
 <li>when does spawning occur, possibly by year <code>spawning_timing_yr_fraction</code></li>
-<li>maturity at age (n_y x n_a) <em>all maturity by length</em></li>
+<li>maturity at age (n_y x n_a) <em>all maturity by length, interpolated to get</em> <code>a50</code>= 5.0778726</li>
 <li>aggregate catch by fleet (n_y x n_f) <code>catch_matrix</code></li>
 <li>CV for aggregate catch by fleet (n_y x n_f) <code>catch_se_matrix</code></li>
 <li>proportions at age (numbers not biomass) in catch (by fleet possibly) (n_f x n_y x n_a) <code>age_comp_catch$age_comp</code></li>
