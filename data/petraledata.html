@@ -1233,21 +1233,12 @@ get_N_and_indicator &lt;- function(age_comp, fleets){
   #Filter to the fleets you want
   age_comp &lt;- filter(age_comp, FltSvy %in% fleets)
   
-  #aggregate CAAL comps into marginal N at a
-  if(any(age_comp$Lbin_lo!=(-1))){
-    age_comp &lt;- age_comp %&gt;%
-      group_by(Yr,Seas,FltSvy,Gender) %&gt;%
-      summarise(across(starts_with(&quot;f&quot;), sum), Nsamp=Nsamp) %&gt;%
-      ungroup()
-    age_comp_fltyr &lt;- age_comp
-  } else{
   
   #Aggregate across fleet and year
   age_comp_fltyr &lt;- age_comp %&gt;% 
     group_by(FltSvy,Yr) %&gt;% 
     select(Yr, FltSvy,Nsamp)  %&gt;%
     distinct()
-  }
   #Maybe worth noting two entries are duplicate
   
   Nsamp_yr_fleet &lt;- age_comp_fltyr %&gt;%
@@ -1266,14 +1257,24 @@ get_N_and_indicator &lt;- function(age_comp, fleets){
       indicator[,as.character(i)] &lt;-0
     }
   }
-  return(list(&quot;age_comp&quot;=age_comp, &quot;Nsamp&quot;=Nsamp_yr_fleet, &quot;indicator&quot; = indicator))
+  
+  #combine males and females
+  if(fleets==-7){
+    age_comp_combined &lt;- ((age_comp[,10:26] + age_comp[,27:43])/100)*age_comp$Nsamp
+  }else{
+    age_comp_combined &lt;- age_comp[,10:26] + age_comp[,27:43]
+  }
+names(age_comp_combined) &lt;- gsub(pattern=&quot;f&quot;, replacement=&quot;c&quot;, x=names(age_comp_combined))
+
+
+  return(list(&quot;age_comp&quot;=age_comp_combined, &quot;Nsamp&quot;=Nsamp_yr_fleet, &quot;indicator&quot; = indicator))
 }
 
-age_comp_catch &lt;- get_N_and_indicator(total_age_comp,fishing_fleets)
-age_comp_survey &lt;- get_N_and_indicator(total_age_comp,survey_fleets)</code></pre>
-<pre><code>## `summarise()` has grouped output by 'Yr', 'Seas', 'FltSvy', 'Gender'. You can override using the `.groups` argument.</code></pre>
-<pre class="r"><code>age_comp_catch_combined &lt;- age_comp_catch$age_comp[,10:26] + age_comp_catch$age_comp[,27:43]
-names(age_comp_catch_combined) &lt;- gsub(pattern=&quot;f&quot;, replacement=&quot;c&quot;, x=names(age_comp_catch_combined))</code></pre>
+age_comp_catch &lt;- get_N_and_indicator(total_age_comp,fishing_fleets)</code></pre>
+<pre><code>## Warning in if (fleets == -7) {: the condition has length &gt; 1 and only the first
+## element will be used</code></pre>
+<pre class="r"><code>#use Fleet = 07 to denote marginal age comps
+age_comp_survey &lt;- get_N_and_indicator(total_age_comp,-7)</code></pre>
 </div>
 <div id="indices" class="section level1">
 <h1>Indices</h1>
