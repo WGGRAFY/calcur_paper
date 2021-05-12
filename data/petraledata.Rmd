@@ -14,8 +14,9 @@ require(tibble)
 
 Read in data and control files
 ```{r read_files, warning=FALSE, message=FALSE}
-petrale_data <-r4ss::SS_readdat("./2019_petrale.dat")
-petrale_control <- r4ss::SS_readctl("./2019_petrale.ctl")
+petrale_data <-r4ss::SS_readdat("2019_petrale.dat")
+petrale_control <- r4ss::SS_readctl("2019_petrale.ctl")
+petrale_report <- r4ss::SS_output(".")
 
 #Look at quantities you can extract from list
 names(petrale_data)
@@ -37,7 +38,7 @@ n_a_ctl == n_a_dat
 #Right now n_a is set to growth ages but can change
 ages_growth <- petrale_control$Growth_Age_for_L1:petrale_control$Growth_Age_for_L2
 n_a_growth <- ages_growth
-n_a <- length(n_a_growth)
+n_a <- length(n_a_dat)
 ```
 There are a different number of ages in the data than in the control file.
 
@@ -109,6 +110,14 @@ get_length <- function(weight,a,b){
 growth_lengths <- filter(waa_matrix, Fleet==-1, Sex==1) %>%
     mutate(across(num_range("",0:n_a_dat), ~get_length(.x,a=fem_wl[1],b=fem_wl[2])))
 
+# Get maturity - at - age
+maturity_at_age <- petrale_report$endgrowth %>%
+  mutate("Age_Mat_val"=Len_Mat*Age_Mat) %>%
+  select(Sex,Age_Beg,Age_Mat_val) %>% distinct() %>%
+  pivot_wider(names_from=Sex,values_from=Age_Mat_val, names_prefix="Sex_") %>%
+  mutate("Averaged_Mat_across_sex"=(Sex_1+Sex_2)/2)
+
+
 ```
 
 ## Spawning and Maturity
@@ -169,12 +178,12 @@ get_N_and_indicator <- function(age_comp, fleets){
   #Filter to the fleets you want
   age_comp <- filter(age_comp, FltSvy %in% fleets)
   
+  
   #Aggregate across fleet and year
   age_comp_fltyr <- age_comp %>% 
     group_by(FltSvy,Yr) %>% 
     select(Yr, FltSvy,Nsamp)  %>%
     distinct()
-  
   #Maybe worth noting two entries are duplicate
   
   Nsamp_yr_fleet <- age_comp_fltyr %>%
@@ -193,11 +202,25 @@ get_N_and_indicator <- function(age_comp, fleets){
       indicator[,as.character(i)] <-0
     }
   }
-  return(list("age_comp"=age_comp, "Nsamp"=Nsamp_yr_fleet, "indicator" = indicator))
+  
+  #combine males and females
+  if(fleets==-7){
+    age_comp_combined <- ((age_comp[,10:26] + age_comp[,27:43])/100)*age_comp$Nsamp
+  }else{
+    age_comp_combined <- age_comp[,10:26] + age_comp[,27:43]
+  }
+names(age_comp_combined) <- gsub(pattern="f", replacement="c", x=names(age_comp_combined))
+
+
+  return(list("age_comp"=age_comp_combined, "Nsamp"=Nsamp_yr_fleet, "indicator" = indicator))
 }
 
 age_comp_catch <- get_N_and_indicator(total_age_comp,fishing_fleets)
-age_comp_survey <- get_N_and_indicator(total_age_comp,survey_fleets)
+#use Fleet = 07 to denote marginal age comps
+age_comp_survey <- get_N_and_indicator(total_age_comp,-7)
+
+
+
 ```
 
 # Indices
@@ -243,7 +266,7 @@ save.image("petrale_inputs.Rds")
 4) number of indices (n_i) `n_i`
 5) if any fleets or indices have multiple selectivity "blocks" or periods where selectivity assumptions are different, then describe those (which years, how many, etc.) - *all selectivity by length*
 6) when does spawning occur, possibly by year `spawning_timing_yr_fraction`
-7) maturity at age (n_y x n_a) *all maturity by length, interpolated to get* `a50`= `r a50`
+7) maturity at age (n_y x n_a) `maturity_at_age` has one column each for maturity by sex and then averaged across sex
 8) aggregate catch by fleet (n_y x n_f) `catch_matrix`
 9) CV for aggregate catch by fleet (n_y x n_f) `catch_se_matrix`
 10) proportions at age (numbers not biomass) in catch (by fleet possibly) (n_f x n_y x n_a) `age_comp_catch$age_comp`
