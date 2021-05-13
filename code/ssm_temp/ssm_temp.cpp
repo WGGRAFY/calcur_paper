@@ -638,11 +638,9 @@ Type objective_function<Type>::operator() ()
   //DATA_IVECTOR(year_obs); //age for each observation
   DATA_IVECTOR(Ecov_maxages_k); //last year of Ecov to use (nobs)
   //DATA_IVECTOR(Ecov_maxages_a50); //last year of Ecov to use (nobs)
-  DATA_VECTOR(Ecov_obs);
-  DATA_IVECTOR(use_Ecov_obs);
-  DATA_VECTOR(Ecov_obs_sigma);
-  DATA_INTEGER(fit_k);
-  DATA_INTEGER(fit_a50);
+  DATA_MATRIX(Ecov_obs);
+  DATA_IMATRIX(use_Ecov_obs);
+  DATA_MATRIX(Ecov_obs_sigma);
   //DATA_INTEGER(binomial);
   
   DATA_IVECTOR(model_years); //which of the years in the environmental time series (Which may be longer) are the years of the assessment model
@@ -658,6 +656,9 @@ Type objective_function<Type>::operator() ()
   //DATA_IVECTOR(Ecov_maxages_k); //last year of Ecov to use (nobs)
   DATA_IVECTOR(Ecov_maxages_Linf); //last year of Ecov to use (nobs)
   DATA_INTEGER(fit_k_LVB);
+  DATA_INTEGER(laa_matrix_max_age); //max age for reporting predicted length and weight at age over time
+  DATA_MATRIX(X_Linf) //design matrix for Linf (nobs x ncov)
+  DATA_INTEGER(obs_for_Linf_y) // which row of X_Linf to use for yearly predicted Linf
   
   PARAMETER_VECTOR(mean_rec_pars);
   PARAMETER_VECTOR(logit_q);
@@ -685,12 +686,12 @@ Type objective_function<Type>::operator() ()
   PARAMETER(beta_b);
   PARAMETER(beta_a);
   PARAMETER_VECTOR(beta_k_LVB);
-  PARAMETER(beta_Linf);
+  PARAMETER_VECTOR(beta_Linf);
   PARAMETER(t0);
-  PARAMETER_VECTOR(beta_Ecov_b);
-  PARAMETER_VECTOR(beta_Ecov_a);
-  PARAMETER_VECTOR(beta_Ecov_k_LVB);
-  PARAMETER_VECTOR(beta_Ecov_Linf);
+  PARAMETER_MATRIX(beta_Ecov_b);
+  PARAMETER_MATRIX(beta_Ecov_a);
+  PARAMETER_MATRIX(beta_Ecov_k_LVB);
+  PARAMETER_MATRIX(beta_Ecov_Linf);
   PARAMETER_VECTOR(k_LVB_AR_pars); //AR1 process (2)
   PARAMETER_VECTOR(k_LVB_re);
   PARAMETER(beta_sig_Linf);
@@ -698,9 +699,10 @@ Type objective_function<Type>::operator() ()
   PARAMETER(beta_sig_W_obs);
   
   //Environmental covariate parameters
-  PARAMETER(Ecov_mu);
-  PARAMETER_VECTOR(Ecov_AR_pars); //AR1 process (2)
-  PARAMETER_VECTOR(Ecov_re);
+  PARAMETER_VECTOR(Ecov_mu);
+  PARAMETER_MATRIX(Ecov_AR_pars); //AR1 process (2)
+  PARAMETER_MATRIX(Ecov_re);
+  PARAMETER_VECTOR(log_Ecov_obs_sig_scale);
 
   Type zero = Type(0);
   Type one = Type(1);
@@ -741,113 +743,57 @@ Type objective_function<Type>::operator() ()
   vector<Type> t_paa(n_ages), t_pred_paa(n_ages);
   
   //do Ecov process and observations. Fill out Ecov_out to use later
-  int n_obs_mat = Y.size();
+  //int n_obs_mat = Y.size();
   int n_obs = weight.size();
   int n_years_Ecov = Ecov_obs.rows();// + max_ecov_ages;
-    
-  vector<Type> Ecov_y(n_years_Ecov);
-  Type Ecov_phi;
-  Type Ecov_sig;
-  Type nll_Ecov = zero;
-  Ecov_phi = -one + Type(2)/(one + exp(-Ecov_AR_pars(0)));
-  Ecov_sig = exp(Ecov_AR_pars(1));
-  for(int y = 0; y < n_years_Ecov; y++) Ecov_y(y) = Ecov_mu + Ecov_re(y);
-  nll_Ecov -= dnorm(Ecov_re(0), zero, Ecov_sig*exp(-Type(0.5) * log(one - pow(Ecov_phi,Type(2)))), 1);
-  for(int y = 1; y < n_years_Ecov; y++) nll -= dnorm(Ecov_re(y), Ecov_phi * Ecov_re(y-1), Ecov_sig, 1);
-  nll += nll_Ecov;
-  see(nll_Ecov);
-  SIMULATE {
-    Ecov_re(0) = rnorm(zero, Ecov_sig*exp(-Type(0.5) * log(one - pow(Ecov_phi,Type(2)))));
-    for(int y = 1; y < n_years_Ecov; y++) Ecov_re(y) = rnorm(Ecov_phi * Ecov_re(y-1), Ecov_sig);
-    for(int y = 0; y < n_years_Ecov; y++) Ecov_y(y) = Ecov_mu + Ecov_re(y);
-  }
-  Type nll_Ecov_obs = zero;
-  for(int y = 0; y < Ecov_obs.size(); y++) if(use_Ecov_obs(y) == 1) nll_Ecov_obs -= dnorm(Ecov_obs(y), Ecov_y(y), Ecov_obs_sigma(y), 1);
-  nll += nll_Ecov_obs;
-  see(nll_Ecov_obs);
-  SIMULATE {
-    for(int y = 0; y < Ecov_obs.size(); y++) if(use_Ecov_obs(y) == 1) Ecov_obs(y) = rnorm(Ecov_y(y),Ecov_obs_sigma(y));
-  }
- /*
-  //do fit for maturity data to get parameters to specify maturity at age for SSB
-  //k AR(1) process
-  Type k_phi;
-  Type k_sig;
-  Type nll_k = zero;
-  k_phi = -one + Type(2)/(one + exp(-k_AR_pars(0)));
-  k_sig = exp(k_AR_pars(1));
-  nll_k -= dnorm(k_re(0), zero, k_sig*exp(-Type(0.5) * log(one - pow(k_phi,Type(2)))), 1);
-  for(int y = 1; y < n_years_Ecov; y++) nll_k -= dnorm(k_re(y), k_phi * k_re(y-1), k_sig, 1);
-  if(fit_k == 1) nll += nll_k;
-
-  //a50 AR(1) process
-  Type a50_phi;
-  Type a50_sig;
-  Type nll_a50 = zero;
-  a50_phi = -one + Type(2)/(one + exp(-a50_AR_pars(0)));
-  a50_sig = exp(a50_AR_pars(1));
-  nll_a50 -= dnorm(a50_re(0), zero, a50_sig*exp(-Type(0.5) * log(one - pow(a50_phi,Type(2)))), 1);
-  for(int y = 1; y < n_years_Ecov; y++) nll_a50 -= dnorm(a50_re(y), a50_phi * a50_re(y-1), a50_sig, 1);
-  if(fit_a50 == 1) nll += nll_a50;
-  
-  vector<Type> l_k(n_obs_mat);
-  vector<Type> l_a50(n_obs_mat);
-  vector<Type> logit_mat(n_obs_mat);
-  for(int i = 0; i < n_obs_mat; i++) 
+  int n_Ecov = Ecov_obs.cols();
+   
+  matrix<Type> Ecov_y(n_years_Ecov,n_Ecov);
+  vector<Type> nll_Ecov(n_Ecov);
+  nll_Ecov.setZero();
+  vector<Type> Ecov_phi(n_Ecov), Ecov_sig(n_Ecov);
+  for(int p = 0; p < n_Ecov; p++) 
   {
-    l_k(i) = beta_k; 
-    for(int y = 0; y <= Ecov_maxages_k(i); y++) l_k(i) += Ecov_y(year_obs(i) - 1 - age_obs(i) + y) * beta_Ecov_k(y) + k_re(year_obs(i) -1 - age_obs(i) + y);
-    l_a50(i) = beta_a50;
-    for(int y = 0; y <= Ecov_maxages_a50(i); y++) l_a50(i) += Ecov_y(year_obs(i) - 1 - age_obs(i) + y) * beta_Ecov_a50(y) + a50_re(year_obs(i) -1 -age_obs(i) + y);
-    logit_mat(i) = exp(l_k(i)) * (Type(age_obs(i)) - exp(l_a50(i)));
-  }
-  vector<Type> mat = one/(one + exp(-logit_mat));
-  Type phi = exp(beta_phi);
-  vector<Type> ll_mat(n_obs_mat); 
-  ll_mat.setZero();
-  if(binomial == 1) 
-  {
-    ll_mat = dbinom(Y, N, mat, 1); //binomial?
-  }
-  else 
-  {
-    for(int i = 0; i < n_obs_mat; i++) ll_mat(i) = dbetabinom(Y(i), N(i), mat(i), phi, 1);
-  }
-  //see(sum(ll_mat));
-  nll -= sum(ll_mat);
-  see(n_obs_mat);
-
-  //get maturity at age
-  matrix<Type> logit_pmat(n_years,n_ages), pmat(n_years,n_ages);
-  vector<Type> fix_pmat(10);
-  for(int y = 0; y < n_years; y++) for(int a = 0; a < n_ages; a++) 
-  {
-    Type temp = beta_k;
-    int maxage = a+1;
-    if(a+1 > beta_Ecov_k.size()) maxage = beta_Ecov_k.size();
-    for(int i = 0; i < maxage; i++) temp += beta_Ecov_k(i) * Ecov_y(model_years(y)-1 - a + i - 1) + k_re(model_years(y) - 1 - a + i - 1);
-    logit_pmat(y,a) = exp(temp);
-    if(y == n_years-1 & a == 0) fix_pmat(8) = exp(temp);
-    temp = beta_a50;
-    maxage = a+1;
-    if(a+1 > beta_Ecov_a50.size()) maxage = beta_Ecov_a50.size();
-    for(int i = 0; i < maxage; i++) temp += beta_Ecov_a50(i) * Ecov_y(model_years(y)-1 - a + i - 1) + a50_re(model_years(y) - 1 - a + i - 1);
-    if(y == n_years-1 & a == 0) fix_pmat(9) = exp(temp);
-    logit_pmat(y,a) *= Type(a+1) - exp(temp);
-    pmat(y,a) = one/(one + exp(-logit_pmat(y,a)));
-    if(y == n_years-1 & a == 0) 
+    Ecov_phi(p) = -1 + 2/(1 + exp(-Ecov_AR_pars(0,p)));
+    Ecov_sig(p) = exp(Ecov_AR_pars(1,p));
+    for(int y = 0; y < n_years_Ecov; y++) Ecov_y(y,p) = Ecov_mu(p) + Ecov_re(y,p);
+    nll_Ecov(p) -= dnorm(Ecov_re(0,p), zero, Ecov_sig(p)*exp(-Type(0.5) * log(one - pow(Ecov_phi(p),Type(2)))), 1);
+  //see(nll_Ecov);
+    SIMULATE
     {
-      fix_pmat(0) = beta_k;
-      fix_pmat(1) = beta_Ecov_k(0);
-      fix_pmat(2) = Ecov_y(model_years(y)-1 - a + 0 - 1);
-      fix_pmat(3) = k_re(model_years(y) - 1 - a + 0 - 1);
-      fix_pmat(4) = beta_a50;
-      fix_pmat(5) = beta_Ecov_a50(0);
-      fix_pmat(6) = a50_re(model_years(y) - 1 - a + 0 - 1);
-      fix_pmat(7) = logit_pmat(y,a);
+      Ecov_re(0,p) = rnorm(zero, Ecov_sig(p)*exp(-Type(0.5) * log(one - pow(Ecov_phi(p),Type(2)))));
+      Ecov_y(0,p) = Ecov_mu(p) + Ecov_re(0,p);
+    }
+    for(int y = 1; y < n_years_Ecov; y++) 
+    {
+      nll_Ecov(p) -= dnorm(Ecov_re(y,p), Ecov_phi(p) * Ecov_re(y-1,p), Ecov_sig(p), 1);
+      SIMULATE
+      {
+        Ecov_re(y,p) = rnorm(Ecov_phi(p) * Ecov_re(y-1,p), Ecov_sig(p));
+        Ecov_y(y,p) = Ecov_mu(p) + Ecov_re(y,p);
+      }
+    }
+  }  
+  nll += nll_Ecov.sum();
+  SIMULATE REPORT(Ecov_re);
+
+  vector<Type> nll_Ecov_obs(n_Ecov);
+  nll_Ecov_obs.setZero();
+  for(int p = 0; p < n_Ecov; p++) 
+  {
+    for(int y = 0; y < n_years_Ecov; y++)
+    {
+      if(use_Ecov_obs(y,p) == 1) 
+      {
+        nll_Ecov_obs(p) -= dnorm(Ecov_obs(y,p), Ecov_y(y,p), Ecov_obs_sigma(y,p)*exp(log_Ecov_obs_sig_scale(p)), 1);
+        SIMULATE Ecov_obs(y,p) = rnorm(Ecov_y(y,p), Ecov_obs_sigma(y,p)*exp(log_Ecov_obs_sig_scale(p)));
+      }
     }
   }
-*/
+  nll += nll_Ecov_obs.sum();
+  //see(nll_Ecov_obs);
+  SIMULATE REPORT(Ecov_obs);
+  
   //do fit for growth data to get parameters to specify weight at age for SSB
   //k AR(1) process
   Type k_LVB_phi;
@@ -857,34 +803,48 @@ Type objective_function<Type>::operator() ()
   k_LVB_sig = exp(k_LVB_AR_pars(1));
   nll_k_LVB -= dnorm(k_LVB_re(0), zero, k_LVB_sig*exp(-Type(0.5) * log(one - pow(k_LVB_phi,Type(2)))), 1);
   for(int y = 1; y < n_years_Ecov; y++) nll_k_LVB -= dnorm(k_LVB_re(y), k_LVB_phi * k_LVB_re(y-1), k_LVB_sig, 1);
-  SIMULATE {
+  if(fit_k_LVB == 1) SIMULATE {
     k_LVB_re(0) = rnorm(zero, k_LVB_sig*exp(-Type(0.5) * log(one - pow(k_LVB_phi,Type(2)))));
     for(int y = 1; y < n_years_Ecov; y++) k_LVB_re(y) = rnorm(k_LVB_phi * k_LVB_re(y-1), k_LVB_sig);
+    REPORT(k_LVB_re);
   }
   if(fit_k_LVB == 1) nll += nll_k_LVB;
   
   vector<Type> l_b(n_obs), l_a(n_obs), l_Linf(n_obs), log_l_pred(n_obs), log_w_pred(n_obs), ll_growth(n_obs), v_log_w(n_obs);
   vector<Type> k_sum(n_obs);
   k_sum.setZero(); ll_growth.setZero();
-  Type v_log_l = exp(Type(2) * beta_sig_L_obs) + exp(Type(2) * beta_sig_Linf);
+  Type v_log_l = exp(2.0 * beta_sig_L_obs) + exp(2.0 * beta_sig_Linf);
   for(int i = 0; i < n_obs; i++) 
   {
     l_b(i) = beta_b; 
-    for(int y = 0; y <= Ecov_maxages_b(i); y++) l_b(i) += Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + y) * beta_Ecov_b(y);
-    l_a(i) = beta_a;// - Type(11);
-    for(int y = 0; y <= Ecov_maxages_a(i); y++) l_a(i) += Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + y) * beta_Ecov_a(y);
+    l_a(i) = beta_a;
+    for(int p = 0; p < n_Ecov; p++)
+    {
+      for(int y = 0; y <= Ecov_maxages_b(i); y++)       l_b(i) += Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + y,p) * beta_Ecov_b(y,p);
+      for(int y = 0; y <= Ecov_maxages_a(i); y++)       l_a(i) += Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + y,p) * beta_Ecov_a(y,p);
+      for(int y = 0; y <= Ecov_maxages_Linf(i); y++) l_Linf(i) += Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + y,p) * beta_Ecov_Linf(y,p);
+    }
+
     //do LVB k something like Millar et al. 1999. Need to specify length of beta_Ecov_k = maximum observed age and specify map to fix older ages at 0
-    Type k0 = exp(beta_k_LVB(0) + k_LVB_re(year_obs_growth(i) - 1 - age_obs_growth(i) + 0) + Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + 0) * beta_Ecov_k_LVB(0));
+    Type log_k0 = beta_k_LVB(0) + k_LVB_re(year_obs_growth(i) -1 - age_obs_growth(i) + 0);
+    for(int p = 0; p < n_Ecov; p++) log_k0 += Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + 0,p) * beta_Ecov_k_LVB(0,p);
+    //Type k0 = exp(beta_k_LVB(0) + k_LVB_re(year_obs_growth(i) - 1 - age_obs_growth(i) + 0) + Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + 0) * beta_Ecov_k_LVB(0));
+    Type k0 = exp(log_k0);
     k_sum(i) = k0;
-    for(int y = 1; y < age_obs_growth(i); y++) k_sum(i) += exp(beta_k_LVB(y) + k_LVB_re(year_obs_growth(i) - 1 - age_obs_growth(i) + y) + Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + y) * beta_Ecov_k_LVB(y));
-    l_Linf(i) = beta_Linf;
-    for(int y = 0; y <= Ecov_maxages_Linf(i); y++) l_Linf(i) += Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + y) * beta_Ecov_Linf(y);
-    log_l_pred(i) = l_Linf(i) + log(Type(1) - exp(t0*k0 - k_sum(i)));
+    Type log_ky = 0.0;
+    for(int y = 1; y < age_obs_growth(i); y++) 
+    {
+      Type log_ky = beta_k_LVB(y) + k_LVB_re(year_obs_growth(i) -1 - age_obs_growth(i) + y);
+      for(int p = 0; p < n_Ecov; p++) log_ky += Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + y,p) * beta_Ecov_k_LVB(y,p);
+      k_sum(i) += exp(log_ky);
+    }
+    //k_sum(i) += exp(beta_k_LVB(y) + k_LVB_re(year_obs_growth(i) - 1 - age_obs_growth(i) + y) + Ecov_y(year_obs_growth(i) - 1 - age_obs_growth(i) + y) * beta_Ecov_k_LVB(y));
+    log_l_pred(i) = l_Linf(i) + log(1.0 - exp(t0*k0 - k_sum(i)));
     log_w_pred(i) = l_a(i) + exp(l_b(i)) * log_l_pred(i);
-    v_log_w(i) = exp(Type(2) * beta_sig_W_obs) + exp(Type(2) * (l_b(i) + beta_sig_Linf));
+    v_log_w(i) = exp(2.0 * beta_sig_W_obs) + exp(2.0 * (l_b(i) + beta_sig_Linf));
     matrix<Type> S(2,2);
     S(0,0) = v_log_l; S(1,1) = v_log_w(i);
-    S(0,1) = S(1,0) = exp(l_b(i) + Type(2) * beta_sig_Linf);
+    S(0,1) = S(1,0) = exp(l_b(i) + 2.0 * beta_sig_Linf);
     vector<Type> M(2); M(0) = log_l_pred(i); M(1) = log_w_pred(i); 
     vector<Type> obs(2); obs(0) = log(len(i)); obs(1) = log(weight(i));
     if(islen(i) == 1 & iswt(i) == 1) {
@@ -894,13 +854,21 @@ Type objective_function<Type>::operator() ()
     else
     {
       if(islen(i) == 1) {
-        ll_growth(i) += dnorm(obs(0), M(0), exp(Type(0.5)*log(S(0,0))), 1);
-        SIMULATE obs(0) = rnorm(M(0), exp(Type(0.5)*log(S(0,0))));
+        ll_growth(i) += dnorm(obs(0), M(0), exp(0.5*log(S(0,0))), 1);
+        SIMULATE obs(0) = rnorm(M(0), exp(0.5*log(S(0,0))));
       }
       if(iswt(i) == 1) {
-        ll_growth(i) += dnorm(obs(1), M(1), exp(Type(0.5)*log(S(1,1))), 1);
-        SIMULATE obs(1) = rnorm(M(1), exp(Type(0.5)*log(S(1,1))));
+        ll_growth(i) += dnorm(obs(1), M(1), exp(0.5*log(S(1,1))), 1);
+        SIMULATE obs(1) = rnorm(M(1), exp(0.5*log(S(1,1))));
+      }
     }
+    SIMULATE{
+      len(i) = exp(obs(0)); weight(i) = exp(obs(1));
+    }
+  }
+  SIMULATE{
+    REPORT(len);
+    REPORT(weight);
   }
   //see(sum(ll_growth));
   nll -= sum(ll_growth);
@@ -908,38 +876,49 @@ Type objective_function<Type>::operator() ()
   //get weight at age
   //int n_ages = beta_Ecov_k_LVB.size();
   //int n_years_model = n_years_Ecov-n_ages;
+  int max_age = laa_matrix_max_age;
   matrix<Type> k_age(n_years,n_ages), log_Linf_age(n_years,n_ages), log_a_age(n_years,n_ages), log_b_age(n_years,n_ages);
   matrix<Type> log_laa(n_years,n_ages), log_waa(n_years,n_ages);
   k_age.setZero(); log_Linf_age.setZero(); log_a_age.setZero(); log_b_age.setZero(); log_laa.setZero(); log_waa.setZero();
   vector<Type> fix(6);
+  Type temp_Linf_pred = 0.0;
+  for(int x = 0; x < X_Linf.cols(); x++) temp_Linf_pred += beta_Linf(x) * X_Linf(obs_for_Linf_y-1,x);
+  log_Linf_age.fill(temp_Linf_pred);
   for(int y = 0; y < n_years; y++) 
   {
     for(int a = 0; a < n_ages; a++) 
     {
-      log_Linf_age(y,a) = beta_Linf;
+      //log_Linf_age(y,a) = beta_Linf;
       log_a_age(y,a) = beta_a;
       log_b_age(y,a) = beta_b;
       int maxage_a = a + 1;
-      if(a + 1 > beta_Ecov_a.size()) maxage_a = beta_Ecov_a.size();
-      for(int i = 0; i < maxage_a; i++) log_a_age(y,a) += beta_Ecov_a(i) * Ecov_y(model_years(y)-1 - a + i - 1);
+      if(a + 1 > beta_Ecov_a.rows()) maxage_a = beta_Ecov_a.rows();
+      for(int i = 0; i < maxage_a; i++) for(int p = 0; p < n_Ecov; p++) log_a_age(y,a) += beta_Ecov_a(i,p) * Ecov_y(model_years(y)-1 - a + i - 1,p);
       int maxage_b = a + 1;
-      if(a + 1 > beta_Ecov_b.size()) maxage_b = beta_Ecov_b.size();
-      for(int i = 0; i < maxage_b; i++) log_b_age(y,a) += beta_Ecov_b(i) * Ecov_y(model_years(y) - 1 - a + i - 1);
+      if(a + 1 > beta_Ecov_b.rows()) maxage_b = beta_Ecov_b.rows();
+      for(int i = 0; i < maxage_b; i++) for(int p = 0; p < n_Ecov; p++) log_b_age(y,a) += beta_Ecov_b(i,p) * Ecov_y(model_years(y) - 1 - a + i - 1,p);
       int maxage_Linf = a + 1;
-      if(a + 1 > beta_Ecov_Linf.size()) maxage_Linf = beta_Ecov_Linf.size();
-      for(int i = 0; i < maxage_Linf; i++) log_Linf_age(y,a) += beta_Ecov_Linf(i) * Ecov_y(model_years(y) - 1 - a + i - 1);
-      Type k0 = exp(beta_k_LVB(0) + k_LVB_re(model_years(y) - 1 - a + 0 - 1) + Ecov_y(model_years(y) - 1 - a + 0 - 1) * beta_Ecov_k_LVB(0));
-      k_age(y,a) = k0;
-      for(int i = 1; i < a + 1; i++) k_age(y,a) += exp(beta_k_LVB(i) + k_LVB_re(model_years(y) - 1 - a + i - 1) + beta_Ecov_k_LVB(i) * Ecov_y(model_years(y) - 1 - a + i - 1));
-      log_laa(y,a) = log_Linf_age(y,a) + log(one - exp(t0 * k0 - k_age(y,a)));
+      if(a + 1 > beta_Ecov_Linf.rows()) maxage_Linf = beta_Ecov_Linf.rows();
+      for(int i = 0; i < maxage_Linf; i++) for(int p = 0; p < n_Ecov; p++) log_Linf_age(y,a) += beta_Ecov_Linf(i,p) * Ecov_y(model_years(y) - 1 - a + i - 1,p);
+      Type log_k0 = beta_k_LVB(0) + k_LVB_re(model_years(y) - 1 - a + 0 - 1);
+      for(int p = 0; p < n_Ecov; p++) log_k0 += beta_Ecov_k_LVB(0,p) * Ecov_y(model_years(y) - 1 - a + 0 - 1,p);
+      //Type k0 = exp(beta_k_LVB(0) + k_LVB_re(model_years(y) - 1 - a + 0 - 1) + Ecov_y(model_years(y) - 1 - a + 0 - 1) * beta_Ecov_k_LVB(0));
+      k_age(y,a) = exp(log_k0);
+      for(int i = 1; i < a + 1; i++) {
+        //k_age(y,a) += exp(beta_k_LVB(i) + k_LVB_re(model_years(y) - 1 - a + i - 1) + beta_Ecov_k_LVB(i) * Ecov_y(model_years(y) - 1 - a + i - 1));
+        Type log_kya = beta_k_LVB(i) + k_LVB_re(model_years(y) - 1 - a + i - 1);
+        for(int p = 0; p < n_Ecov; p++) log_kya += beta_Ecov_k_LVB(i,p) * Ecov_y(model_years(y) - 1 - a + i - 1,p);
+        k_age(y,a) += exp(log_kya); 
+      }
+      log_laa(y,a) = log_Linf_age(y,a) + log(1.0 - exp(t0 * exp(log_k0) - k_age(y,a)));
       log_waa(y,a) = log_a_age(y,a) + exp(log_b_age(y,a)) * log_laa(y,a);
       if(y==n_years-1 & a == 0)
       {
           fix(0) = k_LVB_re(model_years(y) - 1 - a + 0 - 1);
-          fix(1) = Ecov_y(model_years(y) - 1 - a + 0 - 1);
+          fix(1) = Ecov_y(model_years(y) - 1 - a + 0 - 1,0);
           fix(2) = beta_k_LVB(0);
-          fix(3) = beta_Ecov_k_LVB(0);
-          fix(4) = k0;
+          fix(3) = beta_Ecov_k_LVB(0,0);
+          fix(4) = exp(log_k0);
           fix(5) = k_age(y,a);
       }
     }
@@ -1046,7 +1025,7 @@ Type objective_function<Type>::operator() ()
     for(int y = 1; y < n_years; y++)
     {
       for(int a = 0; a < n_ages; a++){
-        log_NAA(y-1,a) = rnorm(log(pred_NAA(y,a)), exp(log_NAA_sigma(NAA_sigma_pointers(a)-1)), 1);
+        log_NAA(y-1,a) = rnorm(log(pred_NAA(y,a)), exp(log_NAA_sigma(NAA_sigma_pointers(a)-1)));
         NAA(y,a) = exp(log_NAA(y-1,a));
       }
     }
@@ -1069,7 +1048,7 @@ Type objective_function<Type>::operator() ()
         tsum += pred_CAA(y,f,a);
       }
       nll_agg_catch -= dnorm(log(agg_catch(y,f)), log(pred_catch(y,f)), agg_catch_sigma(y,f), 1);
-      SIMULATE agg_catch(y_f) = exp(rnorm(log(pred_catch(y,f)), agg_catch_sigma(y,f)));
+      SIMULATE agg_catch(y,f) = exp(rnorm(log(pred_catch(y,f)), agg_catch_sigma(y,f)));
       if(any_fleet_age_comp(f) == 1)
       {
         vector<Type> acomp_pars(n_age_comp_pars_fleets(f));
