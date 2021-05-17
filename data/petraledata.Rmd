@@ -186,9 +186,9 @@ get_N_and_indicator <- function(age_comp, fleets){
     distinct()
   #Maybe worth noting two entries are duplicate
   
+  rowindex <- select(age_comp,Yr,FltSvy)
   Nsamp_yr_fleet <- age_comp_fltyr %>%
     pivot_wider(names_from=FltSvy,values_from = Nsamp, values_fn=first) 
-  
   fleets_w_data <- names(Nsamp_yr_fleet)[-1]
   
   indicator <- Nsamp_yr_fleet %>%
@@ -212,14 +212,14 @@ get_N_and_indicator <- function(age_comp, fleets){
 names(age_comp_combined) <- gsub(pattern="f", replacement="c", x=names(age_comp_combined))
 
 
-  return(list("age_comp"=age_comp_combined, "Nsamp"=Nsamp_yr_fleet, "indicator" = indicator))
+  return(list("age_comp"=age_comp_combined, "Nsamp"=Nsamp_yr_fleet, "indicator" = indicator, "rowind"=rowindex))
 }
 
 age_comp_catch <- get_N_and_indicator(total_age_comp,fishing_fleets)
 #use Fleet = 07 to denote marginal age comps
 age_comp_survey <- get_N_and_indicator(total_age_comp,-7)
 
-
+rows_catch_age_comp <- lapply(fishing_fleets,function(X) which(total_age_comp$FltSvy==X))
 
 ```
 
@@ -234,6 +234,7 @@ CPUE_units <- petrale_data$CPUEinfo$Units
 CPUE_raw <- petrale_data$CPUE 
 CPUE_data <- petrale_data$CPUE[,-c(2,5)] %>% 
   filter(year>=min(years)) %>% pivot_wider(names_from=index,values_from=obs)
+
 CPUE_se_log <- petrale_data$CPUE[,-c(2,4)] %>% 
   filter(year>=min(years)) %>% pivot_wider(names_from=index,values_from=se_log)
 #Create indicator table for which fleets have CPUE
