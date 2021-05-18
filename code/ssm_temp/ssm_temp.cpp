@@ -583,6 +583,7 @@ Type objective_function<Type>::operator() ()
   DATA_INTEGER(n_ages);
   DATA_INTEGER(n_fleets);
   DATA_INTEGER(n_indices);
+  DATA_INTEGER(n_ages_pop); //greater than n_ages to better model plus group (n_ages) in observations
   DATA_INTEGER(n_selblocks);
   DATA_IVECTOR(selblock_models);
   DATA_IMATRIX(selblock_pointer_fleets);
@@ -636,7 +637,7 @@ Type objective_function<Type>::operator() ()
   //DATA_VECTOR(N); //number of mature + not mature
   //DATA_IVECTOR(age_obs); //age for each observation
   //DATA_IVECTOR(year_obs); //age for each observation
-  DATA_IVECTOR(Ecov_maxages_k); //last year of Ecov to use (nobs)
+  //DATA_IVECTOR(Ecov_maxages_k); //last year of Ecov to use (nobs)
   //DATA_IVECTOR(Ecov_maxages_a50); //last year of Ecov to use (nobs)
   DATA_MATRIX(Ecov_obs);
   DATA_IMATRIX(use_Ecov_obs);
@@ -656,7 +657,7 @@ Type objective_function<Type>::operator() ()
   //DATA_IVECTOR(Ecov_maxages_k); //last year of Ecov to use (nobs)
   DATA_IVECTOR(Ecov_maxages_Linf); //last year of Ecov to use (nobs)
   DATA_INTEGER(fit_k_LVB);
-  DATA_INTEGER(laa_matrix_max_age); //max age for reporting predicted length and weight at age over time
+  //DATA_INTEGER(laa_matrix_max_age); //max age for reporting predicted length and weight at age over time
   DATA_MATRIX(X_Linf) //design matrix for Linf (nobs x ncov)
   DATA_INTEGER(obs_for_Linf_y) // which row of X_Linf to use for yearly predicted Linf
   
@@ -670,6 +671,8 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(catch_paa_pars);
   PARAMETER_VECTOR(index_paa_pars);
   PARAMETER_MATRIX(log_NAA);
+  PARAMETER_VECTOR(N1_re); //random walk re for initial NAA
+  PARAMETER(log_sig_N1); //var par for random walk re for initial NAA
 
   //maturity parameters
  /* PARAMETER(beta_k);
@@ -731,8 +734,9 @@ Type objective_function<Type>::operator() ()
   array<Type> pred_index_paa(n_years,n_indices,n_ages);
   matrix<Type> pred_indices(n_years,n_indices);
   matrix<Type> log_pred_catch(n_years,n_fleets);
-  matrix<Type> NAA(n_years,n_ages);
-  matrix<Type> pred_NAA(n_years,n_ages);
+  matrix<Type> NAA(n_years,n_ages_pop);
+  matrix<Type> NAA_obs(n_years,n_ages); //form to provide for predicting observations
+  matrix<Type> pred_NAA(n_years,n_ages_pop);
   array<Type> FAA(n_years,n_fleets,n_ages);
   matrix<Type> FAA_tot(n_years,n_ages);
   matrix<Type> ZAA(n_years,n_ages);
@@ -876,9 +880,9 @@ Type objective_function<Type>::operator() ()
   //get weight at age
   //int n_ages = beta_Ecov_k_LVB.size();
   //int n_years_model = n_years_Ecov-n_ages;
-  int max_age = laa_matrix_max_age;
-  matrix<Type> k_age(n_years,n_ages), log_Linf_age(n_years,n_ages), log_a_age(n_years,n_ages), log_b_age(n_years,n_ages);
-  matrix<Type> log_laa(n_years,n_ages), log_waa(n_years,n_ages);
+  //int max_age = n_ages_pop;
+  matrix<Type> k_age(n_years,n_ages_pop), log_Linf_age(n_years,n_ages_pop), log_a_age(n_years,n_ages_pop), log_b_age(n_years,n_ages_pop);
+  matrix<Type> log_laa(n_years,n_ages_pop), log_waa(n_years,n_ages_pop);
   k_age.setZero(); log_Linf_age.setZero(); log_a_age.setZero(); log_b_age.setZero(); log_laa.setZero(); log_waa.setZero();
   vector<Type> fix(6);
   Type temp_Linf_pred = 0.0;
@@ -886,7 +890,7 @@ Type objective_function<Type>::operator() ()
   log_Linf_age.fill(temp_Linf_pred);
   for(int y = 0; y < n_years; y++) 
   {
-    for(int a = 0; a < n_ages; a++) 
+    for(int a = 0; a < n_ages_pop; a++) 
     {
       //log_Linf_age(y,a) = beta_Linf;
       log_a_age(y,a) = beta_a;
@@ -975,22 +979,39 @@ Type objective_function<Type>::operator() ()
   for(int y = 0; y < n_years; y++) SSB(y) = zero;
 
   ZAA = FAA_tot + Maa;
-  for(int a = 0; a < n_ages; a++) NAA(0,a) = exp(log_N1(a));
-  
-  for(int a = 0; a < n_ages; a++) SSB(0) += NAA(0,a) * waa(waa_pointer_ssb-1,0,a) * mature(0,a) * exp(-ZAA(0,a) * fracyr_SSB(0));
+  Type nll_N1 = 0;
+  //Initial log_NAA is a random walk from initial log_recruitment
+  nll_N1 -= dnorm(N1_re(0), log_N1(0), exp(log_sig_N1),1);
+  SIMULATE N1_re(0) = rnorm(log_N1(0), exp(log_sig_N1));
+  NAA(0,0) = exp(log_N1(0));
+  for(int a = 1; a < n_ages_pop; a++) {
+    nll_N1 -= dnorm(N1_re(a), N1_re(a-1), exp(log_sig_N1),1);
+    SIMULATE N1_re(a) = rnorm(N1_re(a-1),exp(log_sig_N1));
+    NAA(0,a) = exp(N1_re(a-1));
+    if(a < n_ages) NAA_obs(0,a) = NAA(0,a);
+    else NAA_obs(0,n_ages-1) += NAA(0,a);
+  }
+  nll += nll_N1;
+  REPORT(nll_N1);
+
+  for(int a = 0; a < n_ages; a++) SSB(0) += NAA_obs(0,a) * waa(waa_pointer_ssb-1,0,a) * mature(0,a) * exp(-ZAA(0,a) * fracyr_SSB(0));
 
   for(int y = 1; y < n_years; y++) 
   {
+    for(int a = 0; a < n_ages_pop; a++) {
+      NAA(y,a) = exp(log_NAA(y-1,a)); //random effects NAA
+      if(a < n_ages) NAA_obs(y,a) = NAA(y,a);
+      else NAA_obs(y,n_ages-1) += NAA(y,a);
+    }
     for(int a = 0; a < n_ages; a++) 
     {
-      NAA(y,a) = exp(log_NAA(y-1,a)); //random effects NAA
       SSB(y) += NAA(y,a) * waa(waa_pointer_ssb-1,y,a) * mature(y,a) * exp(-ZAA(y,a)*fracyr_SSB(y));
     }
   }
       
-  for(int a = 0; a < n_ages; a++) pred_NAA(0,a) = exp(log_N1(a));
+  for(int a = 0; a < n_ages_pop; a++) pred_NAA(0,a) = NAA(0,a);
   
-  Type nll_NAA = zero;
+  Type nll_NAA = 0;
   for(int y = 1; y < n_years; y++)
   {
     if(recruit_model == 1) pred_NAA(y,0) = NAA(y-1,0); //random walkNAA(y,1)
@@ -1009,24 +1030,28 @@ Type objective_function<Type>::operator() ()
         }
       }
     }
-    for(int a = 1; a < n_ages-1; a++) 
+    for(int a = 1; a < n_ages_pop-1; a++) 
     {
-      pred_NAA(y,a) = NAA(y-1,a-1) * exp(-ZAA(y-1,a-1));
+      if(a < n_ages) pred_NAA(y,a) = NAA(y-1,a-1) * exp(-ZAA(y-1,a-1));
+      else pred_NAA(y,a) = NAA(y-1,a-1) * exp(-ZAA(y-1,n_ages-1));
     }
-    pred_NAA(y,n_ages-1) = NAA(y-1,n_ages-2) * exp(-ZAA(y-1,n_ages-2)) + NAA(y-1,n_ages-1) * exp(-ZAA(y-1,n_ages-1));
+    //note ZAA is the same in both components below because n_ages << n_ages_pop
+    pred_NAA(y,n_ages_pop-1) = NAA(y-1,n_ages_pop-2) * exp(-ZAA(y-1,n_ages-1)) + NAA(y-1,n_ages_pop-1) * exp(-ZAA(y-1,n_ages-1));
   }
   
   for(int y = 1; y < n_years; y++)
   {
-    for(int a = 0; a < n_ages; a++)
+    for(int a = 0; a < n_ages_pop; a++)
       nll_NAA -= dnorm(log(NAA(y,a)), log(pred_NAA(y,a)), exp(log_NAA_sigma(NAA_sigma_pointers(a)-1)), 1);
   }
   SIMULATE {
     for(int y = 1; y < n_years; y++)
     {
-      for(int a = 0; a < n_ages; a++){
+      for(int a = 0; a < n_ages_pop; a++){
         log_NAA(y-1,a) = rnorm(log(pred_NAA(y,a)), exp(log_NAA_sigma(NAA_sigma_pointers(a)-1)));
         NAA(y,a) = exp(log_NAA(y-1,a));
+        if(a < n_ages) NAA_obs(y,a) = NAA(y,a);
+        else NAA_obs(y,n_ages-1) += NAA(y,a);
       }
     }
   }
@@ -1043,7 +1068,7 @@ Type objective_function<Type>::operator() ()
       Type tsum = zero;
       for(int a = 0; a < n_ages; a++) 
       {
-        pred_CAA(y,f,a) =  NAA(y,a) * FAA(y,f,a) * (1 - exp(-ZAA(y,a)))/ZAA(y,a);
+        pred_CAA(y,f,a) =  NAA_obs(y,a) * FAA(y,f,a) * (1 - exp(-ZAA(y,a)))/ZAA(y,a);
         pred_catch(y,f) += waa(waa_pointer_fleets(f)-1,y,a) * pred_CAA(y,f,a);
         tsum += pred_CAA(y,f,a);
       }
@@ -1092,7 +1117,7 @@ Type objective_function<Type>::operator() ()
       Type tsum = zero;
       for(int a = 0; a < n_ages; a++) 
       {
-        pred_IAA(y,i,a) =  NAA(y,a) * QAA(y,i,a) * exp(-ZAA(y,a) * fracyr_indices(y,i));
+        pred_IAA(y,i,a) =  NAA_obs(y,a) * QAA(y,i,a) * exp(-ZAA(y,a) * fracyr_indices(y,i));
         if(units_indices(i) == 1) pred_indices(y,i) += waa(waa_pointer_indices(i)-1,y,a) * pred_IAA(y,i,a);
         else pred_indices(y,i) += pred_IAA(y,i,a);
       }
@@ -1144,14 +1169,16 @@ Type objective_function<Type>::operator() ()
   vector<Type> log_SSB = log(SSB);
   vector<Type> SSB_E(n_years);
   SSB_E.setZero();
-  for(int y = 0; y < n_years; y++) for(int a = 0; a < n_ages; a++) 
+  for(int y = 0; y < n_years; y++) for(int a = 0; a < n_ages_pop; a++) 
   {
-    Type SSB_a = NAA(y,a) * exp(-ZAA(y,a)*fracyr_SSB(y));
-    //if(use_mat_model == 1) SSB_a *= pmat(y,a);
-    //else 
-    SSB_a *= mature(y,a);
+    Type SSB_a = 0;
+    if(a < n_ages) SSB_a = NAA(y,a) * exp(-ZAA(y,a)*fracyr_SSB(y)) * mature(y,a);
+    else SSB_a = NAA(y,a) * exp(-ZAA(y,n_ages-1)*fracyr_SSB(y)) * mature(y,n_ages-1);
     if(use_growth_model == 1) SSB_a *= exp(log_waa(y,a));
-    else SSB_a *= waa(waa_pointer_ssb-1,y,a);
+    else {
+      if(a < n_ages) SSB_a *= waa(waa_pointer_ssb-1,y,a);
+      else SSB_a *= waa(waa_pointer_ssb-1,y,n_ages-1);
+    }
     SSB_E(y) += SSB_a;
   }
   vector<Type> log_SSB_E = log(SSB_E);
@@ -1170,11 +1197,20 @@ Type objective_function<Type>::operator() ()
   for(int y = 0; y < n_years; y++)
   {
     vector<Type> maturity_E(n_ages);
-    //if(use_mat_model == 1) maturity_E = pmat.row(y);
-    //else  
     maturity_E = mature.row(y);
     vector<Type> wssb_E(n_ages);
-    if(use_growth_model == 1) for(int a= 0; a < n_ages; a++) wssb_E(a) = exp(log_waa(y,a));
+    if(use_growth_model == 1) {
+      vector<Type> paaplus = NAA.row(y).tail(n_ages_pop-n_ages);
+      paaplus = paaplus / paaplus.sum();
+      vector<Type> waaplus = log_waa.row(y).tail(n_ages_pop-n_ages);
+      waaplus = exp(waaplus);
+      waaplus = waaplus * paaplus;
+      wssb_E(n_ages-1) = waaplus.sum();
+      for(int a= 0; a < (n_ages-1); a++) 
+      {
+        wssb_E(a) = exp(log_waa(y,a));
+      }
+    }
     else for(int a = 0; a < n_ages; a++) wssb_E(a) = waa(waa_pointer_ssb-1, y , a);
     vector<Type> maturity = mature.row(y);
     SPR_0(y) = get_SPR_0(M2, maturity, wssb, fracyr_SSB(n_years-1));
