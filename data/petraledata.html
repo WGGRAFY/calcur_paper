@@ -1241,9 +1241,9 @@ get_N_and_indicator &lt;- function(age_comp, fleets){
     distinct()
   #Maybe worth noting two entries are duplicate
   
+  rowindex &lt;- select(age_comp,Yr,FltSvy)
   Nsamp_yr_fleet &lt;- age_comp_fltyr %&gt;%
     pivot_wider(names_from=FltSvy,values_from = Nsamp, values_fn=first) 
-  
   fleets_w_data &lt;- names(Nsamp_yr_fleet)[-1]
   
   indicator &lt;- Nsamp_yr_fleet %&gt;%
@@ -1267,14 +1267,16 @@ get_N_and_indicator &lt;- function(age_comp, fleets){
 names(age_comp_combined) &lt;- gsub(pattern=&quot;f&quot;, replacement=&quot;c&quot;, x=names(age_comp_combined))
 
 
-  return(list(&quot;age_comp&quot;=age_comp_combined, &quot;Nsamp&quot;=Nsamp_yr_fleet, &quot;indicator&quot; = indicator))
+  return(list(&quot;age_comp&quot;=age_comp_combined, &quot;Nsamp&quot;=Nsamp_yr_fleet, &quot;indicator&quot; = indicator, &quot;rowind&quot;=rowindex))
 }
 
 age_comp_catch &lt;- get_N_and_indicator(total_age_comp,fishing_fleets)</code></pre>
 <pre><code>## Warning in if (fleets == -7) {: the condition has length &gt; 1 and only the first
 ## element will be used</code></pre>
 <pre class="r"><code>#use Fleet = 07 to denote marginal age comps
-age_comp_survey &lt;- get_N_and_indicator(total_age_comp,-7)</code></pre>
+age_comp_survey &lt;- get_N_and_indicator(total_age_comp,-7)
+
+rows_catch_age_comp &lt;- lapply(fishing_fleets,function(X) which(total_age_comp$FltSvy==X))</code></pre>
 </div>
 <div id="indices" class="section level1">
 <h1>Indices</h1>
@@ -1286,6 +1288,7 @@ CPUE_units &lt;- petrale_data$CPUEinfo$Units
 CPUE_raw &lt;- petrale_data$CPUE 
 CPUE_data &lt;- petrale_data$CPUE[,-c(2,5)] %&gt;% 
   filter(year&gt;=min(years)) %&gt;% pivot_wider(names_from=index,values_from=obs)
+
 CPUE_se_log &lt;- petrale_data$CPUE[,-c(2,4)] %&gt;% 
   filter(year&gt;=min(years)) %&gt;% pivot_wider(names_from=index,values_from=se_log)
 #Create indicator table for which fleets have CPUE
