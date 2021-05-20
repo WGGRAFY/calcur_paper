@@ -184,9 +184,8 @@ get_N_and_indicator <- function(age_comp, fleets){
     group_by(FltSvy,Yr) %>% 
     select(Yr, FltSvy,Nsamp)  %>%
     distinct()
-  #Maybe worth noting two entries are duplicate
   
-  rowindex <- select(age_comp,Yr,FltSvy)
+  rowindex <- select(age_comp,Yr,FltSvy,Ageerr)
   Nsamp_yr_fleet <- age_comp_fltyr %>%
     pivot_wider(names_from=FltSvy,values_from = Nsamp, values_fn=first) 
   fleets_w_data <- names(Nsamp_yr_fleet)[-1]
@@ -221,6 +220,10 @@ age_comp_survey <- get_N_and_indicator(total_age_comp,-7)
 
 rows_catch_age_comp <- lapply(fishing_fleets,function(X) which(total_age_comp$FltSvy==X))
 
+#Remove CAPBB, CAP surface ages, rows 25 and 91 are WDFW surface for years w other age data
+rows_to_omit <- c(c(25,91),which(age_comp_catch$rowind$Ageerr %in% c(2,3)))
+age_comp_catch$rowind <- age_comp_catch$rowind[-c(rows_to_omit),]
+age_comp_catch$age_comp <- age_comp_catch$age_comp[-c(rows_to_omit),]
 ```
 
 # Indices
