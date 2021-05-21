@@ -1,3 +1,6 @@
 code/ss_lvb_temp/*.so
 code/ss_lvb_temp/*.o
+code/ssm_temp/*.so
+code/ssm_temp/*.o
 results/ss_lvb_temp/*.RDS
+results/ssm_temp/*.RDS
