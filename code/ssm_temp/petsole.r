@@ -56,6 +56,7 @@ temp$par = m1_long$parList
 m2_long = MakeADFun(temp$dat,temp$par,random=c("Ecov_re", "k_re"),DLL=dll_name, map = temp$map)
 m2_long = fit.tmb.fn(m2_long, 3)
 m2 = readRDS(file = paste0('results/ss_lvb_temp/', sp, "_m2.RDS"))
+saveRDS(m2_long, file = "results/ssm_temp/m2_long.RDS")
 
 best = "m2_long"
 
@@ -133,13 +134,14 @@ x$agg_catch = cbind(subset(catch_matrix, year %in% years)[,-1])
 x$agg_catch_sigma = cbind(subset(catch_se_matrix, year %in% years)[,-1])
 
 ########################################
-load("data/rows.Rds")
+#load("data/rows.Rds")
 source("code/ssm_temp/get_aref_fn.r")
-rows_catch_age_comp
-age_comp_catch$age_comp
-x$catch_paa = matrix(NA, x$n_years*n_fleets, x$n_ages)
-ind = 
+x$catch_paa = matrix(NA, x$n_years*x$n_fleets, x$n_ages)
 for(i in 1:x$n_fleets) {
+	ind = age_comp_catch$rowind[,2] == i
+	tyrs = age_comp_catch$rowind[ind,1]
+	temp = age_comp_catch$age_comp[ind,]
+	temp[tyrs==2009,]
 	temp = age_comp_catch$Nsamp$Yr[!is.na(age_comp_catch$Nsamp[,i+1])]
 	temp = age_comp_catch$age_comp[rows_catch_age_comp[[i]],]
 
@@ -193,6 +195,9 @@ x$recruit_model = 2 # random about mean
 
 x$use_growth_model = 1
 x$percentSPR = 40
+
+m2_long = readRDS(file = "results/ssm_temp/m2_long.RDS")
+
 
 dat = m2_long$env$dat
 x$Ecov_obs = dat$Ecov_obs
@@ -274,6 +279,10 @@ map.pars = c("beta_Ecov_b", "beta_Ecov_a", "log_Ecov_obs_sig_scale", "beta_Ecov_
 ssm_input$map[map.pars] = temp$map[map.pars]
 
 ssm_input$random = c("log_NAA", "N1_re", "Ecov_re", "k_re")
+
+setwd("code/ssm_temp")
+compile("ssm_temp.cpp", "-O0 -g")
+setwd("../..")
 ssm_mod <- MakeADFun(ssm_input$dat,ssm_input$par,DLL="ssm_temp", random = c("log_NAA", "Ecov_re", "k_LVB_re", "k_re"), 
   map = temp$map)
 
