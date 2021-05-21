@@ -1239,9 +1239,8 @@ get_N_and_indicator &lt;- function(age_comp, fleets){
     group_by(FltSvy,Yr) %&gt;% 
     select(Yr, FltSvy,Nsamp)  %&gt;%
     distinct()
-  #Maybe worth noting two entries are duplicate
   
-  rowindex &lt;- select(age_comp,Yr,FltSvy)
+  rowindex &lt;- select(age_comp,Yr,FltSvy,Ageerr)
   Nsamp_yr_fleet &lt;- age_comp_fltyr %&gt;%
     pivot_wider(names_from=FltSvy,values_from = Nsamp, values_fn=first) 
   fleets_w_data &lt;- names(Nsamp_yr_fleet)[-1]
@@ -1276,7 +1275,12 @@ age_comp_catch &lt;- get_N_and_indicator(total_age_comp,fishing_fleets)</code></
 <pre class="r"><code>#use Fleet = 07 to denote marginal age comps
 age_comp_survey &lt;- get_N_and_indicator(total_age_comp,-7)
 
-rows_catch_age_comp &lt;- lapply(fishing_fleets,function(X) which(total_age_comp$FltSvy==X))</code></pre>
+rows_catch_age_comp &lt;- lapply(fishing_fleets,function(X) which(total_age_comp$FltSvy==X))
+
+#Remove CAPBB, CAP surface ages, rows 25 and 91 are WDFW surface for years w other age data
+rows_to_omit &lt;- c(c(25,91),which(age_comp_catch$rowind$Ageerr %in% c(2,3)))
+age_comp_catch$rowind &lt;- age_comp_catch$rowind[-c(rows_to_omit),]
+age_comp_catch$age_comp &lt;- age_comp_catch$age_comp[-c(rows_to_omit),]</code></pre>
 </div>
 <div id="indices" class="section level1">
 <h1>Indices</h1>
