@@ -1,288 +1,460 @@
 library(TMB)
-dll_name = "ss_lvb_temp"
-source("code/ss_lvb_temp/helper_MV.r")
-dyn.load(dynlib(paste0("code/ss_lvb_temp/",dll_name)))
-comname = "petrale sole"
-sp = "petsole"
-ecov_year1 = 1950
-dat = readRDS("data/all_length_data.RDS")
-#get tempdat, regions, tdat.obs, tdat.sd
-load(file = "data/temp_objects_for_ss_lvb_temp.RData")
+#source("code/ssm_temp/make_ssm_input_1.r")
+#source("code/ssm_temp/make_ssm_input_2.r")
+source("code/ssm_temp/make_ssm_input_3.r")
 
-ldata_years = min(tempdat$year):max(tempdat$year) #1977-2018, but there are gaps in data until 2003.
-nyears = length(ldata_years)
-dat = subset(dat, common_name == comname)# & project == "Groundfish Slope and Shelf Combination Survey")
-dat = subset(dat, yc %in% ldata_years) #only model obs where we can follow cohort from age 0
-dat = subset(dat, age_years >0) #only allow estimation of of temperature effects as early as age 0! Not before!
-modyears = ecov_year1:max(ldata_years)
-
-
-sp.tdat = subset(tempdat, species == comname & age < 6)
-region.at.age = sapply(sort(unique(sp.tdat$age)), function(x) sort(unique(sp.tdat$region[sp.tdat$age == x])))[1] #just looking at the region at earliest age now
-sp.regions = sort(unique(region.at.age))
-
-tdat.obs = cbind(tdat.obs[,colnames(tdat.obs) %in% sp.regions])
-tdat.obs = cbind(c(rep(NA, length(ecov_year1:(min(tempdat$year)-1))), tdat.obs))
-tdat.sd = cbind(tdat.sd[,colnames(tdat.sd) %in% sp.regions])
-tdat.sd = cbind(c(rep(NA, length(ecov_year1:(min(tempdat$year)-1))), tdat.sd))
-tdat.obs = t(t(tdat.obs) - apply(tdat.obs,2,mean, na.rm = TRUE))
-#for the first 5 ages, the only unique time series are for 1-3, 4-5
-input = make_input(dat, edat=list(tdat.obs, tdat.sd))
-
-#no temperature effects, constant a, b, k, Linf
-temp = input
-m0_long = MakeADFun(temp$dat,temp$par,DLL=dll_name, map = temp$map, random = "Ecov_re")
-m0_long = fit.tmb.fn(m0_long, 3)
-m0 = readRDS(file = paste0('results/ss_lvb_temp/', sp, "_m0.RDS"))
-
-#include AR(1) for log VB k
-temp = input
-temp$par = m0_long$parList
-temp$dat$fit_k = 1
-temp$map = temp$map[-which(names(temp$map) %in% c("k_re","k_AR_pars"))]
-m1_long = MakeADFun(temp$dat,temp$par,random=c("Ecov_re", "k_re"),DLL=dll_name, map = temp$map)
-m1_long = fit.tmb.fn(m1_long, 3)
-m1 = readRDS(file = paste0('results/ss_lvb_temp/', sp, "_m1.RDS"))
-
-#temperature effect at ages 0 and AR(1) annual residuals on VB k
-temp = input
-x = c(NROW(temp$par$beta_Ecov_k), NCOL(temp$par$beta_Ecov_k))
-temp$map$beta_Ecov_k = matrix(NA, x[1],x[2])
-temp$map$beta_Ecov_k[1,1] = 1
-temp$map$beta_Ecov_k = factor(temp$map$beta_Ecov_k)
-temp$dat$fit_k = 1
-temp$map = temp$map[-which(names(temp$map) %in% c("k_re","k_AR_pars"))]
-temp$par = m1_long$parList
-m2_long = MakeADFun(temp$dat,temp$par,random=c("Ecov_re", "k_re"),DLL=dll_name, map = temp$map)
-m2_long = fit.tmb.fn(m2_long, 3)
-m2 = readRDS(file = paste0('results/ss_lvb_temp/', sp, "_m2.RDS"))
-saveRDS(m2_long, file = "results/ssm_temp/m2_long.RDS")
-
-best = "m2_long"
-
-#cairo_pdf(paste0("results/ss_lvb_temp/", sp, '_', best, '_ecov_res.pdf'), family = "Times", height = 10, width = 10)
-plot.Ecov.res.fn(get(best), years = modyears, ylab2 = colnames(tdat.obs))
-#dev.off()
-
-plt.yrs = min(dat$yc[dat$age<2]):max(dat$year)
-#cairo_pdf(paste0("results/ss_lvb_temp/", sp, '_', best, '_k_estimates.pdf'), family = "Times", height = 7, width = 10)
-nyears = length(modyears)
-par(mfrow = c(1,2), mar = c(1,1,0,1), oma = c(4,4,3,0))
-for(i in 1:2) 
-{
-  plot.kaa.fn(i, get(best), ymax = round(get.ymax.kaa.fn(1:2, get(best), years = plt.yrs),2), do.xlab = TRUE, do.ylab = i == 1, do.nobs = i == 1, years = plt.yrs)
-  mtext(side = 3, outer = FALSE, line = 1, cex = 1.5, ifelse(i==1, "Age 0", "Age > 0"))
-}
-mtext(side = 2, outer = TRUE, line = 2, "LVB k", cex = 1.5)
-mtext(side = 1, outer = TRUE, line = 2, "Year", cex = 1.5)
-#dev.off()
-
-plt.yrs = min(dat$yc):max(dat$year)
-#cairo_pdf(paste0("results/ss_lvb_temp/",sp,'_', best, '_laa_estimates.pdf'), family = "Times", height = 10, width = 10)
-par(mfrow = c(3,3), mar = c(1,1,1,1), oma = c(4,4,0,0))
-for(i in 1:9) plot.laa.fn(i, ymax = round(get.ymax.laa.fn(1:9,get(best), years = plt.yrs)), mod = get(best), do.xlabs = i %in% 7:9, do.ylabs = i %in% c(1,4,7), years = plt.yrs)
-mtext(side = 2, outer = TRUE, line = 2, "Length (cm)", cex = 1.5)
-mtext(side = 1, outer = TRUE, line = 2, "Year", cex = 1.5)
-#dev.off()
-
-load("data/petrale_inputs.Rds")
-
-years = 1969:2018
-x = list(n_years = length(years)) 
-#x$n_ages = n_a_dat
-x$n_ages = 17 #this is the max age in the age comp observations. n_a_dat=40 is for weight at age, maturity at age, etc.
-x$n_fleets = n_f #4
-#the third GB index only has values in the first 4 years, so not useful for the joint model.
-x$n_indices = 3 #CPUE for fleets 1,3 and survey fleet 7
-x$n_ages_pop = n_a_dat #40
-
-#remove selectivity stuff for 3rd gb index
-x$n_selblocks = x$n_fleets + 1 #first two CPUE will use same selectivity as fleets 1,3
-x$selblock_models = rep(2,x$n_selblocks) #logistic
-x$selblock_pointer_fleets = t(matrix(1:x$n_fleets, x$n_fleets, x$n_years))
-x$selblock_pointer_indices = t(matrix(c(1,3,5), x$n_indices, x$n_years))
-
-x$age_comp_model_fleets = rep(1, x$n_fleets)
-x$n_age_comp_pars_fleets = rep(1, x$n_fleets)
-x$age_comp_model_indices = rep(1, x$n_indices)
-x$n_age_comp_pars_indices = rep(1, x$n_indices)
-
-x$fracyr_SSB = rep(spawning_timing_yr_fraction, x$n_years)
-x$mature = t(matrix(maturity_at_age[1 + 1:x$n_ages,3], x$n_ages, x$n_years)) #starts at 0
-x$waa_pointer_fleets = 1:x$n_fleets
-x$waa_pointer_totcatch = x$n_fleets + 2 #6
-x$waa_pointer_indices = c(1,3,5)
-x$waa_pointer_ssb = x$n_fleets + 1 #doesn't matter
-x$waa_pointer_jan1 = x$n_fleets + 1 #doesn't matter
-
-#use average weight at age of ages 17:40 in plus group. males don't get very big. Would imply larger M for males.
-weights  = exp(-(16:39)*natM[1]) #equilibrium survive to age 17:40 (no fishing)
-weights = weights/sum(weights) #equilibrium proportion alive at age, give survive to age 17
-waa = array(NA, dim = c(x$n_fleets+x$n_indices,x$n_years, x$n_ages))
-for(i in 1:(x$n_fleets+x$n_indices)){
-	temp = as.matrix(subset(waa_matrix, Fleet == i & Sex == 1 & Yr %in% years)[,-(1:7)])
-	waa[i,,1:(x$n_ages-1)] = temp[,1:(x$n_ages-1)]
-	waa[i,,x$n_ages] = apply(temp[,(x$n_ages):NCOL(temp)],1,function(x) sum(x*weights))
-	temp = as.matrix(subset(waa_matrix, Fleet == i & Sex == 2 & Yr %in% years)[,-(1:7)])
-	waa[i,,1:(x$n_ages-1)] = (waa[i,,1:(x$n_ages-1)] + temp[,1:(x$n_ages-1)])/2
-	waa[i,,x$n_ages] = (waa[i,,x$n_ages] + apply(temp[,(x$n_ages):NCOL(temp)],1,function(x) sum(x*weights)))/2
-}
-x$waa = waa
-x$Maa = matrix(natM[1], x$n_years, x$n_ages)
-
-x$agg_catch = cbind(subset(catch_matrix, year %in% years)[,-1])
-x$agg_catch_sigma = cbind(subset(catch_se_matrix, year %in% years)[,-1])
-
-########################################
-#load("data/rows.Rds")
-source("code/ssm_temp/get_aref_fn.r")
-x$catch_paa = matrix(NA, x$n_years*x$n_fleets, x$n_ages)
-for(i in 1:x$n_fleets) {
-	ind = age_comp_catch$rowind[,2] == i
-	tyrs = age_comp_catch$rowind[ind,1]
-	temp = age_comp_catch$age_comp[ind,]
-	temp[tyrs==2009,]
-	temp = age_comp_catch$Nsamp$Yr[!is.na(age_comp_catch$Nsamp[,i+1])]
-	temp = age_comp_catch$age_comp[rows_catch_age_comp[[i]],]
-
-	x$catch_paa[(i-1)*x$n_years + 1:x$n_years,] = age_comp_catch$age_comp[rows_catch_age_comp[[i]],]
-x$use_catch_paa = cbind(gb$use_catch_paa)
-x$catch_Neff = cbind(gb$catch_Neff)
-x$catch_aref = cbind(gb$catch_aref)
-########################################
-
-x$units_indices = rep(1,3)
-x$fracyr_indices = catch_timing_as_fraction[c(1:2,5)] #I think this is right?
-temp = CPUE_data
-temp = temp[match(years, temp$year),]
-x$agg_indices = cbind(temp[,1+c(1:2,5)])
-temp = matrix(1, NROW(x$agg_indices), NCOL(x$agg_indices))
-temp[is.na(x$agg_indices)] = 0
-x$use_indices = temp
-temp = CPUE_se_log
-temp = temp[match(years, temp$year),]
-x$agg_index_sigma = cbind(temp[,1+c(1:2,5)])
-x$units_index_paa = rep(2, x$n_indices)
-
-x$index_paa = matrix(NA, x$n_years*x$n_indices, x$n_ages)
-x$index_paa[2*x$n_years + 1:x$n_years,] = as.matrix(age_comp_survey$age_comp[match(years,age_comp_survey$Nsamp$Yr),])
-temp = matrix(0, x$n_years, x$n_indices)
-temp[match(age_comp_survey$Nsamp$Yr,years),3] = 1
-x$use_index_paa = temp
-temp = matrix(0, x$n_years, x$n_indices)
-temp[match(age_comp_survey$Nsamp$Yr,years),3] = age_comp_survey$Nsamp[,2]
-x$index_Neff = temp
-
-temp = get_aref_fn(x$index_paa[2*x$n_years + which(x$index_Neff[1:x$n_years,3]>0),])
-x$index_aref = matrix(17, x$n_years, x$n_indices)
-x$index_aref[which(x$index_Neff[1:x$n_years,3]>0),3] = temp
-##########################################
-
-x$q_lower = rep(0, x$n_indices)
-x$q_upper = rep(1000, x$n_indices)
-
-x$n_estimated_selpars = 2* x$n_selblocks
-x$n_other_selpars = 0
-x$other_selpars = c()
-x$estimated_selpar_pointers = 1:x$n_estimated_selpars
-x$other_selpar_pointers = c()
-x$selpars_lower = rep(0, x$n_estimated_selpars)
-x$selpars_upper = rep(x$n_ages, x$n_estimated_selpars)
-
-x$n_NAA_sigma = 2
-x$NAA_sigma_pointers =  c(1,rep(2,x$n_ages_pop-1))
-x$recruit_model = 2 # random about mean
-
-x$use_growth_model = 1
-x$percentSPR = 40
-
-m2_long = readRDS(file = "results/ssm_temp/m2_long.RDS")
-
-
-dat = m2_long$env$dat
-x$Ecov_obs = dat$Ecov_obs
-x$use_Ecov_obs = dat$use_Ecov_obs
-#x$Ecov_obs[which(is.na(x$Ecov_obs))] = -999
-x$Ecov_obs_sigma = dat$Ecov_obs_sigma
-#x$Ecov_obs_sigma[which(is.na(x$Ecov_obs_sigma))] = -999
-
-#which of the years in the environmental time series (Which may be longer) are the years of the assessment model
-x$model_years = match(years, 1950:2018)
-
-x$age_obs_growth = dat$age_obs
-x$year_obs_growth = dat$year_obs
-x$weight = dat$weight
-x$iswt = dat$iswt
-x$len = dat$len
-x$islen = dat$islen
-x$Ecov_maxages_b = dat$Ecov_maxages_b
-x$Ecov_maxages_a = dat$Ecov_maxages_a
-x$Ecov_maxages_Linf = dat$Ecov_maxages_Linf
-x$fit_k_LVB = dat$fit_k
-
-x$X_Linf = dat$X_Linf
-x$obs_for_Linf_y = dat$obs_for_Linf_y
-
-
-y = list(mean_rec_pars = 10)
-y$logit_q = rep(-8, x$n_indices)
-y$log_F1 = rep(-2, x$n_fleets)
-y$F_devs = matrix(0, x$n_years-1, x$n_fleets)
-y$log_N1 = 10 #random walk in the rest of the ages
-#y$log_N1 = rep(10, x$n_ages) #x$N1_model = 0
-y$log_NAA_sigma = rep(0, x$n_NAA_sigma)
-y$estimated_selpars = rep(0, x$n_estimated_selpars)
-n_catch_acomp_pars = c(1,1,1,3,1,2)[x$age_comp_model_fleets[which(apply(x$use_catch_paa,2,sum)>0)]]
-n_index_acomp_pars = c(1,1,1,3,1,2)[x$age_comp_model_indices[which(apply(x$use_index_paa,2,sum)>0)]]
-y$catch_paa_pars = rep(0, sum(n_catch_acomp_pars))
-y$index_paa_pars = rep(0, sum(n_index_acomp_pars))
-y$log_NAA = matrix(10, x$n_years-1, x$n_ages_pop)
-y$N1_re = rep(10, x$n_ages_pop-1)
-y$log_sig_N1 = 0
-
-par = m2_long$parList
-y$beta_b = par$beta_b
-y$beta_a = par$beta_a
-y$beta_k_LVB = par$beta_k
-y$beta_Linf = par$beta_Linf
-y$t0 = par$t0
-y$beta_Ecov_b = par$beta_Ecov_b
-y$beta_Ecov_a = par$beta_Ecov_a
-y$beta_Ecov_k_LVB = par$beta_Ecov_k
-y$beta_Ecov_Linf = par$beta_Ecov_Linf
-#y$beta_Ecov_Linf = rep(0,max(1,x$Ecov_maxages_Linf+1))
-y$k_LVB_AR_pars = par$k_AR_pars
-y$k_LVB_re = par$k_re
-y$beta_sig_Linf = par$beta_sig_Linf
-y$beta_sig_L_obs = par$beta_sig_L_obs
-y$beta_sig_W_obs = par$beta_sig_W_obs
-
-y$Ecov_mu = par$Ecov_mu
-y$Ecov_AR_pars = par$Ecov_AR_pars
-y$Ecov_re = par$Ecov_re
-y$log_Ecov_obs_sig_scale = par$log_Ecov_obs_sig_scale
-
-temp = input
-x = c(NROW(temp$par$beta_Ecov_k), NCOL(temp$par$beta_Ecov_k))
-temp$map$beta_Ecov_k = matrix(NA, x[1],x[2])
-temp$map$beta_Ecov_k[1,1] = 1
-temp$map$beta_Ecov_k = factor(temp$map$beta_Ecov_k)
-temp$dat$fit_k = 1
-temp$map = temp$map[-which(names(temp$map) %in% c("k_re","k_AR_pars"))]
-temp$par = m1_long$parList
-
-ssm_input = list(dat = x, par = y)
-ssm_input$map = list()
-ssm_input$map$beta_k_LVB = temp$map$beta_k
-ssm_input$map$beta_Ecov_k_LVB = temp$map$beta_Ecov_k
-map.pars = c("beta_Ecov_b", "beta_Ecov_a", "log_Ecov_obs_sig_scale", "beta_Ecov_Linf", "beta_sig_L_obs")
-ssm_input$map[map.pars] = temp$map[map.pars]
-
-ssm_input$random = c("log_NAA", "N1_re", "Ecov_re", "k_re")
-
+ssm_input = readRDS("code/ssm_temp/ssm_input.RDS")
 setwd("code/ssm_temp")
 compile("ssm_temp.cpp", "-O0 -g")
 setwd("../..")
-ssm_mod <- MakeADFun(ssm_input$dat,ssm_input$par,DLL="ssm_temp", random = c("log_NAA", "Ecov_re", "k_LVB_re", "k_re"), 
+dyn.load(dynlib(paste0("code/ssm_temp/ssm_temp")))
+
+source("code/ssm_temp/fit_tmb.r")
+x = ssm_input
+y <- MakeADFun(x$dat,x$par,DLL="ssm_temp", random = x$random, 
+  map = x$map)
+temp = fit_tmb(y, do.sdrep = FALSE)
+temp$sdrep = sdreport(temp)
+saveRDS(temp, file="code/ssm_temp/best_fit_so_far.RDS")
+less_ages = readRDS(file="code/ssm_temp/best_fit_so_far.RDS")
+x = summary(less$sdrep)
+plot(years, exp(x[rownames(x) == "log_F40",1]), type = 'l', ylim = c(0,0.2))
+lines(years, exp(x[rownames(x) == "log_F40_E",1]), col = 'red')
+
+plot(years, exp(x[rownames(x) == "log_SSB",1]), type = 'l')
+lines(years, exp(x[rownames(x) == "log_SSB_E",1]), col = 'red')
+
+plot(years, exp(x[rownames(x) == "log_SSB40",1]), type = 'l')
+lines(years, exp(x[rownames(x) == "log_SSB40_E",1]), col = 'red')
+
+
+source("code/ssm_temp/make_ssm_input_4.r")
+ssm_input = readRDS("code/ssm_temp/ssm_input.RDS")
+
+x = ssm_input
+y <- MakeADFun(x$dat,x$par,DLL="ssm_temp", random = x$random, 
+  map = x$map)
+more_ages = fit_tmb(y, do.sdrep = FALSE)
+more_ages$sdrep = sdreport(more_ages)
+saveRDS(more_ages, file="code/ssm_temp/more_ages.RDS")
+x = summary(more_ages$sdrep)
+plot(years, exp(x[rownames(x) == "log_F40",1]), type = 'l', ylim = c(0,0.2))
+lines(years, exp(x[rownames(x) == "log_F40_E",1]), col = 'red')
+
+plot(years, exp(x[rownames(x) == "log_SSB",1]), type = 'l')
+lines(years, exp(x[rownames(x) == "log_SSB_E",1]), col = 'red')
+
+plot(years, exp(x[rownames(x) == "log_SSB40",1]), type = 'l')
+lines(years, exp(x[rownames(x) == "log_SSB40_E",1]), col = 'red')
+
+#B-H implies steepnesses ~ 1
+x = ssm_input
+x$dat$recruit_model = 3
+x$par$mean_rec_pars = c(0,0)
+y <- MakeADFun(x$dat,x$par,DLL="ssm_temp", random = x$random, 
+  map = x$map)
+more_ages_sr = fit_tmb(y, do.sdrep = FALSE)
+saveRDS(more_ages_sr, file = "code/ssm_temp/more_ages_sr.RDS")
+more_ages_sr = readRDS(file = "code/ssm_temp/more_ages_sr.RDS")
+x$par = more_ages_sr$parList
+y <- MakeADFun(x$dat,x$par,DLL="ssm_temp", random = x$random, 
+  map = x$map)
+temp = fit_tmb(y, do.sdrep = FALSE)
+
+#Now include growth model estimation
+source("code/ssm_temp/make_ssm_input_5.r")
+ssm_input = readRDS("code/ssm_temp/ssm_input.RDS")
+x = ssm_input
+x$par = more_ages$parList
+
+y <- MakeADFun(x$dat,x$par,DLL="ssm_temp", random = x$random, 
+  map = x$map)
+more_ages_growth_on = fit_tmb(y, do.sdrep = FALSE)
+more_ages_growth_on$sdrep = sdreport(more_ages_growth_on)
+saveRDS(more_ages_growth_on, file="code/ssm_temp/more_ages_growth_on.RDS")
+#more_ages_growth_on = readRDS(file="code/ssm_temp/more_ages_growth_on.RDS")
+
+#years = 1969:2018
+tcol <- col2rgb('black')
+tcol <- paste(rgb(tcol[1,],tcol[2,], tcol[3,], maxColorValue = 255), "55", sep = '')
+
+#cairo_pdf('results/ssm_temp/weight_age_10.pdf', family = "Times", height = 10, width = 10)
+png(filename = "results/ssm_temp/weight_age_10.png", width = 5*144, height = 5*144, res = 144, pointsize = 12, family = "Times")#,
+par(mfrow = c(1,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+temp = summary(more_ages_growth_on$sdrep)
+temp = temp[which(rownames(temp) == "log_waa"),]
+temp = list(matrix(temp[,1],ssm_input$dat$n_years, ssm_input$dat$n_ages_pop),matrix(temp[,2],ssm_input$dat$n_years, ssm_input$dat$n_ages_pop))
+temp = cbind(temp[[1]][,10],temp[[2]][,10])
+temp = cbind(temp[,1], temp[,1] + qnorm(0.975)*cbind(-temp[,2],temp[,2]))
+plot(years, temp[,1], type = 'n', axes = FALSE, ylim = c(0,max(exp(temp))), xlab = '', ylab = '')
+axis(1, lwd = 2, cex.axis = 1.5)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+grid(col = gray(0.7), lwd = 1, lty = 2)
+lines(years, exp(temp[,1]), lwd = 2, type = 'b', pch = 19, cex = 1.5)
+lines(years, ssm_input$dat$waa[1,,10], lwd = 2)
+polygon(c(years,rev(years)), exp(c(temp[,2],rev(temp[,3]))), col = tcol, border = "transparent")
+mtext(side = 2, outer = FALSE, "Mass (kg)", line = 3, cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+text(max(years), max(exp(temp)), "Age 10", adj = c(1,1), cex = 2)
+dev.off()
+
+png(filename = "results/ssm_temp/petrale_SSB.png", width = 5*144, height = 5*144, res = 144, pointsize = 12, family = "Times")#,
+par(mfrow = c(1,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+temp = summary(more_ages_growth_on$sdrep)
+temp = temp[which(rownames(temp) == "log_SSB_E"),]
+temp = cbind(temp[,1], temp[,1] + qnorm(0.975)*cbind(-temp[,2],temp[,2]))
+plot(years, temp[,1], type = 'n', axes = FALSE, ylim = c(0,max(exp(temp)))/1000, xlab = '', ylab = '')
+axis(1, lwd = 2, cex.axis = 1.5)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+grid(col = gray(0.7), lwd = 1, lty = 2)
+#lines(years, GBcod.asap.res[,1]/1000, lwd = 2, lty = 2)
+lines(years, exp(temp[,1])/1000, lwd = 2, type = 'b', pch = 19, cex = 1.5)
+polygon(c(years,rev(years)), exp(c(temp[,2],rev(temp[,3])))/1000, col = tcol, border = "transparent")
+mtext(side = 2, outer = FALSE, expression(paste("SSB (", 10^3, " mt)")), line = 3, cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+dev.off()
+
+cairo_pdf('results/ssm_temp/petrale_SSB_F_R.pdf', family = "Times", height = 10, width = 5)
+par(mfrow = c(3,1), mar = c(1,1,1,1), oma = c(4,5,0,0))
+temp = summary(more_ages_growth_on$sdrep)
+temp = temp[which(rownames(temp) == "log_SSB_E"),]
+temp = cbind(temp[,1], temp[,1] + qnorm(0.975)*cbind(-temp[,2],temp[,2]))
+plot(years, temp[,1], type = 'n', axes = FALSE, ylim = c(0,max(exp(temp)))/1000, xlab = '', ylab = '')
+axis(1, labels = FALSE, lwd = 2)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+grid(col = gray(0.7), lwd = 1, lty = 2)
+#lines(years, GBcod.asap.res[,1]/1000, lwd = 2, lty = 2)
+lines(years, exp(temp[,1])/1000, lwd = 2, type = 'b', pch = 19, cex = 1.5)
+polygon(c(years,rev(years)), exp(c(temp[,2],rev(temp[,3])))/1000, col = tcol, border = "transparent")
+mtext(side = 2, outer = FALSE, expression(paste("SSB (", 10^3, " mt)")), line = 3, cex = 1.5)
+
+temp = summary(more_ages_growth_on$sdrep)
+temp = temp[which(rownames(temp) == "log_F"),]
+temp = cbind(temp[,1], temp[,1] + qnorm(0.975)*cbind(-temp[,2],temp[,2]))
+plot(years, exp(temp[,1]), type = 'n', axes = FALSE, ylim = c(0,max(exp(temp))), xlab = '', ylab = '')
+axis(1, labels = FALSE, lwd = 2)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+grid(col = gray(0.7), lwd = 1, lty = 2)
+#lines(years, GBcod.asap.res[,2], lwd = 2, lty = 2)
+lines(years, exp(temp[,1]), lwd = 2, type = 'b', pch = 19, cex = 1.5)
+polygon(c(years,rev(years)), exp(c(temp[,2],rev(temp[,3]))), col = tcol, border = "transparent")
+mtext(side = 2, outer = FALSE, expression(italic(F)), line = 3, cex = 1.5)
+
+dat = ssm_input$dat
+temp = summary(more_ages_growth_on$sdrep)
+exp(temp[which(rownames(temp) == "log_N1"),1])
+exp(temp[which(rownames(temp) == "N1_re"),1])
+exp(temp[which(rownames(temp) == "log_NAA")[1:5],1])
+ind = c(which(rownames(temp) == "log_N1"),which(rownames(temp) == "N1_re"),t(matrix(which(rownames(temp) == "log_NAA"),dat$n_years-1, dat$n_ages_pop)))
+x = list(matrix(temp[ind,1], dat$n_years, dat$n_ages_pop, byrow = TRUE))
+x[2:3] = list(x[[1]] - matrix(qnorm(0.975)*temp[ind,2], dat$n_years, dat$n_ages_pop, byrow = TRUE),x[[1]] + matrix(qnorm(0.975)*temp[ind,2], dat$n_years, dat$n_ages_pop, byrow = TRUE))
+plot(years, x[[1]][,1], type = 'n', axes = FALSE, ylim = c(0,max(exp(x[[3]][,1])))/1000, xlab = '', ylab = '')
+axis(1, lwd = 2, cex.axis = 1.5)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+grid(col = gray(0.7), lwd = 1, lty = 2)
+#lines(years, GBcod.asap.res[,3]/1000, lwd = 2, lty = 2)
+lines(years, exp(x[[1]][,1])/1000, lwd = 2, type = 'b', pch = 19, cex = 1.5)
+polygon(c(years,rev(years)), exp(c(x[[2]][,1],rev(x[[3]][,1])))/1000, col = tcol, border = "transparent")
+mtext(side = 2, outer = FALSE, expression(paste(italic(R), " (", 10^6,")")), line = 3, cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+dev.off()
+
+cairo_pdf('results/ssm_temp/petrale_BRPs.pdf', family = "Times", height = 8, width = 6)
+par(mfrow = c(2,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+
+temp = summary(more_ages_growth_on$sdrep)
+temp = temp[grep("log_SSB40_E", rownames(temp)),]
+temp = cbind(temp[,1], temp[,1] +qnorm(0.975)*cbind(-temp[,2],temp[,2]))
+plot(years, exp(temp[,1]), type = 'n', axes = FALSE, ann = FALSE, ylim = c(range(exp(temp)))/1000, xlab = '', ylab = '')
+axis(1, labels = FALSE, lwd = 2)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+grid(col = gray(0.7), lty = 2)
+lines(years, exp(temp[,1])/1000, lwd = 2, type = 'b', pch = 19, cex = 1.5)
+polygon(c(years,rev(years)), exp(c(temp[,2],rev(temp[,3])))/1000, col = tcol, border = "transparent")
+mtext(side = 2, outer = FALSE, expression(paste(SSB[40], " (", 10^3, "mt)")), line = 3, cex = 1.5)
+
+temp = summary(more_ages_growth_on$sdrep)
+temp = temp[grep("log_F40_E", rownames(temp)),]
+#temp = temp[gbcod$dat$n_years + 1:gbcod$dat$n_years,1]/temp[1:gbcod$dat$n_years,1] # = 1
+temp = cbind(temp[,1], temp[,1] +qnorm(0.975)*cbind(-temp[,2],temp[,2]))
+plot(years, exp(temp[,1]), type = 'n', axes = FALSE, ann = FALSE, ylim = c(range(exp(temp))), xlab = '', ylab = '')
+axis(1, lwd = 2, cex.axis = 1.5)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+grid(col = gray(0.7), lty = 2)
+lines(years, exp(temp[,1]), lwd = 2, type = 'b', pch = 19, cex = 1.5)
+polygon(c(years,rev(years)), exp(c(temp[,2],rev(temp[,3]))), col = tcol, border = "transparent")
+mtext(side = 2, outer = FALSE, expression(italic(F)[40]), line = 3, cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+dev.off()
+
+more_ages = readRDS(file="code/ssm_temp/more_ages.RDS")
+z = summary(more_ages$sdrep, "report")
+known.prec.res = cbind(z[rownames(z) == "log_SSB_E",2])
+known.prec.res = cbind(known.prec.res, z[rownames(z) == "log_SPR_0_E",2])
+known.prec.res = cbind(known.prec.res, z[rownames(z) == "log_SPR40_E",2])
+known.prec.res = cbind(known.prec.res, z[rownames(z) == "log_YPR40_E",2])
+known.prec.res = cbind(known.prec.res, z[rownames(z) == "log_F40_E",2])
+known.prec.res = cbind(known.prec.res, z[rownames(z) == "log_SSB40_E",2])
+
+z = summary(more_ages_growth_on$sdrep, "report")
+prec.res = cbind(z[rownames(z) == "log_SSB_E",2])
+prec.res = cbind(prec.res, z[rownames(z) == "log_SPR_0_E",2])
+prec.res = cbind(prec.res, z[rownames(z) == "log_SPR40_E",2])
+prec.res = cbind(prec.res, z[rownames(z) == "log_YPR40_E",2])
+prec.res = cbind(prec.res, z[rownames(z) == "log_F40_E",2])
+prec.res = cbind(prec.res, z[rownames(z) == "log_SSB40_E",2])
+
+
+#cairo_pdf('results/ssm_temp/petrale_SSB_SSB40_F40_CV_ratio.pdf', family = "Times", height = 10, width = 5)
+png(filename = 'results/ssm_temp/petrale_SSB_CV_ratio.png', width = 5*144, height = 5*144, res = 144, pointsize = 12, family = "Times")#,
+#par(mfrow = c(3,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+par(mfrow = c(1,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+temp = 100*((prec.res/known.prec.res)[,1]-1)
+plot(years, temp, type = "n", ylab = "", xlab = "", axes = FALSE)
+grid(col = gray(0.7), lwd = 1)
+lines(years, temp, lwd = 2)
+axis(1, lwd = 2, cex.axis = 1.5)
+#axis(1, labels = FALSE, lwd = 2)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+text(max(years), max(temp), "SSB", adj = c(1,1), cex = 2)
+mtext(side = 2, outer = TRUE, line = 2, "% increase in CV", cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+dev.off()
+
+png(filename = 'results/ssm_temp/petrale_SSB40_CV_ratio.png', width = 5*144, height = 5*144, res = 144, pointsize = 12, family = "Times")#,
+#par(mfrow = c(3,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+par(mfrow = c(1,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+temp = 100*((prec.res/known.prec.res)[,6]-1)
+plot(years, temp, type = "n", ylab = "", xlab = "", axes = FALSE)
+grid(col = gray(0.7), lwd = 1)
+lines(years, temp, lwd = 2)
+axis(2, lwd = 2, cex.axis = 1.5)
+axis(1, lwd = 2, cex.axis = 1.5)
+#axis(1, labels = FALSE, lwd = 2)
+box(lwd = 2)
+text(max(years), max(temp), expression(SSB[40]), adj = c(1,1), cex = 2)
+mtext(side = 2, outer = TRUE, line = 2, "% increase in CV", cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+dev.off()
+
+png(filename = 'results/ssm_temp/petrale_F40_CV_ratio.png', width = 5*144, height = 5*144, res = 144, pointsize = 12, family = "Times")#,
+par(mfrow = c(1,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+temp = 100*((prec.res/known.prec.res)[,5]-1)
+plot(years, temp, type = "n", ylab = "", xlab = "", axes = FALSE)
+grid(col = gray(0.7), lwd = 1)
+lines(years, temp, lwd = 2)
+axis(1, lwd = 2, cex.axis = 1.5)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+text(max(years), max(temp), expression(italic(F)[40]), adj = c(1,1), cex = 2)
+mtext(side = 2, outer = TRUE, line = 2, "% increase in CV", cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+dev.off()
+
+cairo_pdf('results/ssm_temp/petrale_SPR0_CV_ratio.pdf', family = "Times", height = 5, width = 5)
+par(mfrow = c(1,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+plot(years, 100*((prec.res/known.prec.res)[,2]-1), type = "n", ylab = "", xlab = "", axes = FALSE)
+grid(col = gray(0.7), lwd = 1)
+lines(years, 100*((prec.res/known.prec.res)[,2]-1), lwd = 2)
+axis(1, lwd = 2, cex.axis = 1.5)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+#text(2007,100, expression(SPR[100])), cex = 1.5)
+mtext(side = 2, outer = TRUE, line = 2, "% increase in CV", cex = 1.5)
+dev.off()
+
+plot(years, prec.res[,4], type = "n", ylim = c(0,20), ylab = "", xlab = "", axes = FALSE)
+grid(col = gray(0.7), lwd = 1)
+lines(years, 100*((prec.res/known.prec.res)[,4]-1), lwd = 2)
+lines(years, 100*((g_known.prec.res/known.prec.res)[,4]-1), lty = 2, lwd = 2)
+lines(years, 100*((m_known.prec.res/known.prec.res)[,4]-1), lty = 3, lwd = 2)
+axis(1, lwd = 2, cex.axis = 1.5)
+axis(2, labels = FALSE, lwd = 2)
+box(lwd = 2)
+text(2007,18, expression(YPR(italic(F)[40])), cex = 1.5)
+
+par(mfrow = c(1,2), mar = c(1,1,1,1), oma = c(4,4,0,0))
+plot(years, prec.res[,2], type = "n", ylim = c(0,500), ylab = "", xlab = "", axes = FALSE)
+grid(col = gray(0.7), lwd = 1)
+lines(years, 100*((prec.res/g_known.prec.res)[,2]-1), lty = 2, lwd = 2)
+lines(years, 100*((prec.res/m_known.prec.res)[,2]-1), lty = 3, lwd = 2)
+axis(1, lwd = 2, cex.axis = 1.5)
+axis(2, lwd = 2, cex.axis = 1.5)
+box(lwd = 2)
+text(2007,100, expression(SPR[100])), cex = 1.5)
+mtext(side = 2, outer = TRUE, line = 2, "% increase in CV", cex = 1.5)
+
+plot(years, prec.res[,3], type = "n", ylim = c(0,500), ylab = "", xlab = "", axes = FALSE)
+grid(col = gray(0.7), lwd = 1)
+lines(years, 100*((prec.res/g_known.prec.res)[,3]-1), lty = 2, lwd = 2)
+lines(years, 100*((prec.res/m_known.prec.res)[,3]-1), lty = 3, lwd = 2)
+axis(1, lwd = 2, cex.axis = 1.5)
+axis(2, labels = FALSE, lwd = 2)
+box(lwd = 2)
+text(2007,100, expression(SPR(italic(F)[40])), cex = 1.5)
+
+plot(years, prec.res[,6], type = "n", ylim = c(0,0.2), ylab = "", xlab = "")
+lines(years, (prec.res/known.prec.res)[,6]-1, lwd = 2)
+lines(years, (g_known.prec.res/known.prec.res)[,6]-1, lty = 2, lwd = 2)
+lines(years, (m_known.prec.res/known.prec.res)[,6]-1, lty = 3, lwd = 2)
+
+m_known.prec.res/prec.res
+prec.res/known.prec.res
+
+z = summary(more_ages_growth_on$sdrep, "report")
+temp = z[rownames(z) == "log_SSB_E",2]
+z = summary(more_ages$sdrep, "report")
+temp = temp/z[rownames(z) == "log_SSB_E",2]
+
+z = summary(more_ages_growth_on$sdrep, "report")
+temp = z[rownames(z) == "log_SSB40_E",2]
+z = summary(more_ages$sdrep, "report")
+temp = temp/z[rownames(z) == "log_SSB40_E",2]
+
+z = summary(more_ages_growth_on$sdrep, "report")
+exp(z[rownames(z) == "log_F40_E",1])
+temp = z[rownames(z) == "log_F40_E",2]
+z = summary(more_ages$sdrep, "report")
+exp(z[rownames(z) == "log_F40_E",1])
+temp = temp/z[rownames(z) == "log_F40_E",2]
+
+z = summary(more_ages_growth_on$sdrep, "report")
+temp = z[rownames(z) == "SPR_0_E",2]/z[rownames(z) == "SPR_0_E",1]
+z = summary(more_ages$sdrep, "report")
+temp = temp/z[rownames(z) == "SPR_0_E",2]
+
+tcol <- col2rgb('black')
+tcol <- paste(rgb(tcol[1,],tcol[2,], tcol[3,], maxColorValue = 255), "55", sep = '')
+
+
+
+temp = summary(gbcod.ss.mod0$sdrep)
+temp = temp[which(rownames(temp) == "log_SSB_E"),]
+plot(years, exp(temp[,1]), type = 'l')
+temp = summary(more_ages_growth_on$sdrep)
+temp = temp[which(rownames(temp) == "log_SSB_E"),]
+lines(years, exp(temp[,1]), col = 'red')
+
+temp.fn = function(ylim. = c(0.7,1.4), labels = FALSE)
+{
+  plot(years, exp(x[,1]), type = 'n', ann = FALSE, axes = FALSE, ylim = ylim.)
+  axis(1, labels = labels, lwd = 2, cex.axis = 1.5)
+  axis(2, lwd = 2, cex.axis = 1.5)
+  box(lwd = 2)
+  grid(col = gray(0.7), lwd = 1, lty = 2)
+  #abline(h = 1, lwd = 2)
+}
+
+#cairo_pdf('results/ssm_temp/petrale_SSB_BRP_ratio.pdf', family = "Times", height = 10, width = 5)
+png(filename = 'results/ssm_temp/petrale_SSB_ratio.png', width = 5*144, height = 5*144, res = 144, pointsize = 12, family = "Times")#,
+#par(mfrow = c(3,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+par(mfrow = c(1,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+temp = summary(more_ages_growth_on$sdrep)
+x = temp[which(rownames(temp) == "log_SSB_E"),]
+x = x - temp[which(rownames(temp) == "log_SSB"),]
+temp.fn(c(0.8,1.25), labels = TRUE)
+lines(years, exp(x[,1]), lwd = 2)
+abline(h=1, lwd = 2, col = "red")
+text(max(years), 1.25, "SSB", adj = c(1,1), cex = 2)
+mtext(side = 2, "Ratio (Temperature/Constant)", outer = TRUE, line = 2, cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+dev.off()
+
+png(filename = 'results/ssm_temp/petrale_SSB40_ratio.png', width = 5*144, height = 5*144, res = 144, pointsize = 12, family = "Times")#,
+par(mfrow = c(1,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+temp = summary(more_ages_growth_on$sdrep)
+x = temp[which(rownames(temp) == "log_SSB40_E"),]
+x = x - temp[which(rownames(temp) == "log_SSB40"),]
+temp.fn(c(0.8,1.25), labels = TRUE)
+lines(years, exp(x[,1]), lwd = 2)
+abline(h=1, lwd = 2, col = "red")
+text(max(years), 1.25, expression(SSB[40]), adj = c(1,1), cex = 2)
+mtext(side = 2, "Ratio (Temperature/Constant)", outer = TRUE, line = 2, cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+dev.off() #mtext(side = 2, outer = FALSE, expression(paste(SSB[40], " ratio")), line = 3, cex = 1.5)
+
+png(filename = 'results/ssm_temp/petrale_F40_ratio.png', width = 5*144, height = 5*144, res = 144, pointsize = 12, family = "Times")#,
+par(mfrow = c(1,1), mar = c(1,1,1,1), oma = c(4,4,0,0))
+temp = summary(more_ages_growth_on$sdrep)
+x = temp[which(rownames(temp) == "log_F40_E"),]
+x = x - temp[which(rownames(temp) == "log_F40"),]
+temp.fn(c(0.8,1.25), labels = TRUE)
+lines(years, exp(x[,1]), lwd = 2)
+abline(h=1, lwd = 2, col = "red")
+text(max(years), 1.25, expression(italic(F)[40]), adj = c(1,1), cex = 2)
+mtext(side = 2, "Ratio (Temperature/Constant)", outer = TRUE, line = 2, cex = 1.5)
+mtext(side = 1, outer = FALSE, "Year", line = 3, cex = 1.5)
+#mtext(side = 2, outer = FALSE, expression(paste(italic(F)[40], " ratio")), line = 3, cex = 1.5)
+dev.off()
+
+############ stop here
+
+library(TMB)
+dyn.load("ssm_env_ssb_v4.so")
+peel.fit.fn = function(peel, model = more_ages_growth_on)
+{
+  
+  print(peel)
+  temp = list(dat = model$env$data, par = model$env$parList(), map = model$env$map)
+  temp$dat$n_years = temp$dat$n_years - peel
+  temp$dat$Maa = temp$dat$Maa[1:temp$dat$n_years,]
+  ind = numeric()
+  for(i in 1:temp$dat$n_indices) ind = c(ind, 1:temp$dat$n_years + (i-1)*model$env$data$n_years)
+  print(model$env$data$n_years)
+  print(ind)
+  print(dim(temp$dat$index_paa))
+  temp$dat$index_paa = temp$dat$index_paa[ind,]
+  ind = numeric()
+  for(i in 1:temp$dat$n_fleets) ind = c(ind, 1:temp$dat$n_years + (i-1)*model$env$data$n_years)
+  temp$dat$catch_paa = temp$dat$catch_paa[ind,]
+  log_NAA_na_ind = rbind(matrix(1:(temp$dat$n_ages*(temp$dat$n_years-1)), temp$dat$n_years-1, temp$dat$n_ages), matrix(rep(NA, peel*temp$dat$n_ages), peel, temp$dat$n_ages))
+  F_devs_na_ind = rbind(matrix(1:(temp$dat$n_fleets * (temp$dat$n_years-1)), temp$dat$n_years-1, temp$dat$n_fleets), matrix(rep(NA, peel * temp$dat$n_fleets), peel, temp$dat$n_fleets))
+  #Ecov_re_na_ind = c(1:(temp$dat$n_years_Ecov-1), rep(NA, peel))
+  #if(model$env$random == "log_R") temp$map$log_R = factor(log_R_na_ind)
+  #temp$map$Ecov_re = factor(Ecov_re_na_ind)
+  temp$map$log_NAA = factor(log_NAA_na_ind)
+  temp$map$F_devs = factor(F_devs_na_ind)
+  temp$map$catch_paa_pars = factor(rep(NA,length(temp$par$catch_paa_pars))) 
+  temp$map$index_paa_pars = factor(rep(NA,length(temp$par$index_paa_pars)))
+
+  temp.mod <- MakeADFun(temp$dat,temp$par,DLL="ssm_env_ssb_v4", random = c("log_NAA", "Ecov_re", "k_LVB_re", "k_re", "a50_re"), 
   map = temp$map)
+  temp.opt = nlminb(temp.mod$par,temp.mod$fn,temp.mod$gr, control = list(iter.max = 1000, eval.max = 1000))
+  return(list(opt = temp.opt, rep = temp.mod$report()))
+}
+
+#temp = peel.fit.fn(1)
+#temp.mod <- MakeADFun(temp$dat,temp$par,DLL="ssm_env_ssb_v4", random = c("log_NAA","Ecov_re"), map = temp$map)
+temp = list(peel.fit.fn(0))
+  
+more_ages_growth_on$rep$SSB
+temp$peels = list(peel.fit.fn(1))
+temp$peels[[2]] = peel.fit.fn(2)
+temp$peels[[3]] = peel.fit.fn(3)
+temp$peels[[4]] = peel.fit.fn(4)
+temp$peels[[5]] = peel.fit.fn(5)
+more_ages_growth_on$peels = temp$peels
+more_ages_growth_on$peels[[6]] = peel.fit.fn(6)
+more_ages_growth_on$peels[[7]] = peel.fit.fn(7)
+more_ages_growth_on$peels[1:5] = temp$peels
+
+mean(sapply(1:5, function(x) temp$peels[[x]]$rep$SSB[gbcod.ss$dat$n_years-x]/more_ages_growth_on$rep$SSB[gbcod.ss$dat$n_years-x] - 1))
+mean(sapply(1:5, function(x) temp$peels[[x]]$rep$F[gbcod.ss$dat$n_years-x]/more_ages_growth_on$rep$F[gbcod.ss$dat$n_years-x] - 1))
+mean(sapply(1:7, function(x) more_ages_growth_on$peels[[x]]$rep$SSB[gbcod.ss$dat$n_years-x]/more_ages_growth_on$rep$SSB[gbcod.ss$dat$n_years-x] - 1))
+mean(sapply(1:7, function(x) more_ages_growth_on$peels[[x]]$rep$F[gbcod.ss$dat$n_years-x]/more_ages_growth_on$rep$F[gbcod.ss$dat$n_years-x] - 1))
+
+x = latex(round(gbcod$waa[gbcod$waa_pointer_fleets,,],2), file = 'results/WAA_table_catch.tex', 
+  rowlabel = 'Year', rowname = years, colheads = paste('Age ', 1:gbcod$n_ages, c(rep('',gbcod$n_ages-1),'+'), sep =''), 
+  table.env = FALSE)
+x = latex(round(gbcod$waa[gbcod$waa_pointer_ssb,,],2), file = 'results/WAA_table_ssb.tex', 
+  rowlabel = 'Year', rowname = years, colheads = paste('Age ', 1:gbcod$n_ages, c(rep('',gbcod$n_ages-1),'+'), sep =''), 
+  table.env = FALSE)
 

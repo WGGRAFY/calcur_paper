@@ -270,10 +270,11 @@ plot.laa.Ecov.fn = function(x, ymax = 80,mod = m1, do.xlabs = TRUE, do.ylabs = T
   plotCI(Ecov, res$obs[,1], li = res$obs[,2], ui = res$obs[,3], add = TRUE, lwd = 2, slty = 2, sfrac = 0)
 }
 
-plot.Ecov.res.fn = function(model, yrange, years, ylab = "Bottom temperature anomaly", ylab2)
+plot.Ecov.res.fn = function(model, yrange, years, ylab = "Bottom temperature anomaly", ylab2, xrange)
 {
   tcol <- col2rgb('black')
   tcol <- paste(rgb(tcol[1,],tcol[2,], tcol[3,], maxColorValue = 255), "55", sep = '')
+  if(missing(xrange)) xrange = range(years)
   require(plotrix)
   n_Ecov = NCOL(model$env$data$Ecov_obs)
   print(n_Ecov)
@@ -287,7 +288,7 @@ plot.Ecov.res.fn = function(model, yrange, years, ylab = "Bottom temperature ano
   par(mfrow = c(n_Ecov,1), mar = c(1,1,1,3), oma = c(4,4,0,0))
   for(p in 1:n_Ecov) {
     yrange = range(Ecov[,,p], na.rm = TRUE)
-    plot(years, Ecov[1,,p], type = 'n', axes = FALSE, xlab = "", ylab = "", ylim = yrange)
+    plot(years, Ecov[1,,p], type = 'n', axes = FALSE, xlab = "", ylab = "", ylim = yrange, xlim = xrange)
     grid(col = gray(0.7), lwd = 1)
     lines(years, Ecov[1,,p], lwd = 2)
     polygon(c(years,rev(years)), c(Ecov[2,,p],rev(Ecov[3,,p])), col = tcol, border = "transparent", lty = 2)

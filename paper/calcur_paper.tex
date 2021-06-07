@@ -72,12 +72,17 @@
 \linenumbers
 \usepackage[belowskip=0pt,aboveskip=0pt]{caption}
 \usepackage{relsize}
+\usepackage{xspace}
 \usepackage{bm}
 \usepackage{caption,graphics}
 \usepackage{graphicx}
 \renewcommand\figurename{Fig.}
 \captionsetup{labelsep=period, singlelinecheck=false}
 \usepackage{footmisc}
+\usepackage{makecell}
+\newcommand{\changesize}[1]{\fontsize{#1pt}{#1pt}\selectfont}
+\renewcommand{\arraystretch}{1.5}
+\renewcommand\theadfont{}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -92,6 +97,8 @@
 \usepackage[normalem]{ulem}
 \usepackage{makecell}
 \usepackage{xcolor}
+\usepackage[]{natbib}
+\bibliographystyle{plainnat}
 
 \title{Modeling the effect of temperature on fish growth in the California
 Current}
@@ -519,5 +526,28 @@ To be determined, but some organizing thoughts are:
 
 \hypertarget{figures}{%
 \section{Figures}\label{figures}}
+
+\begin{figure}
+\caption{Effects of bottom temperature anomaly on the von Bertelanffy growth parameter $k$ for each species.}\label{temp_effect_k}
+\begin{center}
+\includegraphics[height = 0.8\textheight]{../results/ss_lvb_temp/temp_effect_by_species.pdf}
+\end{center}
+\end{figure}
+
+\begin{figure}
+\caption{Annual spawning biomass, fully-selected fishing mortality rate, and recruitment for Petrale sole.}\label{SSB_F_R}
+\begin{center}
+\includegraphics[height = 0.8\textheight]{../results/ssm_temp/petrale_SSB_F_R.pdf}
+\end{center}
+\end{figure}
+
+\begin{figure}
+\caption{Annual SSB$_{40}$ and $F_{40}$, reference points for Petrale sole.}\label{BRPs}
+\begin{center}
+\includegraphics[height = 0.8\textheight]{../results/ssm_temp/petrale_BRPs.pdf}
+\end{center}
+\end{figure}
+
+\bibliography{calcur\_paper.bib}
 
 \end{document}
