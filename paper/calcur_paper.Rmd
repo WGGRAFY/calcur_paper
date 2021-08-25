@@ -5,7 +5,7 @@ author:
   - Tara Marshall^[UK]
   - Alan Boudron^[UK]
   - Timothy J. Miller^[Northeast Fisheries Science Center, National Marine Fisheries Service, 166 Water Street, Woods Hole, MA 02543, USA]
-  - Christine Stawitz^[Headquarters, National Marine Fisheries Service, Washington, DC XXXXX USA]
+  - Christine Stawitz^[Office of Science and Technology, National Marine Fisheries Service, Sand Point Way, Seattle, USA]
   - Melissa Haltuch^[Northwest Fisheries Science Center, National Marine Fisheries Service, Montlake Blvd, Seattle, WA XXXXX, USA]
 date: ''
 output:
