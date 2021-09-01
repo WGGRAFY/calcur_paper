@@ -156,8 +156,8 @@
 4 # max F or harvest rate, depends on F_Method
 # no additional F input needed for Fmethod 1
 # if Fmethod=2; read overall start F value; overall phase; N detailed inputs to read
-0 1 1
-1 1 1 0 0.01 -1
+0 1 0
+#1 1 1 0 0.01 -1
 # if Fmethod=3; read N iterations for tuning for Fmethod 3
 # N iterations for tuning F in hybrid method (recommend 3 to 7)
 #
