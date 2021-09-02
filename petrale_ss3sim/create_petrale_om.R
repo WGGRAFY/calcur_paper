@@ -53,41 +53,29 @@ system.file("bin", package = "ss3sim")
   }
 
 ## Now read in the dat file to extract some important info
-  Datfile = readLines(con=paste0(getwd(), "/calcur_paper-master/petrale_ss3sim/om_test/om.dat", sep=""))
+  Datfile = readLines(con=paste0(getwd(), "/calcur_paper-master1/petrale_ss3sim/om_test/om.dat", sep=""))
   Nage = as.numeric(substr(Datfile[grep("#_Nages", Datfile, fixed=TRUE)], 1, 2))
   # if length bin method is 2 (like in this case) do below:
   Nlength =  (as.numeric(substr(Datfile[grep("# maximum size ", Datfile, fixed=TRUE)], 1, 3)) - as.numeric(substr(Datfile[grep("# minimum size ", Datfile, fixed=TRUE)], 1, 2)))/as.numeric(substr(Datfile[grep("# binwidth for population", Datfile, fixed=TRUE)], 1, 2))+1
 
 ## now read in the Report.sso file
-  rawrep <- read.table(file=paste0(getwd(), "/calcur_paper-master/petrale_ss3sim/om_test/Report.sso"),col.names=1:200,fill=TRUE,quote="", colClasses="character",nrows=-1,comment.char="")
+  rawrep <- read.table(file=paste0(getwd(), "/calcur_paper-master1/petrale_ss3sim/om_test/Report.sso"),col.names=1:200,fill=TRUE,quote="", colClasses="character",nrows=-1,comment.char="")
 
 # Extract the general place where the AGE_LENGTH_KEY is written 
-  LAA <- matchfun2(string1 ="AGE_LENGTH_KEY", adjust1=5, string2="AGE_AGE_KEY", adjust2=-1, header = TRUE)
+  LAA <- matchfun2(string1 ="MEAN_SIZE_TIMESERIES", adjust1=1, string2="mean_size_Jan_1_for_sex", adjust2=-2, header = TRUE)
 
 # size from subseason 1 and morph 1
-  LAA_sea1_morph1 <- LAA[3:(2+Nlength),]
-  rownames(LAA_sea1_morph1) <- LAA_sea1_morph1[,1]
-  LAA_sea1_morph1 <- LAA_sea1_morph1[,-1]
-  colnames(LAA_sea1_morph1) <- 1:Nage
-
+  LAA_sea1_morph1 <- LAA %>% filter(Morph==1, SubSeas==1)
+ 
 # size from subseason 1 and morph 2
-  LAA_sea1_morph2 <- LAA[(8+Nlength) : (7+2*Nlength),]
-  rownames(LAA_sea1_morph2) <- LAA_sea1_morph2[,1]
-  LAA_sea1_morph2 <- LAA_sea1_morph2[,-1]
-  colnames(LAA_sea1_morph2) <- 1:Nage
-
+  LAA_sea1_morph2 <- LAA %>% filter(Morph==1, SubSeas==2)
+  
 # size from subseason 2 and morph 1
-  LAA_sea2_morph1 <- LAA[(13+2*Nlength) : (12+3*Nlength),]
-  rownames(LAA_sea2_morph1) <- LAA_sea2_morph1[,1]
-  LAA_sea2_morph1 <- LAA_sea2_morph1[,-1]
-  colnames(LAA_sea2_morph1) <- 1:Nage
-
+  LAA_sea2_morph1 <- LAA %>% filter(Morph==2, SubSeas==1)
+  
 # size from subseason 2 and morph 2
-  LAA_sea2_morph2 <-  LAA[(18+3*Nlength) : (17+4*Nlength),]
-  rownames(LAA_sea2_morph2) <- LAA_sea2_morph2[,1]
-  LAA_sea2_morph2 <- LAA_sea2_morph2[,-1]
-  colnames(LAA_sea2_morph2) <- 1:Nage
-
+  LAA_sea2_morph2 <- LAA %>% filter(Morph==2, SubSeas==2)
+  
 
 # We then need to add some observation error on top of them to create some data to feed in the estimation model
   
