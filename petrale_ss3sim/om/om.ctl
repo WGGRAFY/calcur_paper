@@ -21,14 +21,10 @@
 #_Cond 1.0 # first age that moves (real age at begin of season, not integer) also cond on do_migration>0
 #_Cond 1 1 1 2 4 10 # example move definition for seas=1, morph=1, source=1 dest=2, age1=4, age2=10
 #
-5 #_Nblock_Patterns
- 5 3 3 1 1 #_blocks_per_pattern 
+0 #_Nblock_Patterns
+# 5 3 3 1 1 #_blocks_per_pattern 
 # begin and end years of blocks
- 1973 1982 1983 1992 1993 2002 2003 2010 2011 2018
- 2003 2009 2010 2010 2011 2018
- 2003 2008 2009 2010 2011 2018
- 1875 1875
- 2004 2009
+
 #
 # controls for all timevary parameters 
 1 #_env/block/dev_adjust_method for all time-vary parms (1=warn relative to base parm bounds; 3=no bound check)
@@ -180,28 +176,27 @@
 #_5:  0/1 for biasadj or not
 #_6:  0/1 to float
 #_   fleet      link link_info  extra_se   biasadj     float  #  fleetname
-         1         3         0         0         1         0  #  WinterN
-         3         3         0         0         1         0  #  WinterS
-         5         1         0         1         0         1  #  TriEarly
-         6         1         0         1         0         1  #  TriLate
-         7         1         0         0         0         1  #  NWFSC
+         1         1         0         0         0         0  #  WinterN
+         3         1         0         0         0         0  #  WinterS
+         5         1         0         1         0         0  #  TriEarly
+         6         1         0         1         0         0  #  TriLate
+         7         1         0         0         0         0  #  NWFSC
 -9999 0 0 0 0 0
 #
 #_Q_parms(if_any);Qunits_are_ln(q)
 #_          LO            HI          INIT         PRIOR         PR_SD       PR_type      PHASE    env-var    use_dev   dev_mnyr   dev_mxyr     dev_PH      Block    Blk_Fxn  #  parm_name
-           -20             5      -7.01915             0            99             0          1          0          0          0          0          0          5          1  #  LnQ_base_WinterN(1)
-            -5             5     -0.120823             0            -1             0          3          0          0          0          0          0          0          0  #  Q_power_WinterN(1)
-           -20             5       -1.3472             0            99             0          1          0          0          0          0          0          5          1  #  LnQ_base_WinterS(3)
-            -5             5     -0.852654             0            -1             0          3          0          0          0          0          0          0          0  #  Q_power_WinterS(3)
-           -15            15     -0.861191             0             1             0         -1          0          0          0          0          0          0          0  #  LnQ_base_TriEarly(5)
-         0.001             2      0.218021          0.22            -1             0          5          0          0          0          0          0          0          0  #  Q_extraSD_TriEarly(5)
-           -15            15     -0.430897             0             1             0         -1          0          0          0          0          0          0          0  #  LnQ_base_TriLate(6)
-         0.001             2      0.312559          0.16            -1             0          4          0          0          0          0          0          0          0  #  Q_extraSD_TriLate(6)
-           -15            15        1.0476             0             1             0         -1          0          0          0          0          0          0          0  #  LnQ_base_NWFSC(7)
+           -20             5      -7.06261             0            99             0          1          0          0          0          0          0          0          0  #  LnQ_base_WinterN(1)
+           -20             5      -1.36181             0            99             0          1          0          0          0          0          0          0          0  #  LnQ_base_WinterS(3)
+           -15            15     -0.857253             0             1             0         -1          0          0          0          0          0          0          0  #  LnQ_base_TriEarly(5)
+         0.001             2      0.216409          0.22            -1             0          5          0          0          0          0          0          0          0  #  Q_extraSD_TriEarly(5)
+           -15            15     -0.425227             0             1             0         -1          0          0          0          0          0          0          0  #  LnQ_base_TriLate(6)
+         0.001             2      0.313165          0.16            -1             0          4          0          0          0          0          0          0          0  #  Q_extraSD_TriLate(6)
+           -15            15       1.05559             0             1             0         -1          0          0          0          0          0          0          0  #  LnQ_base_NWFSC(7)
+
 # timevary Q parameters 
 #_          LO            HI          INIT         PRIOR         PR_SD       PR_type     PHASE  #  parm_name
-         -0.99          0.99      0.490021             0           0.5             6      3  # LnQ_base_WinterN(1)_BLK5add_2004
-         -0.99          0.99      0.619915             0           0.5             6      3  # LnQ_base_WinterS(3)_BLK5add_2004
+#         -0.99          0.99      0.490021             0           0.5             6      3  # LnQ_base_WinterN(1)_BLK5add_2004
+#         -0.99          0.99      0.619915             0           0.5             6      3  # LnQ_base_WinterS(3)_BLK5add_2004
 # info on dev vectors created for Q parms are reported with other devs after tag parameter section 
 #
 #_size_selex_patterns
@@ -258,15 +253,15 @@
 #
 #_          LO            HI          INIT         PRIOR         PR_SD       PR_type      PHASE    env-var    use_dev   dev_mnyr   dev_mxyr     dev_PH      Block    Blk_Fxn  #  parm_name
 # 1   WinterN LenSelex
-            15            75       48.6805          43.1             5             0          2          0          0          0          0        0.5          1          1  #  Size_DblN_peak_WinterN(1)
+            15            75       48.6805          43.1             5             0          2          0          0          0          0        0.5          0          0  #  Size_DblN_peak_WinterN(1)
             -5             3             3           0.7             5             0         -3          0          0          0          0        0.5          0          0  #  Size_DblN_top_logit_WinterN(1)
             -4            12       4.30771          3.42             5             0          3          0          0          0          0        0.5          0          0  #  Size_DblN_ascend_se_WinterN(1)
             -2            15            14          0.21             5             0         -3          0          0          0          0        0.5          0          0  #  Size_DblN_descend_se_WinterN(1)
            -15             5          -999          -8.9             5             0         -4          0          0          0          0        0.5          0          0  #  Size_DblN_start_logit_WinterN(1)
             -5             5          -999          0.15             5             0         -4          0          0          0          0        0.5          0          0  #  Size_DblN_end_logit_WinterN(1)
-            10            40       28.0301            15             9             0          2          0          0          0          0          0          2          1  #  Retain_L_infl_WinterN(1)
-           0.1            10        1.8503             3             9             0          4          0          0          0          0          0          2          1  #  Retain_L_width_WinterN(1)
-           -10            10        8.3732            10             9             0          4          0          0          0          0          0          2          2  #  Retain_L_asymptote_logit_WinterN(1)
+            10            40       28.0301            15             9             0          2          0          0          0          0          0          0          0  #  Retain_L_infl_WinterN(1)
+           0.1            10        1.8503             3             9             0          4          0          0          0          0          0          0          0  #  Retain_L_width_WinterN(1)
+           -10            10        8.3732            10             9             0          4          0          0          0          0          0          0          0  #  Retain_L_asymptote_logit_WinterN(1)
            -10            10             0             0             9             0         -2          0          0          0          0          0          0          0  #  Retain_L_maleoffset_WinterN(1)
            -15            15      -11.8861             0             5             0          4          0          0          0          0        0.5          0          0  #  SzSel_Male_Peak_WinterN(1)
            -15            15      -1.45306             0             5             0          4          0          0          0          0        0.5          0          0  #  SzSel_Male_Ascend_WinterN(1)
@@ -274,15 +269,15 @@
            -15            15             0             0             5             0         -4          0          0          0          0        0.5          0          0  #  SzSel_Male_Final_WinterN(1)
            -15            15             1             0             5             0         -4          0          0          0          0        0.5          0          0  #  SzSel_Male_Scale_WinterN(1)
 # 2   SummerN LenSelex
-            15            75       48.4299          43.1             5             0          2          0          0          0          0        0.5          1          1  #  Size_DblN_peak_SummerN(2)
+            15            75       48.4299          43.1             5             0          2          0          0          0          0        0.5          0          0  #  Size_DblN_peak_SummerN(2)
             -5             3             3           0.7             5             0         -3          0          0          0          0        0.5          0          0  #  Size_DblN_top_logit_SummerN(2)
             -4            12       5.29851          3.42             5             0          3          0          0          0          0        0.5          0          0  #  Size_DblN_ascend_se_SummerN(2)
             -2            15            14          0.21             5             0         -3          0          0          0          0        0.5          0          0  #  Size_DblN_descend_se_SummerN(2)
            -15             5          -999          -8.9             5             0         -4          0          0          0          0        0.5          0          0  #  Size_DblN_start_logit_SummerN(2)
             -5             5          -999          0.15             5             0         -4          0          0          0          0        0.5          0          0  #  Size_DblN_end_logit_SummerN(2)
-            10            40       30.6729            15             9             0          2          0          0          0          0          0          3          1  #  Retain_L_infl_SummerN(2)
-           0.1            10       1.31436             3             9             0          4          0          0          0          0          0          3          1  #  Retain_L_width_SummerN(2)
-           -10            10       9.37198            10             9             0          4          0          0          0          0          0          3          2  #  Retain_L_asymptote_logit_SummerN(2)
+            10            40       30.6729            15             9             0          2          0          0          0          0          0          0          0  #  Retain_L_infl_SummerN(2)
+           0.1            10       1.31436             3             9             0          4          0          0          0          0          0          0          0  #  Retain_L_width_SummerN(2)
+           -10            10       9.37198            10             9             0          4          0          0          0          0          0          0          0  #  Retain_L_asymptote_logit_SummerN(2)
            -10            10             0             0             9             0         -2          0          0          0          0          0          0          0  #  Retain_L_maleoffset_SummerN(2)
            -20            15      -12.7368             0            -5             0          4          0          0          0          0        0.5          0          0  #  SzSel_Male_Peak_SummerN(2)
            -15            15      -1.89766             0            -5             0          4          0          0          0          0        0.5          0          0  #  SzSel_Male_Ascend_SummerN(2)
@@ -290,15 +285,15 @@
            -15            15             0             0             5             0         -4          0          0          0          0        0.5          0          0  #  SzSel_Male_Final_SummerN(2)
            -15            15             1             0             5             0         -4          0          0          0          0        0.5          0          0  #  SzSel_Male_Scale_SummerN(2)
 # 3   WinterS LenSelex
-            15            75       38.4882          43.1             5             0          2          0          0          0          0        0.5          1          1  #  Size_DblN_peak_WinterS(3)
+            15            75       38.4882          43.1             5             0          2          0          0          0          0        0.5          0          0  #  Size_DblN_peak_WinterS(3)
             -5             3             3           0.7             5             0         -3          0          0          0          0        0.5          0          0  #  Size_DblN_top_logit_WinterS(3)
             -4            12       4.41185          3.42             5             0          3          0          0          0          0        0.5          0          0  #  Size_DblN_ascend_se_WinterS(3)
             -2            15            14          0.21             5             0         -3          0          0          0          0        0.5          0          0  #  Size_DblN_descend_se_WinterS(3)
            -15             5          -999          -8.9             5             0         -4          0          0          0          0        0.5          0          0  #  Size_DblN_start_logit_WinterS(3)
             -5             5          -999          0.15             5             0         -4          0          0          0          0        0.5          0          0  #  Size_DblN_end_logit_WinterS(3)
-            10            40       28.8815            15             9             0          2          0          0          0          0          0          2          1  #  Retain_L_infl_WinterS(3)
-           0.1            10       1.35726             3             9             0          3          0          0          0          0          0          2          1  #  Retain_L_width_WinterS(3)
-           -10            10       3.97227            10             9             0          4          0          0          0          0          0          2          2  #  Retain_L_asymptote_logit_WinterS(3)
+            10            40       28.8815            15             9             0          2          0          0          0          0          0          0          0  #  Retain_L_infl_WinterS(3)
+           0.1            10       1.35726             3             9             0          3          0          0          0          0          0          0          0  #  Retain_L_width_WinterS(3)
+           -10            10       3.97227            10             9             0          4          0          0          0          0          0          0          0  #  Retain_L_asymptote_logit_WinterS(3)
            -10            10             0             0             9             0         -2          0          0          0          0          0          0          0  #  Retain_L_maleoffset_WinterS(3)
            -15            15      -12.7221             0             5             0          4          0          0          0          0        0.5          0          0  #  SzSel_Male_Peak_WinterS(3)
            -15            15      -1.86133             0             5             0          4          0          0          0          0        0.5          0          0  #  SzSel_Male_Ascend_WinterS(3)
@@ -306,15 +301,15 @@
            -15            15             0             0             5             0         -4          0          0          0          0        0.5          0          0  #  SzSel_Male_Final_WinterS(3)
            -15            15             1             0             5             0         -4          0          0          0          0        0.5          0          0  #  SzSel_Male_Scale_WinterS(3)
 # 4   SummerS LenSelex
-            15            75       40.6429          43.1             5             0          2          0          0          0          0        0.5          1          1  #  Size_DblN_peak_SummerS(4)
+            15            75       40.6429          43.1             5             0          2          0          0          0          0        0.5          0          0  #  Size_DblN_peak_SummerS(4)
             -5             3             3           0.7             5             0         -3          0          0          0          0        0.5          0          0  #  Size_DblN_top_logit_SummerS(4)
             -4            12       4.89772          3.42             5             0          3          0          0          0          0        0.5          0          0  #  Size_DblN_ascend_se_SummerS(4)
             -2            15            14          0.21             5             0         -3          0          0          0          0        0.5          0          0  #  Size_DblN_descend_se_SummerS(4)
            -15             5          -999          -8.9             5             0         -4          0          0          0          0        0.5          0          0  #  Size_DblN_start_logit_SummerS(4)
             -5             5          -999          0.15             5             0         -4          0          0          0          0        0.5          0          0  #  Size_DblN_end_logit_SummerS(4)
-            10            40       28.8753            15             9             0          3          0          0          0          0          0          3          1  #  Retain_L_infl_SummerS(4)
-           0.1            10       1.07128             3             9             0          3          0          0          0          0          0          3          1  #  Retain_L_width_SummerS(4)
-           -10            10        9.5208            10             9             0          4          0          0          0          0          0          3          2  #  Retain_L_asymptote_logit_SummerS(4)
+            10            40       28.8753            15             9             0          3          0          0          0          0          0          0          0  #  Retain_L_infl_SummerS(4)
+           0.1            10       1.07128             3             9             0          3          0          0          0          0          0          0          0  #  Retain_L_width_SummerS(4)
+           -10            10        9.5208            10             9             0          4          0          0          0          0          0          0          0  #  Retain_L_asymptote_logit_SummerS(4)
            -10            10             0             0             9             0         -2          0          0          0          0          0          0          0  #  Retain_L_maleoffset_SummerS(4)
            -15            15       -12.548             0             5             0          4          0          0          0          0        0.5          0          0  #  SzSel_Male_Peak_SummerS(4)
            -15            15      -1.89491             0             5             0          4          0          0          0          0        0.5          0          0  #  SzSel_Male_Ascend_SummerS(4)
@@ -366,62 +361,6 @@
 # 7   NWFSC AgeSelex
 # timevary selex parameters 
 #_          LO            HI          INIT         PRIOR         PR_SD       PR_type    PHASE  #  parm_name
-         -31.6          28.4       2.05549             0          14.2             6      5  # Size_DblN_peak_WinterN(1)_BLK1add_1973
-         -31.6          28.4      -1.98219             0          14.2             6      5  # Size_DblN_peak_WinterN(1)_BLK1add_1983
-         -31.6          28.4     -0.790166             0          14.2             6      5  # Size_DblN_peak_WinterN(1)_BLK1add_1993
-         -31.6          28.4      0.383774             0          14.2             6      5  # Size_DblN_peak_WinterN(1)_BLK1add_2003
-         -31.6          28.4      0.878534             0          14.2             6      5  # Size_DblN_peak_WinterN(1)_BLK1add_2011
-        -16.19         13.81      -2.26483             0         6.905             6      5  # Retain_L_infl_WinterN(1)_BLK2add_2003
-        -16.19         13.81       1.76566             0         6.905             6      5  # Retain_L_infl_WinterN(1)_BLK2add_2010
-        -16.19         13.81      -3.23884             0         6.905             6      5  # Retain_L_infl_WinterN(1)_BLK2add_2011
-        -1.601         8.299       0.12285             0        0.8005             6      5  # Retain_L_width_WinterN(1)_BLK2add_2003
-        -1.601         8.299      0.393503             0        0.8005             6      5  # Retain_L_width_WinterN(1)_BLK2add_2010
-        -1.601         8.299     -0.697801             0        0.8005             6      5  # Retain_L_width_WinterN(1)_BLK2add_2011
-           -10            10       6.63678            10             9             0      5  # Retain_L_asymptote_logit_WinterN(1)_BLK2repl_2003
-           -10            10       2.11235            10             9             0      5  # Retain_L_asymptote_logit_WinterN(1)_BLK2repl_2010
-           -10            10        9.9881            10             9             0      5  # Retain_L_asymptote_logit_WinterN(1)_BLK2repl_2011
-         -38.8          21.2        1.9558             0          10.6             6      5  # Size_DblN_peak_SummerN(2)_BLK1add_1973
-         -38.8          21.2     -0.399466             0          10.6             6      5  # Size_DblN_peak_SummerN(2)_BLK1add_1983
-         -38.8          21.2      -2.38392             0          10.6             6      5  # Size_DblN_peak_SummerN(2)_BLK1add_1993
-         -38.8          21.2    -0.0936437             0          10.6             6      5  # Size_DblN_peak_SummerN(2)_BLK1add_2003
-         -38.8          21.2       3.26642             0          10.6             6      5  # Size_DblN_peak_SummerN(2)_BLK1add_2011
-       -20.679         9.321     -0.419922             0        4.6605             6      5  # Retain_L_infl_SummerN(2)_BLK3add_2003
-       -20.679         9.321       1.29282             0        4.6605             6      5  # Retain_L_infl_SummerN(2)_BLK3add_2009
-       -20.679         9.321      -1.92562             0        4.6605             6      5  # Retain_L_infl_SummerN(2)_BLK3add_2011
-       -1.0278        8.8722      0.161789             0        0.5139             6      5  # Retain_L_width_SummerN(2)_BLK3add_2003
-       -1.0278        8.8722      0.138985             0        0.5139             6      5  # Retain_L_width_SummerN(2)_BLK3add_2009
-       -1.0278        8.8722       0.21153             0        0.5139             6      5  # Retain_L_width_SummerN(2)_BLK3add_2011
-           -10            10       5.45846            10             9             0      5  # Retain_L_asymptote_logit_SummerN(2)_BLK3repl_2003
-           -10            10       7.55883            10             9             0      5  # Retain_L_asymptote_logit_SummerN(2)_BLK3repl_2009
-           -10            10       6.15877            10             9             0      5  # Retain_L_asymptote_logit_SummerN(2)_BLK3repl_2011
-       -25.422        34.578      -15.0996             0        12.711             6      5  # Size_DblN_peak_WinterS(3)_BLK1add_1973
-       -25.422        34.578       5.08526             0        12.711             6      5  # Size_DblN_peak_WinterS(3)_BLK1add_1983
-       -25.422        34.578       9.18368             0        12.711             6      5  # Size_DblN_peak_WinterS(3)_BLK1add_1993
-       -25.422        34.578       6.98535             0        12.711             6      5  # Size_DblN_peak_WinterS(3)_BLK1add_2003
-       -25.422        34.578       8.30205             0        12.711             6      5  # Size_DblN_peak_WinterS(3)_BLK1add_2011
-       -18.816        11.184       -2.0172             0         5.592             6      5  # Retain_L_infl_WinterS(3)_BLK2add_2003
-       -18.816        11.184       1.52688             0         5.592             6      5  # Retain_L_infl_WinterS(3)_BLK2add_2010
-       -18.816        11.184      -4.29967             0         5.592             6      5  # Retain_L_infl_WinterS(3)_BLK2add_2011
-       -1.0443        8.8557      0.366784             0       0.52215             6      5  # Retain_L_width_WinterS(3)_BLK2add_2003
-       -1.0443        8.8557       0.13891             0       0.52215             6      5  # Retain_L_width_WinterS(3)_BLK2add_2010
-       -1.0443        8.8557    -0.0497998             0       0.52215             6      5  # Retain_L_width_WinterS(3)_BLK2add_2011
-           -10            10       7.80958            10             9             0      5  # Retain_L_asymptote_logit_WinterS(3)_BLK2repl_2003
-           -10            10       5.53053            10             9             0      5  # Retain_L_asymptote_logit_WinterS(3)_BLK2repl_2010
-           -10            10       7.87413            10             9             0      5  # Retain_L_asymptote_logit_WinterS(3)_BLK2repl_2011
-      -28.0793       31.9207      -5.16048             0       14.0397             6      5  # Size_DblN_peak_SummerS(4)_BLK1add_1973
-      -28.0793       31.9207      -6.38506             0       14.0397             6      5  # Size_DblN_peak_SummerS(4)_BLK1add_1983
-      -28.0793       31.9207       3.57295             0       14.0397             6      5  # Size_DblN_peak_SummerS(4)_BLK1add_1993
-      -28.0793       31.9207        6.2503             0       14.0397             6      5  # Size_DblN_peak_SummerS(4)_BLK1add_2003
-      -28.0793       31.9207       6.03167             0       14.0397             6      5  # Size_DblN_peak_SummerS(4)_BLK1add_2011
-       -19.055        10.945      -1.40609             0        5.4725             6      5  # Retain_L_infl_SummerS(4)_BLK3add_2003
-       -19.055        10.945      -1.68655             0        5.4725             6      5  # Retain_L_infl_SummerS(4)_BLK3add_2009
-       -19.055        10.945       -2.0893             0        5.4725             6      5  # Retain_L_infl_SummerS(4)_BLK3add_2011
-        -0.876         9.024      0.604487             0         0.438             6      5  # Retain_L_width_SummerS(4)_BLK3add_2003
-        -0.876         9.024       0.47059             0         0.438             6      5  # Retain_L_width_SummerS(4)_BLK3add_2009
-        -0.876         9.024      0.581508             0         0.438             6      5  # Retain_L_width_SummerS(4)_BLK3add_2011
-           -10            10       7.55833            10             9             0      5  # Retain_L_asymptote_logit_SummerS(4)_BLK3repl_2003
-           -10            10       8.89461            10             9             0      5  # Retain_L_asymptote_logit_SummerS(4)_BLK3repl_2009
-           -10            10       7.68067            10             9             0      5  # Retain_L_asymptote_logit_SummerS(4)_BLK3repl_2011
 # info on dev vectors created for selex parms are reported with other devs after tag parameter section 
 #
 0   #  use 2D_AR1 selectivity(0/1):  experimental feature
