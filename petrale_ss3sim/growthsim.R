@@ -4,29 +4,28 @@ remotes::install_github("ss3sim/ss3sim", ref = "development")
 remotes::install_github("nmfs-fish-tools/SSMSE")
 
 require(SSMSE)
+require(here)
 
 # create paths
 run_SSMSE_dir <- file.path("run_SSMSE-ex")
 dir.create(run_SSMSE_dir)
-cod_mod_path <- system.file("extdata", "models", "cod", package = "SSMSE")
+petrale_mod_path <- here("om_SSMSE")
 
 
 # develop_OMs will save a model called "cod_SR_BH_steep_1" in the out_dir
 # specified
-develop_OMs(OM_name = "cod", out_dir = run_SSMSE_dir, par_name = "SR_BH_steep",
-            par_vals = 1, refit_OMs = FALSE, hess = FALSE)
+develop_OMs(OM_in_dir = petrale_mod_path, out_dir = run_SSMSE_dir, par_name = "L_at_Amax_Fem_GP_1",
+            par_vals = 80, refit_OMs = FALSE, hess = FALSE)
 # OM model for scenario 2
-cod_1_path <- file.path(run_SSMSE_dir, "cod_SR_BH_steep_1")
+cod_1_path <- file.path(run_SSMSE_dir, "om_L_at_Amax_Fem_GP_1")
 
 #find dat file
-datfile <- system.file("extdata", "models", "cod", "ss3.dat", package = "SSMSE")
+datfile <- file.path(petrale_mod_path, "om.dat")
 
 #creates a sample structure for the datfile
 sample_struct <- create_sample_struct(dat = datfile, nyrs = 6) # note warning
 
-sample_struct$lencomp <- NULL # don't use length sampling
-
-sample_struct_list <- list("h-ctl" = sample_struct, "h-1" = sample_struct)
+sample_struct_list <- list("base" = sample_struct)
 
 run_res_path <- file.path(run_SSMSE_dir, "results")
 dir.create(run_res_path)
