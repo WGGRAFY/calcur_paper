@@ -27,10 +27,19 @@ sample_struct <- create_sample_struct(dat = datfile, nyrs = 6) # note warning
 
 sample_struct_list <- list("base" = sample_struct)
 
-#Add in values for NA quantities: base$CPUE$SE, base$lencomp
+#Add in values for NA quantities: base$CPUE$SE, base$lencomp, base$agecomp, remove mean size at age
 sample_struct_list$base$meanbodywt$SE <- rep(0.1, 24)
 sample_struct_list$base$CPUE$SE <- rep(0.01, 22)
-replace(sample_struct_list$base$lencomp$sex, is.na(sample_struct_list$base$lencomp$Sex),values=3)
+sample_struct_list$base$lencomp$Sex[is.na(sample_struct_list$base$lencomp$Sex)] <-  rep(3,3)
+sample_struct_list$base$lencomp$Part[is.na(sample_struct_list$base$lencomp$Part)] <-  rep(2,2)
+sample_struct_list$base$lencomp$Nsamp <- rep(100,22)
+
+#Remove fishery age comp
+sample_struct_list$base$agecomp <- sample_struct_list$base$agecomp[-c(1:4),]
+sample_struct_list$base$agecomp$Nsamp <- rep(100,12)
+sample_struct_list$base$agecomp$Lbin_lo <- sample_struct_list$base$agecomp$Lbin_hi <-  rep(-1,12)
+sample_struct_list$base$agecomp$Sex <-  rep(3,12)
+sample_struct_list$base$agecomp$Ageerr <-  rep(2,12)
 sample_struct_list$base$MeanSize_at_Age_obs <- NULL
 
 
