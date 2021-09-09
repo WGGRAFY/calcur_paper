@@ -27,21 +27,25 @@ sample_struct <- create_sample_struct(dat = datfile, nyrs = 6) # note warning
 
 sample_struct_list <- list("base" = sample_struct)
 
+#Add in values for NA quantities: base$CPUE$SE, base$lencomp
+sample_struct_list$base$meanbodywt$SE <- rep(0.1, 24)
+sample_struct_list$base$CPUE$SE <- rep(0.01, 22)
+replace(sample_struct_list$base$lencomp$sex, is.na(sample_struct_list$base$lencomp$Sex),values=3)
+sample_struct_list$base$MeanSize_at_Age_obs <- NULL
+
+
 run_res_path <- file.path(run_SSMSE_dir, "results")
 dir.create(run_res_path)
-run_SSMSE(scen_name_vec = c("h-ctl", "h-1"),# name of the scenario
+run_SSMSE(scen_name_vec = c("base"),# name of the scenario
           out_dir_scen_vec = run_res_path, # directory in which to run the scenario
-          iter_vec = c(5,5), # run with 5 iterations each
+          iter_vec = c(5), # run with 5 iterations each
           OM_name_vec = NULL, # specify directories instead
-          OM_in_dir_vec = c(cod_mod_path, normalizePath(cod_1_path)), # OM files
-          EM_name_vec = c("cod", "cod"), # cod is included in package data
-          MS_vec = c("EM","EM"),       # The management strategy is specified in the EM
-          use_SS_boot_vec = c(TRUE, TRUE), # use the SS bootstrap module for sampling
-          nyrs_vec = c(6, 6),        # Years to project OM forward
-          nyrs_assess_vec = c(3, 3), # Years between assessments
-          rec_dev_pattern = "rand", # Use random recruitment devs
-          scope = "2", # to use the same recruitment devs across scenarios.
-          impl_error_pattern = "none", # Don't use implementation error
+          OM_in_dir_vec = c(petrale_mod_path), # OM files
+          EM_name_vec = c("petrale"), # cod is included in package data
+          MS_vec = c("EM"),       # The management strategy is specified in the EM
+          use_SS_boot_vec = c(TRUE), # use the SS bootstrap module for sampling
+          nyrs_vec = c(6),        # Years to project OM forward
+          nyrs_assess_vec = c(3), # Years between assessments
           run_EM_last_yr = FALSE, # Run the EM in 106
           run_parallel = FALSE, # Run iterations in parallel
           sample_struct_list = sample_struct_list, # How to sample data for running the EM.
