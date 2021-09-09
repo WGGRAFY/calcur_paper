@@ -43,7 +43,8 @@ devtools::load_all(ss3sim_dir)
   LAA <- matchfun2(string1 ="MEAN_SIZE_TIMESERIES", adjust1=1, string2="mean_size_Jan_1_for_sex", adjust2=-2, header = TRUE)  %>% as_tibble()
   
   #Split by morph and subseas
-  LAA_list <- LAA %>% filter(Yr>=StartYr, Yr<=EndYr) %>% split(list(.$Morph,.$SubSeas)) 
+  LAA_list <- LAA %>% filter(Yr>=StartYr, Yr<=EndYr) %>% split(list(.$Morph,.$SubSeas))
+  save(LAA_list,file="petraleLAA.Rds")
   
   
   # We then need to add some observation error on top of them to create some data to feed in the estimation model
@@ -57,7 +58,7 @@ devtools::load_all(ss3sim_dir)
     setwd(here("om"))
     
     df <- setup_scenarios_defaults()
-    df[, "si.years.2"] <- "seq(76, 100, by = 2)"
+    df[, "si.years.2"] <- unique(LAA$Yr)
     df <- rbind(df, df)
     df[, "si.sds_obs.2"] <- c(0.1, 0.4)
     df[, "bias_adjust"] <- FALSE
