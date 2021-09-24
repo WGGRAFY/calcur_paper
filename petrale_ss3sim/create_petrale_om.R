@@ -58,14 +58,31 @@ devtools::load_all(ss3sim_dir)
     setwd(here("om"))
     
     df <- setup_scenarios_defaults()
-    df[, "si.years.2"] <- unique(LAA$Yr)
+    #f value years
+    df[,"cf.years.1"] <- "1960:2020"
+    #F values - should match dimensions of above
+    df[,"cf.fvals.1"] <- "rep(0.1, 61)"
+    #years to sample for index, length, age samples
+    df[, "si.years.2"] <- 
+      df[,"sl.years.1"] <-
+      df[,"sl.years.2"] <-
+      df[,"sa.years.1"] <-
+      df[,"sl.years.2"] <-
+      df[,"sa.years.2"] <- "1980:2020"
+    
     df <- rbind(df, df)
     df[, "si.sds_obs.2"] <- c(0.1, 0.4)
+    #Set change e to fix L at a max
+    df[,"ce.par_name"] <- "L_at_Amax_Fem_GP_1"
+    df[,"cs.par_int"] <- 50
+    df[,"scenarios"] <- c("D1-E0-F0-pet",
+                          "D2-E0-F0-pet")
     df[, "bias_adjust"] <- FALSE
     df[, "hess_always"] <- TRUE
     
+    iterations <- 1:5
+    
+    scname <- run_ss3sim(iterations, simdf=df)
+    
     out <- change_tv(list("L_at_Amax_Mal_GP_1" = c(rep(0,93,input[[1]]$V1)),
                    "L_at_Amax_Fem_GP_1" = c(rep(0,93),input[[2]]$V1)))
-
-  }
-  
