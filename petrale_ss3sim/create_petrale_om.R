@@ -12,7 +12,7 @@ require(dplyr)
 
 #look for ss.exe
 system.file("bin", package = "ss3sim")
-ss3sim_dir <- paste0(substr(here(),1,30),"ss3sim")
+ss3sim_dir <- paste0(substr(here(),1,32),"ss3sim")
 devtools::load_all(ss3sim_dir)
 ### Creating scenarios
 # Scenario are based on:
@@ -57,35 +57,23 @@ devtools::load_all(ss3sim_dir)
     input <- lapply(here(paste0("om/G",c("M","F"),"3-pet.csv")), read.csv, header=FALSE)
     setwd(here("om"))
     
-    df <- setup_scenarios_defaults()
-    #f value years
-    df[,"cf.years.1"] <- "20:100"
-    #F values - should match dimensions of above
-    df[,"cf.fvals.1"] <- "rep(0.1, 81)"
-    #years to sample for index, length, age samples
-    df[, "si.years.2"] <- 
-      df[,"sl.years.1"] <-
-      df[,"sl.years.2"] <-
-      df[,"sa.years.1"] <-
-      df[,"sl.years.2"] <-
-      df[,"sa.years.2"] <- "50:100"
-    
-    df <- rbind(df, df)
-    df[, "si.sds_obs.2"] <- c(0.1, 0.4)
-    #Use change_tv to change values
-    df[,"tv_params"] <- "list(\"L_at_Amax_Mal_GP_1\" = c(rep(0,93,input[[1]]$V1)),
-                             \"L_at_Amax_Fem_GP_1\" = c(rep(0,93),input[[2]]$V1))"
-    df[,"co.par_int"] <- 50
-    scname <- c("D1-E0-F0-pet",
-                   "D2-E0-F0-pet")
-    df[,"scenarios"] <- scname
-    df[, "bias_adjust"] <- FALSE
-    df[, "hess_always"] <- FALSE
+    # 1. Change in VBk (monotonic trend, decadal) (cases 1-2)
+    # 2. Change in VB L inf  (monotonic trend, decadal)(cases 3-4)
+    # 3. Change in maturation parameters (A50, L50) (TODO)
+    # 4. CV of size at age  (TODO)
+    # 5. Sample size of survey per year (TODO)
+    # 6. Sample size of fishery data (TODO) 
+    # 7. Selectivity  (TODO)
+    # 8. Level of recruitment variation (CV of recruitment) (TODO)
+    # 9. Level of fishing pressure (TODO)
+    # 10. CV of survey index (TODO)
+    df <-make_data_in(1)
+   
     
     iterations <- 1:5
     
     #Run model..not sure if -noest is doing anything? it's still slow
-    scname <- run_ss3sim(iterations, simdf=df, admb_options = "-noest")
+    out <- run_ss3sim(iterations = iterations, simdf=df)
     unlink(df[,"scenarios"], recursive=TRUE)
     
     #Compare output OM and EM
