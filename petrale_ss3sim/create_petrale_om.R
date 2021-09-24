@@ -32,8 +32,8 @@ devtools::load_all(ss3sim_dir)
   Nage = as.numeric(substr(Datfile[grep("#_Nages", Datfile, fixed=TRUE)], 1, 2))
   # if length bin method is 2 (like in this case) do below:
   Nlength =  (as.numeric(substr(Datfile[grep("# maximum size ", Datfile, fixed=TRUE)], 1, 3)) - as.numeric(substr(Datfile[grep("# minimum size ", Datfile, fixed=TRUE)], 1, 2)))/as.numeric(substr(Datfile[grep("# binwidth for population", Datfile, fixed=TRUE)], 1, 2))+1
-  StartYr = as.numeric(substr(Datfile[grep("#_StartYr", Datfile, fixed=TRUE)], 1, 4))
-  EndYr = as.numeric(substr(Datfile[grep("#_EndYr", Datfile, fixed=TRUE)], 1, 4))
+  StartYr = as.numeric(substr(Datfile[grep("#_StartYr", Datfile, fixed=TRUE)], 1, 1))
+  EndYr = as.numeric(substr(Datfile[grep("#_EndYr", Datfile, fixed=TRUE)], 1, 3))
   
   source("helper_functions.R")
   ## now read in the Report.sso file
@@ -59,30 +59,42 @@ devtools::load_all(ss3sim_dir)
     
     df <- setup_scenarios_defaults()
     #f value years
-    df[,"cf.years.1"] <- "1960:2020"
+    df[,"cf.years.1"] <- "20:100"
     #F values - should match dimensions of above
-    df[,"cf.fvals.1"] <- "rep(0.1, 61)"
+    df[,"cf.fvals.1"] <- "rep(0.1, 81)"
     #years to sample for index, length, age samples
     df[, "si.years.2"] <- 
       df[,"sl.years.1"] <-
       df[,"sl.years.2"] <-
       df[,"sa.years.1"] <-
       df[,"sl.years.2"] <-
-      df[,"sa.years.2"] <- "1980:2020"
+      df[,"sa.years.2"] <- "50:100"
     
     df <- rbind(df, df)
     df[, "si.sds_obs.2"] <- c(0.1, 0.4)
-    #Set change e to fix L at a max
-    df[,"ce.par_name"] <- "L_at_Amax_Fem_GP_1"
-    df[,"cs.par_int"] <- 50
-    df[,"scenarios"] <- c("D1-E0-F0-pet",
-                          "D2-E0-F0-pet")
+    #Use change_tv to change values
+    df[,"tv_params"] <- "list(\"L_at_Amax_Mal_GP_1\" = c(rep(0,93,input[[1]]$V1)),
+                             \"L_at_Amax_Fem_GP_1\" = c(rep(0,93),input[[2]]$V1))"
+    df[,"co.par_int"] <- 50
+    scname <- c("D1-E0-F0-pet",
+                   "D2-E0-F0-pet")
+    df[,"scenarios"] <- scname
     df[, "bias_adjust"] <- FALSE
-    df[, "hess_always"] <- TRUE
+    df[, "hess_always"] <- FALSE
     
     iterations <- 1:5
     
-    scname <- run_ss3sim(iterations, simdf=df)
+    #Run model..not sure if -noest is doing anything? it's still slow
+    scname <- run_ss3sim(iterations, simdf=df, admb_options = "-noest")
+    unlink(df[,"scenarios"], recursive=TRUE)
+    
+    #Compare output OM and EM
+    r_om <- r4ss::SS_output(file.path(scname[1], "1", "om"),
+                            verbose = FALSE, printstats = FALSE, covar = FALSE)
+    r_em <- r4ss::SS_output(file.path(scname[1], "1", "em"),
+                            verbose = FALSE, printstats = FALSE, covar = FALSE)
+    r4ss::SSplotComparisons(r4ss::SSsummarize(list(r_om, r_em)),
+                            legendlabels = c("OM", "EM"), subplots = 1)
     
     out <- change_tv(list("L_at_Amax_Mal_GP_1" = c(rep(0,93,input[[1]]$V1)),
                    "L_at_Amax_Fem_GP_1" = c(rep(0,93),input[[2]]$V1)))
