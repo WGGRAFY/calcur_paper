@@ -57,8 +57,8 @@ make_data_in <- function(tv_k = 1, tv_Linf = 1){
   "1" = "list(VonBert_K_Fem_GP_1 = rep(c(rep(0,25),rep(0.1,25)),2)",
   #monotonic increase k
   "2" = "list(VonBert_K_Fem_GP_1 = seq(0,0.1,length.out=100)")
-  scname <- c(paste0("D1-E", tv_params_arg, "-F0-pet"),
-              paste0("D2-E", tv_params_arg, "-F0-pet"))
+  scname <- c(paste0("D1-L", tv_Linf, "-K",tv_k,"-F0-pet"),
+              paste0("D2-L", tv_Linf, "-K",tv_k,"F0-pet"))
   df[,"scenarios"] <- scname
   df[, "bias_adjust"] <- FALSE
   df[, "hess_always"] <- FALSE

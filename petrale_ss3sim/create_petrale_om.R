@@ -67,7 +67,7 @@ devtools::load_all(ss3sim_dir)
     # 8. Level of recruitment variation (CV of recruitment) (TODO)
     # 9. Level of fishing pressure (TODO)
     # 10. CV of survey index (TODO)
-    df <-make_data_in(1)
+    df <-make_data_in()
    
     
     iterations <- 1:5
