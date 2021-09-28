@@ -28,7 +28,7 @@ matchfun2 <- function(string1,adjust1,string2,adjust2,cols="nonblank",matchcol1=
 }
 
 
-make_data_in <- function(tv_params_arg = 1){
+make_data_in <- function(tv_k = 1, tv_Linf = 1){
   df <- setup_scenarios_defaults()
   
   #f value years
@@ -47,15 +47,16 @@ make_data_in <- function(tv_params_arg = 1){
   df[, "si.sds_obs.2"] <- c(0.1, 0.4)
   
   #Use change_tv to make VB L inf a decadal trend
-  df[,"tv_params"] <- switch(tv_params_arg,
+  df[,"ct.L_at_Amax_Fem_GP_1"] <- switch(tv_Linf,
                              #regime for L inf
                              "1" = "list(L_at_Amax_Fem_GP_1 = c(rep(0,50),input[[2]]$V1))",
                              #monotonic increase l2
-                             "2" = "list(L_at_Amax_Fem_GP_1 = seq(0,4,length.out=100)",
-                             #Regime for k
-                             "3" = "list(VonBert_K_Fem_GP_1 = rep(c(rep(0,25),rep(0.1,25)),2)",
-                             #monotonic increase k
-                             "4" = "list(VonBert_K_Fem_GP_1 = seq(0,0.1,length.out=100)")
+                             "2" = "list(L_at_Amax_Fem_GP_1 = seq(0,4,length.out=100)")
+  
+  df[,"ct.VonBert_K_Fem_GP_1"] <- switch(tv_k, #Regime for k
+  "1" = "list(VonBert_K_Fem_GP_1 = rep(c(rep(0,25),rep(0.1,25)),2)",
+  #monotonic increase k
+  "2" = "list(VonBert_K_Fem_GP_1 = seq(0,0.1,length.out=100)")
   scname <- c(paste0("D1-E", tv_params_arg, "-F0-pet"),
               paste0("D2-E", tv_params_arg, "-F0-pet"))
   df[,"scenarios"] <- scname

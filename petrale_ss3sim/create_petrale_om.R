@@ -72,8 +72,15 @@ devtools::load_all(ss3sim_dir)
     
     iterations <- 1:5
     
-    #Run model..not sure if -noest is doing anything? it's still slow
-    out <- run_ss3sim(iterations = iterations, simdf=df)
+    
+    arg_list <- setup_scenarios(df)
+    
+    # Below, I am using the "new" ss3sim_base function where I have added the "skim_em" argument to skip the EM part. 
+    # As we do not need the EM part, this saves us some time. 
+    
+    out <- lapply(arg_list, function(x) {
+      do.call("ss3sim_base", c(x, list(iterations = iterations), skip_em=TRUE))
+    })
     unlink(df[,"scenarios"], recursive=TRUE)
     
     #Compare output OM and EM
