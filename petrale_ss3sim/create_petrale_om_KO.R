@@ -40,7 +40,7 @@ require(dplyr)
 #   StartYr = as.numeric(substr(Datfile[grep("#_StartYr", Datfile, fixed=TRUE)], 1, 1))
 #   EndYr = as.numeric(substr(Datfile[grep("#_EndYr", Datfile, fixed=TRUE)], 1, 3))
 #   
-#   source("helper_functions.R")
+  source(here("helper_functions.R"))
 #   ## now read in the Report.sso file
 #   rawrep <- read.table(file=here("om/Report.sso"),col.names=1:200,fill=TRUE,quote="", colClasses="character",nrows=-1,comment.char="")
 #   
