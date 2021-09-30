@@ -55,6 +55,7 @@ devtools::load_all(ss3sim_dir)
     #Read in the values for L at a max
     
     input <- lapply(here(paste0("om/G",c("M","F"),"3-pet.csv")), read.csv, header=FALSE)
+    input[[2]]$Fval <-scale(input[[2]]$V1) 
     setwd(here("om"))
     
     # 1. Change in VBk (monotonic trend, decadal) (cases 1-2)
@@ -67,10 +68,10 @@ devtools::load_all(ss3sim_dir)
     # 8. Level of recruitment variation (CV of recruitment) (TODO)
     # 9. Level of fishing pressure (TODO)
     # 10. CV of survey index (TODO)
-    df <-make_data_in()
+    df <-make_data_in(tv_Linf = "1", tv_k = "0", tv_mat="0", "sigma_R" = 0.2, "f_scen"="2", nsamp_ages = "1")
    
     
-    iterations <- 1:5
+    iterations <- 1
     
     
     arg_list <- setup_scenarios(df)
@@ -84,12 +85,11 @@ devtools::load_all(ss3sim_dir)
     unlink(df[,"scenarios"], recursive=TRUE)
     
     #Compare output OM and EM
-    r_om <- r4ss::SS_output(file.path(scname[1], "1", "om"),
+    r_om <- r4ss::SS_output(file.path(df[1,"scenarios"], "1", "om"),
                             verbose = FALSE, printstats = FALSE, covar = FALSE)
-    r_em <- r4ss::SS_output(file.path(scname[1], "1", "em"),
+    #r_em <- r4ss::SS_output(file.path(scname[1], "1", "em"),
                             verbose = FALSE, printstats = FALSE, covar = FALSE)
-    r4ss::SSplotComparisons(r4ss::SSsummarize(list(r_om, r_em)),
+    #r4ss::SSplotComparisons(r4ss::SSsummarize(list(r_om, r_em)),
                             legendlabels = c("OM", "EM"), subplots = 1)
+    r4ss::SS_plots(r_om)
     
-    out <- change_tv(list("L_at_Amax_Mal_GP_1" = c(rep(0,93,input[[1]]$V1)),
-                   "L_at_Amax_Fem_GP_1" = c(rep(0,93),input[[2]]$V1)))
