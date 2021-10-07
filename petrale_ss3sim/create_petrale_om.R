@@ -8,6 +8,8 @@ require(ss3sim)
 require(purrr)
 require(here)
 require(dplyr)
+require(tidyr)
+require(ggplot2)
 
 
 #look for ss.exe
@@ -36,6 +38,7 @@ devtools::load_all(ss3sim_dir)
   EndYr = as.numeric(substr(Datfile[grep("#_EndYr", Datfile, fixed=TRUE)], 1, 3))
   
   source("helper_functions.R")
+  
   ## now read in the Report.sso file
   rawrep <- read.table(file=here("om/Report.sso"),col.names=1:200,fill=TRUE,quote="", colClasses="character",nrows=-1,comment.char="")
   
@@ -43,9 +46,8 @@ devtools::load_all(ss3sim_dir)
   LAA <- matchfun2(string1 ="MEAN_SIZE_TIMESERIES", adjust1=1, string2="mean_size_Jan_1_for_sex", adjust2=-2, header = TRUE)  %>% as_tibble()
   
   #Split by morph and subseas
-  LAA_list <- LAA %>% filter(Yr>=StartYr, Yr<=EndYr) %>% split(list(.$Morph,.$SubSeas))
+  LAA_list <- LAA %>% filter(Yr>=as.numeric(StartYr), Yr<=as.numeric(EndYr)) %>% split(list(.$Morph,.$SubSeas))
   save(LAA_list,file="petraleLAA.Rds")
-  
   
   # We then need to add some observation error on top of them to create some data to feed in the estimation model
   CV <- 0.1
@@ -68,7 +70,7 @@ devtools::load_all(ss3sim_dir)
     # 8. Level of recruitment variation (CV of recruitment) (TODO)
     # 9. Level of fishing pressure (TODO)
     # 10. CV of survey index (TODO)
-    df <-make_data_in(tv_Linf = "1", tv_k = "0", tv_mat="0", "sigma_R" = 0.2, "f_scen"="2", nsamp_ages = "1")
+    df <-make_data_in(tv_Linf = "1")
    
     
     iterations <- 1
@@ -84,12 +86,29 @@ devtools::load_all(ss3sim_dir)
     })
     unlink(df[,"scenarios"], recursive=TRUE)
     
+    output_path <- file.path("om/D1-L1-K0-M0-R0-F2-pet", "1")
+    
     #Compare output OM and EM
-    r_om <- r4ss::SS_output(file.path(df[1,"scenarios"], "1", "om"),
+    r_om <- r4ss::SS_output(file.path(output_path,"om"),
                             verbose = FALSE, printstats = FALSE, covar = FALSE)
-    #r_em <- r4ss::SS_output(file.path(scname[1], "1", "em"),
-                            verbose = FALSE, printstats = FALSE, covar = FALSE)
-    #r4ss::SSplotComparisons(r4ss::SSsummarize(list(r_om, r_em)),
-                            legendlabels = c("OM", "EM"), subplots = 1)
+    #Compare output EM
+    r_em <- r4ss::SS_readdat(file.path(output_path,"em","ss3.dat"),
+                            verbose = FALSE)
     r4ss::SS_plots(r_om)
     
+    names(r_em)
+    r_em$lencomp
+unique(r_om$derived_quants$Label)
+
+## now read in the Report.sso file
+rawrep <- read.table(file=here("om/D1-L2-A0-K0-M0-R0-F0-C0-pet/1/om/Report.sso"),col.names=1:200,fill=TRUE,quote="", colClasses="character",nrows=-1,comment.char="")
+
+# Extract the general place where the AGE_LENGTH_KEY is written 
+LAA <- matchfun2(string1 ="MEAN_SIZE_TIMESERIES", adjust1=1, string2="mean_size_Jan_1_for_sex", adjust2=-2, header = TRUE)  %>% as_tibble()
+
+#Split by morph and subseas
+LAA_list <- LAA %>% mutate(Yr = as.numeric(Yr)) %>% filter(Yr>=StartYr, Yr<=EndYr) %>% split(list(.$Morph,.$SubSeas))
+
+LAA_list[[1]] %>% pivot_longer(cols = `0`:`25`) %>%
+  ggplot(aes(x=as.numeric(name), y= as.numeric(value), color=Yr)) +
+  geom_point()
