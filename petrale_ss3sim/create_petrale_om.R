@@ -37,7 +37,7 @@ devtools::load_all(ss3sim_dir)
   StartYr = as.numeric(substr(Datfile[grep("#_StartYr", Datfile, fixed=TRUE)], 1, 1))
   EndYr = as.numeric(substr(Datfile[grep("#_EndYr", Datfile, fixed=TRUE)], 1, 3))
   
-  source("helper_functions.R")
+  source(here("helper_functions.R"))
   
   ## now read in the Report.sso file
   rawrep <- read.table(file=here("om/Report.sso"),col.names=1:200,fill=TRUE,quote="", colClasses="character",nrows=-1,comment.char="")
@@ -77,12 +77,15 @@ devtools::load_all(ss3sim_dir)
     
     
     arg_list <- setup_scenarios(df)
+    # arg_list <- setup_scenarios(setup_scenarios_defaults())
     
     # Below, I am using the "new" ss3sim_base function where I have added the "skim_em" argument to skip the EM part. 
     # As we do not need the EM part, this saves us some time. 
+
+    source(here("ss3sim_base_new.R"))
     
     out <- lapply(arg_list, function(x) {
-      do.call("ss3sim_base", c(x, list(iterations = iterations), skip_em=TRUE))
+      do.call("ss3sim_base_new", c(x, list(iterations = iterations), skip_em=TRUE))
     })
     unlink(df[,"scenarios"], recursive=TRUE)
     

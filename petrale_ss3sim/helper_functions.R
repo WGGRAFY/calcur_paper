@@ -58,9 +58,13 @@ make_data_in <- function(tv_k = "0",
   df[,"sa.Nsamp.2"] <- switch(nsamp_ages,"0" = 100,
                               "1" = 30)
   
- df[,"sc.years.1"] <- "50:100"
- df[,"sc.Nsamp.1"] <- 50
-    
+  # Now adding some conditional age at length information
+  df[,"sc.years.1"] <- df[, "sa.years.1"]   # same sampling year as the age comps 1
+  df[,"sc.years.2"] <- df[, "sa.years.2"]   # same sampling year as the age comps 2
+  df[,"sc.Nsamp_lengths.1"] <- df[,"sl.Nsamp.1"]    # same sample size as the length comps 1
+  df[,"sc.Nsamp_lengths.2"] <- df[,"sl.Nsamp.2"]    # same sample size as the length comps 2
+  df[,"sc.Nsamp_ages.1"] <- df[,"sa.Nsamp.1"]    # same sample size as the age comps 1
+  df[,"sc.Nsamp_ages.2"] <- df[,"sa.Nsamp.2"]    # same sample size as the age comps 2
     
   df <- rbind(df, df)
   df[, "si.sds_obs.2"] <- c(0.1, 0.4)
