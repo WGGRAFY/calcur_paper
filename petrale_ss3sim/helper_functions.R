@@ -58,10 +58,8 @@ make_data_in <- function(tv_k = "0",
   df[,"sa.Nsamp.2"] <- switch(nsamp_ages,"0" = 100,
                               "1" = 30)
   
- # df[,"sc.years.1"] <- 
-#    df[,"sc.years.2"] <- "50:100"
- #   df[,"sc.Nsamp.1"] <- 
- #   df[,"sc.Nsamp.2"] <- 50
+ df[,"sc.years.1"] <- "50:100"
+ df[,"sc.Nsamp.1"] <- 50
     
     
   df <- rbind(df, df)
