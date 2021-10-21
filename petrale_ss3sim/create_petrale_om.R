@@ -89,10 +89,10 @@ devtools::load_all(ss3sim_dir)
     })
     unlink(df[,"scenarios"], recursive=TRUE)
     
-    output_path <- file.path("om/D1-L1-K0-M0-R0-F2-pet", "1")
+    output_path <- file.path("om/D1-L1-A0-K0-M0-R0-F0-C0-pet", "1")
     
     #Compare output OM and EM
-    r_om <- r4ss::SS_output(file.path(output_path,"om"),
+    r_om <- r4ss::SS_output(here(output_path,"om"),
                             verbose = FALSE, printstats = FALSE, covar = FALSE)
     #Compare output EM
     r_em <- r4ss::SS_readdat(file.path(output_path,"em","ss3.dat"),
