@@ -99,19 +99,9 @@ devtools::load_all(ss3sim_dir)
                             verbose = FALSE)
     r4ss::SS_plots(r_om)
     
-    names(r_em)
-    r_em$lencomp
-unique(r_om$derived_quants$Label)
+    #EM data file has the simulated comps we need
+    em_dat<- r4ss::SS_readdat_3.30(here(output_path,"em/ss3.dat"))
+    
+    #Function to turn length comps and CAAL comps to samples
+    Length_sims_1 <- turn_ss_out_to_data(em_dat, flt=1)
 
-## now read in the Report.sso file
-rawrep <- read.table(file=here("om/D1-L2-A0-K0-M0-R0-F0-C0-pet/1/om/Report.sso"),col.names=1:200,fill=TRUE,quote="", colClasses="character",nrows=-1,comment.char="")
-
-# Extract the general place where the AGE_LENGTH_KEY is written 
-LAA <- matchfun2(string1 ="MEAN_SIZE_TIMESERIES", adjust1=1, string2="mean_size_Jan_1_for_sex", adjust2=-2, header = TRUE)  %>% as_tibble()
-
-#Split by morph and subseas
-LAA_list <- LAA %>% mutate(Yr = as.numeric(Yr)) %>% filter(Yr>=StartYr, Yr<=EndYr) %>% split(list(.$Morph,.$SubSeas))
-
-LAA_list[[1]] %>% pivot_longer(cols = `0`:`25`) %>%
-  ggplot(aes(x=as.numeric(name), y= as.numeric(value), color=Yr)) +
-  geom_point()
