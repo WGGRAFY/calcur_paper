@@ -3,6 +3,8 @@ code/ss_lvb_temp/*.o
 code/ssm_temp/*.so
 code/ssm_temp/*.o
 code/ssm_temp/*.RDS
+code/sarla_model/figs/*.png
+code/sarla_model/output/*.Rds
 results/ss_lvb_temp/*.RDS
 results/ssm_temp/*.RDS
 paper/.Rhistory
