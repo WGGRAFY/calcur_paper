@@ -6,7 +6,9 @@ require(nmfspalette)
 require(cmdstanr)
 require(bridgesampling)
 require(posterior)
+require(sarla)
 options(mc.cores = parallel::detectCores())
+
 rstan_options(auto_write = TRUE)
 load("./data/WareHouse_2019.RData")
 #load the temperature data
@@ -54,27 +56,7 @@ for(i in 1:length(spp)){
 }
 
 
-#Run simulated petrale data
-load("./data/petraleLAA.Rds")
-#plot the data
-petrale_sim <-  select(LAA_list[[1]],-c("Morph","Yr","Seas","SubSeas","0"))
-matplot(t(petrale_sim))
 
-stan_dat <- list()
-stan_dat$laa <- petrale_sim
-stan_dat$Nages <-nrow(petrale_sim)
-stan_dat$Nyears <- ncol(petrale_sim)
-# stopped here...
-
-#Run base model
-petrale_mod <- stan("./inst/stan/base.stan",
-            iter = 2000, chains = 6,
-            control = list(adapt_delta = 0.99),
-            data = stan_dat, pars = c("xaa", "sigma_p", "sigma_o", "beta"))
-petrale_mod
-
-
-realdat <- list()
 
 
 petrale_data <- t(model_data[[7]][,-c(1,2,14:22)])
