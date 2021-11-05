@@ -13,12 +13,14 @@ preprocess_cal_curr <- function(data__, common_, sex_, years_, survey_string){
     filter(sex==sex_) %>%
     mutate(year = substr(datetime_utc_iso, 1, 4))
 
+  surv <- eval(parse(text=survey_string))
   #Add project/date filter
   if(!is.na(years_)){
+
     spp_data <- full_data %>%
-      filter((str_detect(project, survey_string[1]) & (year < years_))|(str_detect(project, survey_string[2]) & (year >= years_)))
+      filter((str_detect(project, surv[1]) & (year < years_))|(str_detect(project, surv[2]) & (year >= years_)))
   } else{
-    spp_data <- full_data %>% filter(str_detect(project, survey_string))
+    spp_data <- full_data %>% filter(str_detect(project, surv))
   }
 
   spp_data <- spp_data %>%
