@@ -6,6 +6,7 @@ require(nmfspalette)
 require(cmdstanr)
 require(bridgesampling)
 require(posterior)
+remotes::install_github("WGGRAFY/sarla")
 require(sarla)
 options(mc.cores = parallel::detectCores())
 
