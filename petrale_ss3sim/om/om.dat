@@ -1,0 +1,470 @@
+#V3.30.16.00;_2020_09_03;_safe;_Stock_Synthesis_by_Richard_Methot_(NOAA)_using_ADMB_12.2
+#Stock Synthesis (SS) is a work of the U.S. Government and is not subject to copyright protection in the United States.
+#Foreign copyrights may apply. See copyright.txt for more information.
+#_user_support_available_at:NMFS.Stock.Synthesis@noaa.gov
+#_user_info_available_at:https://vlab.ncep.noaa.gov/group/stock-synthesis
+#_Start_time: Tue Sep 14 11:28:19 2021
+#_Number_of_datafiles: 3
+#C data file created using the SS_writedat function in the R package r4ss
+#C should work with SS version: 
+#C file write time: 2015-04-27 21:23:15
+#_observed data: 
+#V3.30.16.00;_2020_09_03;_safe;_Stock_Synthesis_by_Richard_Methot_(NOAA)_using_ADMB_12.2
+#Stock Synthesis (SS) is a work of the U.S. Government and is not subject to copyright protection in the United States.
+#Foreign copyrights may apply. See copyright.txt for more information.
+1 #_StartYr
+100 #_EndYr
+1 #_Nseas
+ 12 #_months/season
+2 #_Nsubseasons (even number, minimum is 2)
+1 #_spawn_month
+2 #_Ngenders: 1, 2, -1  (use -1 for 1 sex setup with SSB multiplied by female_frac parameter)
+40 #_Nages=accumulator age, first age is always age 0
+1 #_Nareas
+7 #_Nfleets (including surveys)
+#_fleet_type: 1=catch fleet; 2=bycatch only fleet; 3=survey; 4=ignore 
+#_sample_timing: -1 for fishing fleet to use season-long catch-at-age for observations, or 1 to use observation month;  (always 1 for surveys)
+#_fleet_area:  area the fleet/survey operates in 
+#_units of catch:  1=bio; 2=num (ignored for surveys; their units read later)
+#_catch_mult: 0=no; 1=yes
+#_rows are fleets
+#_fleet_type fishery_timing area catch_units need_catch_mult fleetname
+ 1 -1 1 1 0 WinterN  # 1
+ 1 -1 1 1 0 SummerN  # 2
+ 1 -1 1 1 0 WinterS  # 3
+ 1 -1 1 1 0 SummerS  # 4
+ 3 1 1 2 0 TriEarly  # 5
+ 3 1 1 2 0 TriLate  # 6
+ 3 1 1 2 0 NWFSC  # 7
+#Bycatch_fleet_input_goes_next
+#a:  fleet index
+#b:  1=include dead bycatch in total dead catch for F0.1 and MSY optimizations and forecast ABC; 2=omit from total catch for these purposes (but still include the mortality)
+#c:  1=Fmult scales with other fleets; 2=bycatch F constant at input value; 3=bycatch F from range of years
+#d:  F or first year of range
+#e:  last year of range
+#f:  not used
+# a   b   c   d   e   f 
+#_Catch data: yr, seas, fleet, catch, catch_se
+#_catch_se:  standard error of log(catch)
+#_NOTE:  catch data is ignored for survey fleets
+1	1	1	0	0.01
+2	1	1	0	0.01
+3	1	1	0	0.01
+4	1	1	0	0.01
+5	1	1	0	0.01
+6	1	1	0	0.01
+7	1	1	0	0.01
+8	1	1	0	0.01
+9	1	1	0	0.01
+10	1	1	0	0.01
+11	1	1	0	0.01
+12	1	1	0	0.01
+13	1	1	0	0.01
+14	1	1	1.99	0.01
+15	1	1	5.96	0.01
+16	1	1	9.93	0.01
+17	1	1	13.9	0.01
+18	1	1	15.88	0.01
+19	1	1	19.75	0.01
+20	1	1	27.49	0.01
+21	1	1	35.22	0.01
+22	1	1	39.09	0.01
+23	1	1	41.4	0.01
+24	1	1	46	0.01
+25	1	1	50.61	0.01
+26	1	1	55.21	0.01
+27	1	1	59.82	0.01
+28	1	1	64.43	0.01
+29	1	1	69.03	0.01
+30	1	1	73.64	0.01
+31	1	1	75.94	0.01
+32	1	1	156.21	0.01
+33	1	1	117.97	0.01
+34	1	1	131.01	0.01
+35	1	1	46.07	0.01
+36	1	1	26.56	0.01
+37	1	1	57.14	0.01
+38	1	1	137.251	0.01
+39	1	1	170.947	0.01
+40	1	1	99.1799	0.01
+41	1	1	332.103	0.01
+42	1	1	240.868	0.01
+43	1	1	216.656	0.01
+44	1	1	294.855	0.01
+45	1	1	663.294	0.01
+46	1	1	282.319	0.01
+47	1	1	370.455	0.01
+48	1	1	366.063	0.01
+49	1	1	408.625	0.01
+50	1	1	284.404	0.01
+51	1	1	190.34	0.01
+52	1	1	411.706	0.01
+53	1	1	742.624	0.01
+54	1	1	730.423	0.01
+55	1	1	497.47	0.01
+56	1	1	516.994	0.01
+57	1	1	538.952	0.01
+58	1	1	505.729	0.01
+59	1	1	682.084	0.01
+60	1	1	746.25	0.01
+61	1	1	734.309	0.01
+62	1	1	382.498	0.01
+63	1	1	760.672	0.01
+64	1	1	1041.19	0.01
+65	1	1	696.317	0.01
+66	1	1	415.775	0.01
+67	1	1	392.133	0.01
+68	1	1	474.122	0.01
+69	1	1	854.515	0.01
+70	1	1	742.905	0.01
+71	1	1	695.998	0.01
+72	1	1	640.66	0.01
+73	1	1	792.591	0.01
+74	1	1	639.529	0.01
+75	1	1	685.391	0.01
+76	1	1	518.132	0.01
+77	1	1	591.372	0.01
+78	1	1	591.037	0.01
+79	1	1	621.061	0.01
+80	1	1	522.148	0.01
+81	1	1	463.349	0.01
+82	1	1	610.163	0.01
+83	1	1	691.418	0.01
+84	1	1	666.978	0.01
+85	1	1	544.488	0.01
+86	1	1	1009.92	0.01
+87	1	1	963.691	0.01
+88	1	1	537.45	0.01
+89	1	1	930.727	0.01
+90	1	1	842.469	0.01
+91	1	1	846.718	0.01
+92	1	1	263.741	0.01
+93	1	1	223.688	0.01
+94	1	1	409.743	0.01
+95	1	1	512.957	0.01
+96	1	1	852.906	0.01
+97	1	1	1039.95	0.01
+98	1	1	864.545	0.01
+99	1	1	1142.29	0.01
+100	1	1	957.286	0.01
+-9999 0 0 0 0
+#
+ #_CPUE_and_surveyabundance_observations
+#_Units:  0=numbers; 1=biomass; 2=F; 30=spawnbio; 31=recdev; 32=spawnbio*recdev; 33=recruitment; 34=depletion(&see Qsetup); 35=parm_dev(&see Qsetup)
+#_Errtype:  -1=normal; 0=lognormal; >0=T
+#_SD_Report: 0=no sdreport; 1=enable sdreport
+#_Fleet Units Errtype SD_Report
+1 1 0 0 # WinterN
+2 1 0 0 # SummerN
+3 1 0 0 # WinterS
+4 1 0 0 # SummerS
+5 1 0 0 # TriEarly
+6 1 0 0 # TriLate
+7 1 0 0 # NWFSC
+#_yr month fleet obs stderr
+69	7	1	1.091	0.275191	#_	WinterN
+70	7	1	1.155	0.273075	#_	WinterN
+71	7	1	0.918	0.273327	#_	WinterN
+72	7	1	0.759	0.27507	#_	WinterN
+73	7	1	0.86	0.272922	#_	WinterN
+74	7	1	0.556	0.277838	#_	WinterN
+75	7	1	0.561	0.273409	#_	WinterN
+76	7	1	0.503	0.281295	#_	WinterN
+77	7	1	0.66	0.280044	#_	WinterN
+78	7	1	0.767	0.28787	#_	WinterN
+79	7	1	0.85	0.28153	#_	WinterN
+80	7	1	1.009	0.289773	#_	WinterN
+81	7	1	0.714	0.286685	#_	WinterN
+82	7	1	0.674	0.277475	#_	WinterN
+83	7	1	0.83	0.27463	#_	WinterN
+84	7	1	0.93	0.276637	#_	WinterN
+85	7	1	1.018	0.275366	#_	WinterN
+86	7	1	1.629	0.280272	#_	WinterN
+87	7	1	1.853	0.276295	#_	WinterN
+88	7	1	2.007	0.28246	#_	WinterN
+89	7	1	2.045	0.275886	#_	WinterN
+90	7	1	1.955	0.274807	#_	WinterN
+91	7	1	2.118	0.272303	#_	WinterN
+69	7	3	1.08	0.557798	#_	WinterS
+70	7	3	0.908	0.32551	#_	WinterS
+71	7	3	0.533	0.434469	#_	WinterS
+72	7	3	0.963	0.455101	#_	WinterS
+73	7	3	0.895	0.35936	#_	WinterS
+74	7	3	0.592	0.678343	#_	WinterS
+75	7	3	0.863	0.353332	#_	WinterS
+76	7	3	0.713	0.302924	#_	WinterS
+77	7	3	0.9	0.299521	#_	WinterS
+78	7	3	1.25	0.304861	#_	WinterS
+79	7	3	0.817	0.277278	#_	WinterS
+80	7	3	0.933	0.306219	#_	WinterS
+81	7	3	0.831	0.285779	#_	WinterS
+82	7	3	0.618	0.288425	#_	WinterS
+83	7	3	0.663	0.286839	#_	WinterS
+84	7	3	0.799	0.285013	#_	WinterS
+85	7	3	0.847	0.286776	#_	WinterS
+86	7	3	1.711	0.306572	#_	WinterS
+87	7	3	1.929	0.28633	#_	WinterS
+88	7	3	1.584	0.288489	#_	WinterS
+89	7	3	2.068	0.284441	#_	WinterS
+90	7	3	1.616	0.283804	#_	WinterS
+91	7	3	1.765	0.280707	#_	WinterS
+62	7	5	1416.36	0.228717	#_	TriEarly
+65	7	5	2018.97	0.185888	#_	TriEarly
+68	7	5	2094.5	0.190111	#_	TriEarly
+71	7	5	3511.83	0.164899	#_	TriEarly
+74	7	5	2023.66	0.168476	#_	TriEarly
+77	7	6	2217.96	0.0803636	#_	TriLate
+80	7	6	3491.81	0.0666736	#_	TriLate
+83	7	6	3878.58	0.0754094	#_	TriLate
+86	7	6	10521.2	0.0800975	#_	TriLate
+85	7	7	17125.9	0.106976	#_	NWFSC
+86	7	7	22842.3	0.111163	#_	NWFSC
+87	7	7	23291.6	0.0971209	#_	NWFSC
+88	7	7	20148.7	0.0969762	#_	NWFSC
+89	7	7	17102	0.0963634	#_	NWFSC
+90	7	7	14663.1	0.0987975	#_	NWFSC
+91	7	7	18786.7	0.0975802	#_	NWFSC
+92	7	7	24506.2	0.0888615	#_	NWFSC
+93	7	7	30070.1	0.0922569	#_	NWFSC
+94	7	7	36156	0.0994124	#_	NWFSC
+95	7	7	52602.1	0.105444	#_	NWFSC
+96	7	7	66737.5	0.0920117	#_	NWFSC
+97	7	7	52191.7	0.0916499	#_	NWFSC
+98	7	7	61235.8	0.089608	#_	NWFSC
+99	7	7	70051.8	0.0934638	#_	NWFSC
+100	7	7	45575.3	0.0927391	#_	NWFSC
+-9999 1 1 1 1 # terminator for survey observations 
+#
+4 #_N_fleets_with_discard
+#_discard_units (1=same_as_catchunits(bio/num); 2=fraction; 3=numbers)
+#_discard_errtype:  >0 for DF of T-dist(read CV below); 0 for normal with CV; -1 for normal with se; -2 for lognormal; -3 for trunc normal with CV
+# note, only have units and errtype for fleets with discard 
+#_Fleet units errtype
+1 2 -1 # WinterN
+2 2 -1 # SummerN
+3 2 -1 # WinterS
+4 2 -1 # SummerS
+#_yr month fleet obs stderr
+67	7	1	0.0222	0.1103	#_	WinterN
+68	7	1	0.0215	0.1162	#_	WinterN
+69	7	1	0.027	0.1186	#_	WinterN
+84	7	1	0.008	0.001	#_	WinterN
+85	7	1	0.004	0.002	#_	WinterN
+86	7	1	0.003	0.002	#_	WinterN
+87	7	1	0.002	0.001	#_	WinterN
+88	7	1	0.006	0.003	#_	WinterN
+89	7	1	0.012	0.005	#_	WinterN
+90	7	1	0.022	0.012	#_	WinterN
+91	7	1	0.027	0.014	#_	WinterN
+92	7	1	0.119	0.023	#_	WinterN
+93	7	1	0.002	0.015	#_	WinterN
+94	7	1	0.001	0.015	#_	WinterN
+95	7	1	0.001	0.015	#_	WinterN
+96	7	1	0.003	0.015	#_	WinterN
+97	7	1	0.001	0.015	#_	WinterN
+98	7	1	0.001	0.015	#_	WinterN
+99	7	1	0.003	0.015	#_	WinterN
+100	7	1	0.001	0.015	#_	WinterN
+67	7	2	0.0346	0.0419	#_	SummerN
+68	7	2	0.0343	0.0432	#_	SummerN
+69	7	2	0.0315	0.045	#_	SummerN
+84	7	2	0.186	0.023	#_	SummerN
+85	7	2	0.105	0.022	#_	SummerN
+86	7	2	0.083	0.023	#_	SummerN
+87	7	2	0.042	0.008	#_	SummerN
+88	7	2	0.078	0.015	#_	SummerN
+89	7	2	0.116	0.021	#_	SummerN
+90	7	2	0.051	0.016	#_	SummerN
+91	7	2	0.206	0.067	#_	SummerN
+92	7	2	0.099	0.029	#_	SummerN
+93	7	2	0.037	0.015	#_	SummerN
+94	7	2	0.022	0.015	#_	SummerN
+95	7	2	0.017	0.015	#_	SummerN
+96	7	2	0.026	0.015	#_	SummerN
+97	7	2	0.006	0.015	#_	SummerN
+98	7	2	0.017	0.015	#_	SummerN
+99	7	2	0.007	0.015	#_	SummerN
+84	7	3	0.035	0.016	#_	WinterS
+85	7	3	0.012	0.001	#_	WinterS
+86	7	3	0.013	0.033	#_	WinterS
+87	7	3	0.033	0.004	#_	WinterS
+88	7	3	0.071	0.035	#_	WinterS
+89	7	3	0.012	0.003	#_	WinterS
+90	7	3	0.013	0.01	#_	WinterS
+91	7	3	0.024	0.009	#_	WinterS
+92	7	3	0.052	0.031	#_	WinterS
+93	7	3	0.001	0.015	#_	WinterS
+94	7	3	0.001	0.015	#_	WinterS
+95	7	3	0.003	0.015	#_	WinterS
+96	7	3	0.001	0.015	#_	WinterS
+97	7	3	0.001	0.015	#_	WinterS
+98	7	3	0.003	0.015	#_	WinterS
+99	7	3	0.006	0.015	#_	WinterS
+100	7	3	0.001	0.015	#_	WinterS
+84	7	4	0.058	0.016	#_	SummerS
+85	7	4	0.033	0.011	#_	SummerS
+86	7	4	0.033	0.014	#_	SummerS
+87	7	4	0.012	0.003	#_	SummerS
+88	7	4	0.038	0.014	#_	SummerS
+89	7	4	0.065	0.023	#_	SummerS
+90	7	4	0.026	0.014	#_	SummerS
+91	7	4	0.023	0.006	#_	SummerS
+92	7	4	0.056	0.007	#_	SummerS
+93	7	4	0.041	0.015	#_	SummerS
+94	7	4	0.013	0.015	#_	SummerS
+95	7	4	0.004	0.015	#_	SummerS
+96	7	4	0.004	0.015	#_	SummerS
+97	7	4	0.01	0.015	#_	SummerS
+98	7	4	0.004	0.015	#_	SummerS
+99	7	4	0.008	0.015	#_	SummerS
+-9999 0 0 0.0 0.0 # terminator for discard data 
+#
+1 #_use meanbodysize_data (0/1)
+30 #_DF_for_meanbodysize_T-distribution_like
+# note:  type=1 for mean length; type=2 for mean body weight 
+#_yr month fleet part type obs stderr
+84	7	1	1	2	0.411	0.325
+85	7	1	1	2	0.327	0.205
+86	7	1	1	2	0.332	0.17
+87	7	1	1	2	0.316	0.167
+88	7	1	1	2	0.417	0.337
+89	7	1	1	2	0.401	0.141
+90	7	1	1	2	0.522	0.259
+91	7	1	1	2	0.417	0.256
+92	7	1	1	2	0.602	0.31
+93	7	1	1	2	0.276	0.181
+94	7	1	1	2	0.33	0.43
+95	7	1	1	2	0.448	0.355
+96	7	1	1	2	0.518	0.34
+97	7	1	1	2	0.335	0.219
+98	7	1	1	2	0.573	0.758
+99	7	1	1	2	0.551	0.768
+100	7	1	1	2	0.321	0.295
+84	7	2	1	2	0.241	0.06
+85	7	2	1	2	0.234	0.146
+86	7	2	1	2	0.274	0.055
+87	7	2	1	2	0.305	0.099
+88	7	2	1	2	0.267	0.074
+89	7	2	1	2	0.261	0.063
+90	7	2	1	2	0.244	0.069
+91	7	2	1	2	0.217	0.112
+92	7	2	1	2	0.258	0.055
+93	7	2	1	2	0.246	0.058
+94	7	2	1	2	0.312	0.151
+95	7	2	1	2	0.297	0.152
+96	7	2	1	2	0.298	0.084
+97	7	2	1	2	0.221	0.12
+98	7	2	1	2	0.28	0.077
+99	7	2	1	2	0.286	0.113
+84	7	3	1	2	0.41	0.494
+85	7	3	1	2	0.178	0.419
+86	7	3	1	2	0.309	0.192
+87	7	3	1	2	0.27	0.523
+88	7	3	1	2	0.284	0.087
+89	7	3	1	2	0.217	0.186
+90	7	3	1	2	0.296	0.175
+91	7	3	1	2	0.554	0.568
+92	7	3	1	2	0.417	0.489
+93	7	3	1	2	0.32	0.272
+94	7	3	1	2	0.202	0.423
+95	7	3	1	2	0.289	0.505
+96	7	3	1	2	0.353	0.503
+97	7	3	1	2	0.32	0.31
+98	7	3	1	2	0.291	0.259
+99	7	3	1	2	0.39	0.176
+100	7	3	1	2	0.347	0.556
+84	7	4	1	2	0.19	0.67
+85	7	4	1	2	0.175	0.245
+86	7	4	1	2	0.184	0.261
+87	7	4	1	2	0.252	0.133
+88	7	4	1	2	0.319	0.096
+89	7	4	1	2	0.368	0.415
+90	7	4	1	2	0.219	0.126
+91	7	4	1	2	0.213	0.221
+92	7	4	1	2	0.184	0.196
+93	7	4	1	2	0.247	0.139
+94	7	4	1	2	0.227	0.103
+95	7	4	1	2	0.235	0.131
+96	7	4	1	2	0.237	0.092
+97	7	4	1	2	0.253	0.087
+98	7	4	1	2	0.284	0.113
+99	7	4	1	2	0.376	0.204
+ -9999 0 0 0 0 0 0 # terminator for mean body size data 
+#
+# set up population length bin structure (note - irrelevant if not using size data and using empirical wtatage
+2 # length bin method: 1=use databins; 2=generate from binwidth,min,max below; 3=read vector
+2 # binwidth for population size comp 
+4 # minimum size in the population (lower edge of first bin and size at age 0.00) 
+78 # maximum size in the population (lower edge of last bin) 
+1 # use length composition data (0/1)
+#_mintailcomp: upper and lower distribution for females and males separately are accumulated until exceeding this level.
+#_addtocomp:  after accumulation of tails; this value added to all bins
+#_combM+F: males and females treated as combined gender below this bin number 
+#_compressbins: accumulate upper tail by this number of bins; acts simultaneous with mintailcomp; set=0 for no forced accumulation
+#_Comp_Error:  0=multinomial, 1=dirichlet
+#_ParmSelect:  parm number for dirichlet
+#_minsamplesize: minimum sample size; set to 1 to match 3.24, minimum value is 0.001
+#
+#_mintailcomp addtocomp combM+F CompressBins CompError ParmSelect minsamplesize
+-1 0.001 0 0 0 0 1 #_fleet:1_WinterN
+-1 0.001 0 0 0 0 1 #_fleet:2_SummerN
+-1 0.001 0 0 0 0 1 #_fleet:3_WinterS
+-1 0.001 0 0 0 0 1 #_fleet:4_SummerS
+-1 0.001 0 0 0 0 1 #_fleet:5_TriEarly
+-1 0.001 0 0 0 0 1 #_fleet:6_TriLate
+-1 0.001 0 0 0 0 1 #_fleet:7_NWFSC
+# sex codes:  0=combined; 1=use female only; 2=use male only; 3=use both as joint sexxlength distribution
+# partition codes:  (0=combined; 1=discard; 2=retained
+26 #_N_LengthBins; then enter lower edge of each length bin
+ 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 52 54 56 58 60 62
+#_yr month fleet sex part Nsamp datavector(female-male)
+-9999 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+#
+17 #_N_age_bins
+ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
+1 #_N_ageerror_definitions
+ -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+ 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001
+#_mintailcomp: upper and lower distribution for females and males separately are accumulated until exceeding this level.
+#_addtocomp:  after accumulation of tails; this value added to all bins
+#_combM+F: males and females treated as combined gender below this bin number 
+#_compressbins: accumulate upper tail by this number of bins; acts simultaneous with mintailcomp; set=0 for no forced accumulation
+#_Comp_Error:  0=multinomial, 1=dirichlet
+#_ParmSelect:  parm number for dirichlet
+#_minsamplesize: minimum sample size; set to 1 to match 3.24, minimum value is 0.001
+#
+#_mintailcomp addtocomp combM+F CompressBins CompError ParmSelect minsamplesize
+-1 0.001 1 0 0 0 1 #_fleet:1_WinterN
+-1 0.001 1 0 0 0 1 #_fleet:2_SummerN
+-1 0.001 1 0 0 0 1 #_fleet:3_WinterS
+-1 0.001 1 0 0 0 1 #_fleet:4_SummerS
+-1 0.001 1 0 0 0 1 #_fleet:5_TriEarly
+-1 0.001 1 0 0 0 1 #_fleet:6_TriLate
+-1 0.001 1 0 0 0 1 #_fleet:7_NWFSC
+3 #_Lbin_method_for_Age_Data: 1=poplenbins; 2=datalenbins; 3=lengths
+# sex codes:  0=combined; 1=use female only; 2=use male only; 3=use both as joint sexxlength distribution
+# partition codes:  (0=combined; 1=discard; 2=retained
+#_yr month fleet sex part ageerr Lbin_lo Lbin_hi Nsamp datavector(female-male)
+ -9999  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+#
+0 #_Use_MeanSize-at-Age_obs (0/1)
+#
+0 #_N_environ_variables
+# -2 in yr will subtract mean for that env_var; -1 will subtract mean and divide by stddev (e.g. Z-score)
+#Yr Variable Value
+#
+0 # N sizefreq methods to read 
+#
+0 # do tags (0/1)
+#
+0 #    morphcomp data(0/1) 
+#  Nobs, Nmorphs, mincomp
+#  yr, seas, type, partition, Nsamp, datavector_by_Nmorphs
+#
+0  #  Do dataread for selectivity priors(0/1)
+# Yr, Seas, Fleet,  Age/Size,  Bin,  selex_prior,  prior_sd
+# feature not yet implemented
+#
+999
+
+ENDDATA
