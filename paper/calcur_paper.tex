@@ -1,41 +1,62 @@
-\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
 %
-\documentclass[]{article}
+\documentclass[
+]{article}
+\title{Modeling the effect of temperature on fish growth in the
+California Current}
+\author{Paul Spencer\footnote{\href{mailto:paul.spencer@noaa.gov}{\nolinkurl{paul.spencer@noaa.gov}},
+  Alaska Fisheries Science Center, National Marine Fisheries Service,
+  XXXX Sandpoint Way, Seattle, WA XXXXX, USA} \and Tara
+Marshall\footnote{UK} \and Alan Boudron\footnote{UK} \and Timothy J.
+Miller\footnote{Northeast Fisheries Science Center, National Marine
+  Fisheries Service, 166 Water Street, Woods Hole, MA 02543, USA} \and Christine
+Stawitz\footnote{Office of Science and Technology, National Marine
+  Fisheries Service, Sand Point Way, Seattle, USA} \and Melissa
+Haltuch\footnote{Northwest Fisheries Science Center, National Marine
+  Fisheries Service, Montlake Blvd, Seattle, WA XXXXX, USA}}
+\date{}
+
+\usepackage{amsmath,amssymb}
 \usepackage{lmodern}
-\usepackage{amssymb,amsmath}
-\usepackage{ifxetex,ifluatex}
-\usepackage{fixltx2e} % provides \textsubscript
-\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+\usepackage{iftex}
+\ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
-  \usepackage{textcomp} % provides euro and other symbols
-\else % if luatex or xelatex
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
   \usepackage{unicode-math}
-  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
 \fi
-% use upquote if available, for straight quotes in verbatim environments
+% Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
-% use microtype if available
-\IfFileExists{microtype.sty}{%
-\usepackage[]{microtype}
-\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
 }{}
-\IfFileExists{parskip.sty}{%
-\usepackage{parskip}
-}{% else
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt plus 2pt minus 1pt}
-}
-\usepackage{hyperref}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-            pdftitle={Modeling the effect of temperature on fish growth in the California Current},
-            pdfauthor={Paul Spencer; Tara Marshall; Alan Boudron; Timothy J. Miller; Christine Stawitz; Melissa Haltuch},
-            pdfborder={0 0 0},
-            breaklinks=true}
-\urlstyle{same}  % don't use monospace font for urls
+  pdftitle={Modeling the effect of temperature on fish growth in the California Current},
+  pdfauthor={Paul Spencer; Tara Marshall; Alan Boudron; Timothy J. Miller; Christine Stawitz; Melissa Haltuch},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
-\usepackage{graphicx,grffile}
+\usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
 \def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
@@ -44,25 +65,37 @@
 % margins by default, and it is still possible to overwrite the defaults
 % using explicit options in \includegraphics[width, height, ...]{}
 \setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
-\setlength{\emergencystretch}{3em}  % prevent overfull lines
-\providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
-\setcounter{secnumdepth}{5}
-% Redefines (sub)paragraphs to behave more like sections
-\ifx\paragraph\undefined\else
-\let\oldparagraph\paragraph
-\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
-\fi
-\ifx\subparagraph\undefined\else
-\let\oldsubparagraph\subparagraph
-\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
-\fi
-
-% set default figure placement to htbp
+% Set default figure placement to htbp
 \makeatletter
 \def\fps@figure{htbp}
 \makeatother
-
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newlength{\cslentryspacingunit} % times entry-spacing
+\setlength{\cslentryspacingunit}{\parskip}
+\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {% don't indent paragraphs
+  \setlength{\parindent}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+  \let\oldpar\par
+  \def\par{\hangindent=\cslhangindent\oldpar}
+  \fi
+  % set entry spacing
+  \setlength{\parskip}{#2\cslentryspacingunit}
+ }%
+ {}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 \usepackage{url}
 \usepackage{setspace}
 %\singlespacing
@@ -72,14 +105,66 @@
 \linenumbers
 \usepackage[belowskip=0pt,aboveskip=0pt]{caption}
 \usepackage{relsize}
+\newcommand{\afrb}{Alaska Fishery Research Bulletin\xspace}
+\newcommand{\ajms}{African Journal of Marine Science\xspace}
+\newcommand{\amb}{Advances in Marine Biology\xspace}
+\newcommand{\bms}{Bulletin of Marine Science\xspace}
+\newcommand{\bjssf}{Bulletin of the Japanese Society of Scientific Fisheries\xspace}
+\newcommand{\cb}{Conservation Biology\xspace}
+\newcommand{\cjfas}{Canadian Journal of Fisheries and Aquatic Sciences\xspace}
+\newcommand{\ea}{Ecological Applications\xspace}
+\newcommand{\eer}{Evolutionary Ecology Research\xspace}
+\newcommand{\elet}{Ecology Letters\xspace}
+\newcommand{\emod}{Ecological Modelling\xspace}
+\newcommand{\ebf}{Environmental Biology of Fishes\xspace}
+\newcommand{\ff}{Fish and Fisheries\xspace}
+\newcommand{\fo}{Fisheries Oceanography\xspace}
+\newcommand{\fr}{Fisheries Research\xspace}
+\newcommand{\fb}{Fishery Bulletin\xspace}
+\newcommand{\ijms}{ICES Journal of Marine Science\xspace}
+\newcommand{\iccat}{Collective Volume of Scientific Papers ICCAT\xspace}
+\newcommand{\jae}{Journal of Animal Ecology\xspace}
+\newcommand{\jai}{Journal of Applied Ichthyology\xspace}
+\newcommand{\jdc}{Journal Du Conseil International Pour L'exploration De La Mer\xspace}
+\newcommand{\jdcp}{Journal Du Conseil Permanent International Pour L'exploration De La Mer\xspace}
+\newcommand{\jembe}{Journal of Experimental Marine Biology and Ecology\xspace}
+\newcommand{\jfb}{Journal of Fish Biology\xspace}
+\newcommand{\jsr}{Journal of Sea Research\xspace}
+\newcommand{\jtb}{Journal of Theoretical Biology\xspace}
+\newcommand{\jfrbc}{Journal of the Fisheries Research Board of Canada\xspace}
+\newcommand{\jnwafs}{Journal of Northwest Atlantic Fisheries Science\xspace}
+\newcommand{\mcf}{Marine and Coastal Fisheries: Dynamics, Management, and Ecosystem Science\xspace}
+\newcommand{\mb}{Marine Biology\xspace}
+\newcommand{\meps}{Marine Ecology Progress Series\xspace}
+\newcommand{\mfr}{Marine Fisheries Review\xspace}
+\newcommand{\mpb}{Marine Pollution Bulletin\xspace}
+\newcommand{\najfm}{North American Journal of Fisheries Management\xspace}
+\newcommand{\nzjmfr}{New Zealand Journal of Marine and Freshwater Research\xspace}
+\newcommand{\pnas}{Proceedings of the National Academy of Sciences USA\xspace}
+\newcommand{\rpvrciemm}{Rapports et Proc\`es-Verbaux des R\'eunions. Conseil Internationale pour l'Exploration de la Mer\xspace}
+\newcommand{\rpvrcpiemm}{Rapports et Proc\`es-Verbaux des R\'eunions. Conseil Permanent Internationale pour l'Exploration de la Mer\xspace}
+\newcommand{\rfbf}{Reviews in Fish Biology and Fisheries\xspace}
+\newcommand{\sajms}{South African Journal of Marine Science\xspace}
+\newcommand{\tafs}{Transactions of the American Fisheries Society\xspace}
+
+\newcommand{\anzjs}{Australian \& New Zealand Journal of Statistics\xspace}
+\newcommand{\as}{Applied Statistics\xspace}
+\newcommand{\csda}{Computational Statistics \& Data Analysis\xspace}
+\newcommand{\ees}{Environmental and Ecological Statistics\xspace}
+\newcommand{\jas}{Journal of Applied Statistics\xspace}
+\newcommand{\jabes}{Journal of Agricultural, Biological, and Environmental Statistics\xspace}
+\newcommand{\jasa}{Journal of the American Statistical Association\xspace}
+\newcommand{\jrssb}{Journal of the Royal Statistical Society. Series B\xspace}
+\newcommand{\sm}{Statistics in Medicine}
+
 \usepackage{xspace}
 \usepackage{bm}
 \usepackage{caption,graphics}
 \usepackage{graphicx}
+\usepackage{makecell}
 \renewcommand\figurename{Fig.}
 \captionsetup{labelsep=period, singlelinecheck=false}
 \usepackage{footmisc}
-\usepackage{makecell}
 \newcommand{\changesize}[1]{\fontsize{#1pt}{#1pt}\selectfont}
 \renewcommand{\arraystretch}{1.5}
 \renewcommand\theadfont{}
@@ -97,18 +182,9 @@
 \usepackage[normalem]{ulem}
 \usepackage{makecell}
 \usepackage{xcolor}
-\usepackage[]{natbib}
-\bibliographystyle{plainnat}
-
-\title{Modeling the effect of temperature on fish growth in the California
-Current}
-\author{Paul Spencer\footnote{\href{mailto:paul.spencer@noaa.gov}{\nolinkurl{paul.spencer@noaa.gov}},
-  Alaska Fisheries Science Center, National Marine Fisheries Service,
-  XXXX Sandpoint Way, Seattle, WA XXXXX, USA} \and Tara Marshall\footnote{UK} \and Alan Boudron\footnote{UK} \and Timothy J. Miller\footnote{Northeast Fisheries Science Center, National
-  Marine Fisheries Service, 166 Water Street, Woods Hole, MA 02543, USA} \and Christine Stawitz\footnote{Headquarters, National Marine Fisheries
-  Service, Washington, DC XXXXX USA} \and Melissa Haltuch\footnote{Northwest Fisheries Science Center, National
-  Marine Fisheries Service, Montlake Blvd, Seattle, WA XXXXX, USA}}
-\date{}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
 
 \begin{document}
 \maketitle
@@ -137,28 +213,28 @@ non-linear process resulting from dynamic fluxes between anabolism and
 catabolism (Quinn and Deriso 1999). Consequently, abrupt changes in
 growth rates can occur throughout the lifespan of an individual fish,
 most notably during the transition between the rapid growth of juvenile
-stages and the slower growth during adult stages (Lester et al.~2004,
-Quince et al.~2004). Dynamic changes in size-at-age can have direct
+stages and the slower growth during adult stages {[}Lester et al.
+(2004);quinceetal08{]}. Dynamic changes in size-at-age can have direct
 impacts on rates of harvest and fishery management reference points
 because fisheries management is often based on limiting mortality (i.e.,
 based on abundance) via biomass-based harvest quotas and the assumption
-of an average growth relationship through time, {[}milleretal18{]}.
+of an average growth relationship through time (Miller et al. 2018).
 However, if growth fluctuates well above or below the long term average
 growth relationship then realized biomass-based harvest quotas may be
 lower or higher than quotas set as a function of an average growth
 relationship. The dominant patterns in and magnitudes of somatic growth
 variation over long time scales have not been quantified for many
-commercially important fish stocks (Stawitz et al.~2015). Therefore,
+commercially important fish stocks (Stawitz et al. 2015). Therefore,
 quantifying the basic characteristics and dominant scales of variation
 in growth is the necessary first step towards predicting growth
-responses to biotic and abiotic factors (Stawitz et al.~2015).
+responses to biotic and abiotic factors (Stawitz et al. 2015).
 
 Individual growth rates vary on a range of temporal and biological
 scales, including across species and populations of the same species
 (Brander 1995, Brunel and Dickey-Collas 2010). Within a given system,
 variation in size-at-age may occur between cohorts of a single
 population (Baudron et al.~2011, Baudron et al.~2014), between years, or
-between juveniles of cohorts (Stawitz et al.~2015). Understanding the
+between juveniles of cohorts (Stawitz et al. 2015). Understanding the
 variation in size-at-age can help refine mechanistic hypotheses.
 Density-independent annual changes in growth may occur from processes
 such as upwelling, affecting all ages within a year. Alternatively,
@@ -168,10 +244,10 @@ strong recruitment may result in reduced growth rates (Whitten et
 al.~2013). A third mechanism is that variability in growth is related to
 only the size-at-age of juvenile fish, with growth rates of older ages
 unaffected by the environment, which is consistent with juvenile
-intracohort competition being the dominant process. Stawitz et al.
-(2015) examined these hypotheses for North Pacific groundfish, and found
-that about 40\% of the stocks studied showed density-independent annual
-growth variation between years.
+intracohort competition being the dominant process. Stawitz et
+al.~(2015) examined these hypotheses for North Pacific groundfish, and
+found that about 40\% of the stocks studied showed density-independent
+annual growth variation between years.
 
 Because temperature is an important determinant of growth for
 ectothermic species, the temperature size rule (TSR) provides the basis
@@ -254,7 +330,7 @@ stock-specific observation error. An alternative framework applied by
 (Stawitz et al.~2015) are autoregressive state-space models consisting
 of process and observation models that fit to observed time series of
 standardized length-at-age data without a mechanistic growth model.
-Miller et al. (2018) also used a state-space model, but the process
+Miller et al.~(2018) also used a state-space model, but the process
 model is based on a generalized VBGF that allowed process errors in the
 k parameter. Finally, spatio-temporal models such as VAST (Vector
 Autoregressive Spatio-Temporal model; www.github.com/james-thorson/VAST)
@@ -269,11 +345,12 @@ effects.
 An alternative framework that has been applied to modelling individual
 growth is autoregressive state-space models that compare the relative
 importance of different scales of variation (e.g., annual, cohort) and
-extract underlying growth trends across species (Stawitz et al.~2015).
+extract underlying growth trends across species (Stawitz et al. 2015).
 State-space models simultaneously estimate model parameters using two
 equations: the autoregressive process representing abiotic and biotic
 covariates and the unobserved processes including space and time
-covariates.\\
+covariates.
+
 The inferences that can be made regarding how temperature affects fish
 growth are influenced by the choice of model structure. In particular,
 evaluation of a series of models may help illuminate modeling approaches
@@ -295,7 +372,7 @@ or once asynchronous sources of variation had been excluded (DFA).
 Comparative analysis of models can also help to identify biases in model
 performance (e.g.~whether a model systematically underestimates random
 noise in the data) or shortcomings in model fitting (e.g., estimation of
-process or observation error). For example, Brodie et al. (2020)
+process or observation error). For example, Brodie et al.~(2020)
 compared several types of species distribution models and identified
 which models were appropriate for specific purposes. Ultimately model
 purpose must be given due consideration when deciding on the most
@@ -327,7 +404,7 @@ Center (NWFSC) provided data for this study. The Triennial Shelf Survey,
 conducted by the AFSC in 1980, 1983, 1986, 1989, 1992, 1995, 1998, and
 2001 and by the NWFSC in 2004, provides the earliest time series of
 fishery independent temperature and biological data in the U.S. portion
-of the California Current continental shelf (Weinberg et al.~2002).
+of the California Current continental shelf (Weinberg et al. 2002).
 Triennial survey sampling occurred along transects perpendicular to the
 coast over depths from 55 m to 366 m (500 m after 1992) and from the
 Canadian border to Monterey Bay, California (36°48' N) until 1986, then
@@ -338,21 +415,23 @@ and 2001, over depths from 184 m to 1,280 m in waters north of Point
 Conception, California (34°30' N) to the US -- Canada border (Lauth
 1999, 2000, 2001). Sampling in earlier years was spatially limited,
 covering small and inconsistent portions of the coast; however, this
-survey had a high degree of biological sampling. The transect-based
-NWFSC Slope survey, conducted in 1998, 1999, 2000, 2001, and 2002,
-covered depths ranging from 184 m to 1,280 m using chartered commercial
-fishing vessels \textless{}93 feet (Keller et al.~2017). Prior to 2000
-the NWFSC Slope survey sampled from the Morro Bay, California (lat
-35°00'N), to the U.S.--Canada border, the survey area was expanded south
-to Point Conception, California (34°30' N) in 2001, then to the U.S.
-Mexico border in 2002. This survey consists of fewer tows compared to
-other survey data sets, with a lower fraction of tows sampled for ages.
+survey had a high degree of biological sampling.
+
+The transect-based NWFSC Slope survey, conducted in 1998, 1999, 2000,
+2001, and 2002, covered depths ranging from 184 m to 1,280 m using
+chartered commercial fishing vessels \textless93 feet (Keller et al.
+2017). Prior to 2000 the NWFSC Slope survey sampled from the Morro Bay,
+California (lat 35°00'N), to the U.S.--Canada border, the survey area
+was expanded south to Point Conception, California (34°30' N) in 2001,
+then to the U.S. Mexico border in 2002. This survey consists of fewer
+tows compared to other survey data sets, with a lower fraction of tows
+sampled for ages.
 
 The NWFSC West Coast Groundfish Bottom Trawl Survey (WCGBTS), operating
 annually from 2003 through 2019, implements a stratified random-grid
 survey design that spans both continental shelf and slope habitats,
 depths from 55m to 1,280 m, and covers U.S. waters between the Canada
-and Mexico borders (Bradburn et al., 2011, Keller et al.~2017). Strata
+and Mexico borders (Bradburn et al. 2011; Keller et al. 2017). Strata
 include three depth strata (55 m to 183 m, 184 m to 549 m, and 550 m
 to1280 m) and two spatial strata (north and south of Point Conception,
 California (34°30' N)) for all years except 2003. In 2003 five spatial
@@ -370,7 +449,7 @@ coverage south of Point Conception, California (34°30' N).
 
 Regions used in this study are a combination of the 2003 WCGBTS
 latitudinal and depth strata. The INPFC Vancouver, Columbia, and Eureka
-latitudinal strata are combined into a single region, labeled ``ECV'',
+latitudinal strata are combined into a single region, labeled ``ECV,''
 due to ecological similarity. The combination of three INPFC latitudinal
 strata and three depth strata yield nine regions defined by latitude and
 depth. Mean bottom temperature used in situ data from the four surveys
@@ -383,25 +462,26 @@ Seven species were selected for analysis of length-at-age data, based on
 a diversity of life-history traits, habitat usage, and data
 availability. Length-at-age data for two deep-water species with ranges
 encompassing both the continental shelf and slope (darkbloched rockfish
-(Sebastes crameri) and sablefish (Anoplopoma fimbria)) were obtained
-from two surveys that collectively cover the full depth range of these
-species in a given year: the Triennial Shelf Survey and NWFSC Slope
-surveys for years 1998 and 2001, and the WCGBTS for the years 2003 to
-2018. Shortbelly rockfish (Sebastes jordani) also occur on the slope and
-shelf, but limited observations restricted analysis to data from the
-WCGBTS. Length-at-age data for four species that occur on the
-continental shelf (Pacific hake (Merluccius productus), Pacific sanddab
-(Citharichthys sordidus), lingcod (Ophiodon elongatus), and petrale sole
-(Eopsetta jordani)) were obtained from two surveys: the Triennial Shelf
-Survey and the WCGBTS. Because marine fish stocks often change the depth
-and spatial locations occupied as they age, we attempted to derive
-temperature time series reflective of the habitats they occupy at a
-given age. We used the species-specific set of surveys listed above to
-compute the mean depth and latitude of the length-at-age samples by age
-(for ages 0 -- 15) across years, then classified these means into the
-nine latitude-depth regions. The temperature time series for a given
-species and age was obtained from the corresponding latitude-depth
-region where they occurred.
+(\emph{Sebastes crameri}) and sablefish (\emph{Anoplopoma fimbria}))
+were obtained from two surveys that collectively cover the full depth
+range of these species in a given year: the Triennial Shelf Survey and
+NWFSC Slope surveys for years 1998 and 2001, and the WCGBTS for the
+years 2003 to 2018. Shortbelly rockfish (\emph{Sebastes jordani}) also
+occur on the slope and shelf, but limited observations restricted
+analysis to data from the WCGBTS. Length-at-age data for four species
+that occur on the continental shelf (Pacific hake (\emph{Merluccius
+productus}), Pacific sanddab (\emph{Citharichthys sordidus}), lingcod
+(\emph{Ophiodon elongatus}), and petrale sole (\emph{Eopsetta jordani}))
+were obtained from two surveys: the Triennial Shelf Survey and the
+WCGBTS. Because marine fish stocks often change the depth and spatial
+locations occupied as they age, we attempted to derive temperature time
+series reflective of the habitats they occupy at a given age. We used
+the species-specific set of surveys listed above to compute the mean
+depth and latitude of the length-at-age samples by age (for ages 0 --
+15) across years, then classified these means into the nine
+latitude-depth regions. The temperature time series for a given species
+and age was obtained from the corresponding latitude-depth region where
+they occurred.
 
 \hypertarget{state-space-growth-models}{%
 \subsection{State-space growth models}\label{state-space-growth-models}}
@@ -420,7 +500,7 @@ Atlantic cod. The third model expands the second model to include
 temperature effects on the growth rate during the first year of life.
 The fourth model expands the third model to allow different asymptotic
 lengths for cohorts originating after 2000 when there was a dramatic
-reduction in fishing pressure (Warlick et al.~2018).
+reduction in fishing pressure (Warlick et al. 2018).
 
 For darkbotched rockfish, sablefish, and shortbelly rockfish we used
 length, weight and age observations from the ``combination survey''
@@ -514,6 +594,95 @@ To be determined, but some organizing thoughts are:
 \addcontentsline{toc}{subsection}{References}
 
 \hypertarget{refs}{}
+\begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-black09}{}}%
+Black, B.A. 2009. {Climate-driven synchrony across tree, bivalve, and
+rockfish growth-increment chronologies of the northeast Pacific}.\meps
+\textbf{378}: 37--46.
+doi:\href{https://doi.org/10.3354/meps07854}{10.3354/meps07854}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-bradburnetal11}{}}%
+Bradburn, M., Keller, A., and Horness, B. 2011. {The 2003 to 2008 U.S.
+West Coast bottom trawl surveys of groundfish resources off Washington,
+Oregon, and California: estimates of distribution, abundance, length,
+and age composition}. {Tech. Rep. NMFS-NWFSC-114, U.S. Department of
+Commerce, Seattle, WA}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-burnhamanderson02}{}}%
+Burnham, K.P., and Anderson, D.R. 2002. Model selection and multimodel
+inference: A practical information-theoretic approach. Springer-Verlag,
+New York.
+
+\leavevmode\vadjust pre{\hypertarget{ref-katsanevakis08}{}}%
+Katsanevakis, S., and Maravelias, C.D. 2008. Modelling fish growth:
+Multi-model inference as a better alternative to a priori using von
+bertalanffy equation. Fish and Fisheries \textbf{9}(2): 178--187.
+doi:\href{https://doi.org/10.1111/j.1467-2979.2008.00279.x}{10.1111/j.1467-2979.2008.00279.x}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-kelleretal17}{}}%
+Keller, A.A., Wallace, J.R., and Methot, R.D. 2017. The {Northwest
+Fisheries Science Center's} west coast groundfish bottom trawl survey:
+History, design, and description. Seattle, WA: NOAA.
+
+\leavevmode\vadjust pre{\hypertarget{ref-lauth99}{}}%
+Lauth, R.R. 1999. The 1997 pacific west coast upper continental slope
+trawl survey of groundfish resources off washington, oregon, and
+california: Estimates of distribution, abundance, and length
+composition. {U.S. Department of Commerce, NOAA Technical Memorandum
+NMFSAFSC-98}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-lauth00}{}}%
+Lauth, R.R. 2000. {The 1999 Pacific West Coast Upper Continental Slope
+Trawl Survey of groundfish resources off Washington, Oregon, and
+California: Estimates of distribution, abundance, and length
+composition}. {U.S. Department of Commerce, NOAA Technical Memorandum
+NMFSAFSC-115}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-lauth01}{}}%
+Lauth, R.R. 2001. {The 2000 Pacific West Coast Upper Continental Slope
+Trawl Survey of groundfish resources off Washington, Oregon, and
+California: Estimates of distribution, abundance, and length
+composition}. {U.S. Department of Commerce, NOAA Technical Memorandum
+NMFSAFSC-120}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-lesteretal04}{}}%
+Lester, N.P., Shuter, B.J., and Abrams, P.A. 2004. Interpreting the von
+bertalanffy model of somatic growth in fishes: The cost of reproduction.
+Proceedings of the Royal Society of London. Series B: Biological
+Sciences \textbf{271}(1548): 1625--1631.
+doi:\href{https://doi.org/10.1098/rspb.2004.2778}{10.1098/rspb.2004.2778}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-milleretal18}{}}%
+Miller, T.J., O'Brien, L., and Fratantoni, P.S. 2018. Temporal and
+environmental variation in growth and maturity and effects on management
+reference points of {G}eorges {B}ank {A}tlantic cod. Canadian Journal of
+Fisheries and Aquatic Sciences \textbf{75}(12): 2159--2171.
+doi:\href{https://doi.org/10.1139/cjfas-2017-0124}{10.1139/cjfas-2017-0124}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-quinnderiso99}{}}%
+Quinn, T.J., and Deriso, R.B. 1999. Quantitative fish dynamics. Oxford
+University Press.
+
+\leavevmode\vadjust pre{\hypertarget{ref-stawitzetal15}{}}%
+Stawitz, C.C., Essington, T.E., Branch, T.A., Haltuch, M.A., Hollowed,
+A.B., and Spencer, P.D. 2015. A state-space approach for detecting
+growth variation and application to {N}orth {P}acific groundfish.\cjfas
+\textbf{72}(9): 1316--1328.
+
+\leavevmode\vadjust pre{\hypertarget{ref-warlicketal18}{}}%
+Warlick, A., Steiner, E., and Guldin, M. 2018. {History of the West
+Coast groundfish trawl fishery: Tracking socioeconomic characteristics
+across different management policies in a multispecies fishery}. Marine
+Policy \textbf{93}: 9--21.
+
+\leavevmode\vadjust pre{\hypertarget{ref-weinbergetal02}{}}%
+Weinberg, K.L., Wilkins, M.E., Shaw, F.R., and Zimmermann, M. 2002. The
+2001 {P}acific {W}est {C}oast bottom trawl survey of groundfish
+resources: Estimates of distribution, abundance, and length and age
+composition. {U}.{S}. {D}epartment of {C}ommerce, {NOAA} {T}echnical
+{M}emorandum {NMFS-AFSC}-128.
+
+\end{CSLReferences}
 
 \pagebreak
 
@@ -547,7 +716,5 @@ To be determined, but some organizing thoughts are:
 \includegraphics[height = 0.8\textheight]{../results/ssm_temp/petrale_BRPs.pdf}
 \end{center}
 \end{figure}
-
-\bibliography{calcur\_paper.bib}
 
 \end{document}
