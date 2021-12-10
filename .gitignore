@@ -9,3 +9,4 @@ results/ss_lvb_temp/*.RDS
 results/ssm_temp/*.RDS
 paper/.Rhistory
 .Rproj.user
+.Rproj
