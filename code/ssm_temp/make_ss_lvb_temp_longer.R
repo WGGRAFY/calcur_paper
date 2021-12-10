@@ -65,11 +65,12 @@ saveRDS(m2_long, file = "results/ssm_temp/m2_long.RDS")
 #m2_long = readRDS("results/ssm_temp/m2_long.RDS")
 best = "m2_long"
 
-cairo_pdf(paste0("results/ssm_temp/example_ar1.pdf"), family = "Times", height = 10, width = 10)
+#cairo_pdf(paste0("results/ssm_temp/example_ar1.pdf"), family = "Times", height = 5, width = 5)
+png(filename = "results/ssm_temp/example_ar1.png", width = 5*144, height = 5*144, res = 144, pointsize = 12, family = "Times")#,
 plot.Ecov.res.fn(get(best), years = modyears, ylab2 = "", xrange = c(1970,2020))
 dev.off()
 
-cairo_pdf(paste0("results/ssm_temp/petrale_k_age_0.pdf"), family = "Times", height = 7, width = 10)
+cairo_pdf(paste0("results/ssm_temp/petrale_k_age_0.pdf"), family = "Times", height = 5, width = 5)
 nyears = length(modyears)
 plt.yrs = modyears
 par(mfrow = c(1,1), mar = c(1,1,0,1), oma = c(4,4,3,0))
