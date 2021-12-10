@@ -58,7 +58,14 @@ for(i in 1:nrow(spp)){
 petrale_data <- t(model_data[[7]][,-c(1,2,14:22)])
 lingcod_data <- t(model_data[[6]][,-c(1)])
 
-
+#Put lingcod data into stan format
+realdat <- vector("list")
+realdat$xaa_observed <- realdat$laa_observed <- lingcod_data
+realdat$Nages <- nrow(realdat$xaa_observed)
+realdat$Nyears <- ncol(realdat$xaa_observed)
+realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
+stan_dat <- plot_and_fill_data(realdat)
+sarla::fit_sarla(data = stan_dat)
 
 fit_init <- fit_stan_data(lingcod_data, init_effects = 1, year_effects = 0)
 fit_annual <- fit_stan_data()
