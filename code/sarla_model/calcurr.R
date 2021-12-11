@@ -60,18 +60,16 @@ lingcod_data <- t(model_data[[6]][,-c(1)])
 
 #Put lingcod data into stan format
 realdat <- vector("list")
-realdat$xaa_observed <- realdat$laa_observed <- lingcod_data
+realdat$xaa_observed <- realdat$laa_observed <- petrale_data
 realdat$Nages <- nrow(realdat$xaa_observed)
 realdat$Nyears <- ncol(realdat$xaa_observed)
 realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
 stan_dat <- plot_and_fill_data(realdat, init_effects = 0)
-sarla::fit_sarla(data = stan_dat)
+fit <- sarla::fit_sarla(data = stan_dat)
 
-fit_init <- fit_stan_data(lingcod_data, init_effects = 1, year_effects = 0)
-fit_annual <- fit_stan_data()
 summ <- fit$summary()
 unique(summ$variable)
-save(fit,file="output/LingcodInitial.Rds")
+save(fit,file="code/sarla_model/output/LingcodAnnual.Rds")
 readin <- load("output/LingcodAnnual.Rds")
 
 #create a stanfit object - not working
