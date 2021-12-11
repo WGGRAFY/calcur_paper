@@ -64,7 +64,7 @@ realdat$xaa_observed <- realdat$laa_observed <- lingcod_data
 realdat$Nages <- nrow(realdat$xaa_observed)
 realdat$Nyears <- ncol(realdat$xaa_observed)
 realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
-stan_dat <- plot_and_fill_data(realdat)
+stan_dat <- plot_and_fill_data(realdat, init_effects = 0)
 sarla::fit_sarla(data = stan_dat)
 
 fit_init <- fit_stan_data(lingcod_data, init_effects = 1, year_effects = 0)
