@@ -30,7 +30,7 @@ source("./code/sarla_model/functions/preprocess_cal_curr.R")
 spp <- read.csv("code/sarla_model/process_config.csv")
 model_data <- vector("list")
 
-for(i in 1:nrow(spp)){
+for(i in seq_len(spp)){
   processed_data <- preprocess_cal_curr(data__ = WareHouse.All.Ages.Env,
                                         common_ = spp[i,"spp"],
                                         sex_ = "F",
@@ -55,7 +55,7 @@ for(i in 1:nrow(spp)){
 
 
 
-petrale_data <- t(model_data[[7]][,-c(1,2,14:22)])
+petrale_data <- t(model_data[[7]][,-c(1,2,22)])
 lingcod_data <- t(model_data[[6]][,-c(1)])
 
 #Put lingcod data into stan format
@@ -65,6 +65,9 @@ realdat$Nages <- nrow(realdat$xaa_observed)
 realdat$Nyears <- ncol(realdat$xaa_observed)
 realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
 stan_dat <- plot_and_fill_data(realdat, init_effects = 0)
+names(stan_dat)[1] <- "laa_obs"
+
+stan_dat$laa_obs[which((stan_dat$laa_obs)==0)] <- 999
 fit <- sarla::fit_sarla(data = stan_dat)
 
 summ <- fit$summary()
