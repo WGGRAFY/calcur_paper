@@ -56,6 +56,16 @@ Haltuch\footnote{Northwest Fisheries Science Center, National Marine
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
 \usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -466,25 +476,54 @@ encompassing both the continental shelf and slope (darkbloched rockfish
 were obtained from two surveys that collectively cover the full depth
 range of these species in a given year: the Triennial Shelf Survey and
 NWFSC Slope surveys for years 1998 and 2001, and the WCGBTS for the
-years 2003 to 2018. Shortbelly rockfish (\emph{Sebastes jordani}) also
-occur on the slope and shelf, but limited observations restricted
-analysis to data from the WCGBTS. Length-at-age data for four species
-that occur on the continental shelf (Pacific hake (\emph{Merluccius
-productus}), Pacific sanddab (\emph{Citharichthys sordidus}), lingcod
-(\emph{Ophiodon elongatus}), and petrale sole (\emph{Eopsetta jordani}))
-were obtained from two surveys: the Triennial Shelf Survey and the
-WCGBTS. Because marine fish stocks often change the depth and spatial
-locations occupied as they age, we attempted to derive temperature time
-series reflective of the habitats they occupy at a given age. We used
-the species-specific set of surveys listed above to compute the mean
-depth and latitude of the length-at-age samples by age (for ages 0 --
-15) across years, then classified these means into the nine
-latitude-depth regions. The temperature time series for a given species
-and age was obtained from the corresponding latitude-depth region where
-they occurred.
+years 2003 to 2018. Additionally, samples from the 2001 AFSC slope
+survey, and the 2004 Triennial shelf survey, were used for these two
+species. Shortbelly rockfish (\emph{Sebastes jordani}) also occur on the
+slope and shelf, but limited observations restricted analysis to data
+from the WCGBTS. Length-at-age data for four species that occur on the
+continental shelf (Pacific hake (\emph{Merluccius productus}), Pacific
+sanddab (\emph{Citharichthys sordidus}), lingcod (\emph{Ophiodon
+elongatus}), and petrale sole (\emph{Eopsetta jordani})) were obtained
+from two surveys: the Triennial Shelf Survey and the WCGBTS. Because
+marine fish stocks often change the depth and spatial locations occupied
+as they age, we attempted to derive temperature time series reflective
+of the habitats they occupy at a given age. We used the species-specific
+set of surveys listed above to compute the mean depth and latitude of
+the length-at-age samples by age (for ages 0 -- 15) across years, then
+classified these means into the nine latitude-depth regions. The
+temperature time series for a given species and age was obtained from
+the corresponding latitude-depth region where they occurred.
 
-\hypertarget{state-space-growth-models}{%
-\subsection{State-space growth models}\label{state-space-growth-models}}
+\hypertarget{state-space-size-at-age-model}{%
+\subsection{State-space size-at-age
+model}\label{state-space-size-at-age-model}}
+
+We used a slight modification of the state-space size-at-age model in
+Stawitz et al. (2015). Mean length-at-age for each year for each species
+is calculated for fish ages with at least ten observations across the
+length of the time series. The mean is calculated as the difference in
+size-at-age for a given age and year from the mean size-at-age for that
+age across a 15 year reference period (1995 - 2010) to allow for
+comparisons between species with different time series lengths.
+
+This model assumes an autoregressive process of order 1 (AR1) represents
+the ``true'' temporal processes in size-at-age data, such that the
+size-at-age a+1 and year t+1 is a function of size-at-age a in year t.
+This process can be modeled as an AR1 process only (\(S_1\)) or with
+four additional predictors that represent year-specific (\(S_2\)),
+cohort-specific (\(S_3\)), or initial size (\(S_4\)) deviations from the
+AR1 process shared across age groups (Table 3). The observation equation
+is the same across all models, such that the observed length-at-age is
+normally-distributed around the ``true'' length-at-age. The priors and
+estimated parameter values for this model are provided in Appendix . The
+model is implemented in the Stan modeling language (Carpenter (2017))
+via the \texttt{sarla} (State-space AutoRegressive Length-at-Age)
+\texttt{R} package which can be downloaded at
+\url{http://github.com/wggrafy/sarla}.
+
+\hypertarget{state-space-von-bertalanffy-growth-models}{%
+\subsection{State-space von Bertalanffy growth
+models}\label{state-space-von-bertalanffy-growth-models}}
 
 We used the same general model as Miller et al. (2018) which assumes von
 Bertalanffy growth and allows annual age-specific growth rates. It can
@@ -502,22 +541,16 @@ The fourth model expands the third model to allow different asymptotic
 lengths for cohorts originating after 2000 when there was a dramatic
 reduction in fishing pressure (Warlick et al. 2018).
 
-For darkbotched rockfish, sablefish, and shortbelly rockfish we used
-length, weight and age observations from the ``combination survey''
-only, whereas for hake, sanddab, lingcod, petrale sole we used
-observations from both the ``combination'' and ``trienniel'' surveys.
-The total number of length and weight at age observations available for
-each species ranged between 5152 for shortbelly rockfish and 17850 for
-sablefish. For models and , we used the bottom temperature estimates for
-the region defined by area and depth bin where the species was
-predominantly found during the earliest observed ages (Table 2). We
-observed age 0 fish for all species except Petrale sole (minimum age is
-1), and the youngest observed ages of all species predominated in depths
-less than 184 m. Young sablefish and darkblotched rockfish predominated
-in the most northern region (Eureka-Columbia-Vancouver) and young
-shortbelly rockfish predominated in the most southern region
-(Conception). Young fish of all other species predominated in the
-intermediate region (Monterey).
+For models and , we used the bottom temperature estimates for the region
+defined by area and depth bin where the species was predominantly found
+during the earliest observed ages (Table 2). We observed age 0 fish for
+all species except Petrale sole (minimum age is 1), and the youngest
+observed ages of all species predominated in depths less than 184 m.
+Young sablefish and darkblotched rockfish predominated in the most
+northern region (Eureka-Columbia-Vancouver) and young shortbelly
+rockfish predominated in the most southern region (Conception). Young
+fish of all other species predominated in the intermediate region
+(Monterey).
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
@@ -526,6 +559,30 @@ intermediate region (Monterey).
 \subsection{Description of the size at age data, and temperature data
 (Paul, Feb
 29)}\label{description-of-the-size-at-age-data-and-temperature-data-paul-feb-29}}
+
+The number of samples, and length of time series, varied by species,
+owing to the different habitats and sampling rates for the various
+surveys. Pacific Hake has samples extending back to 1977, with large
+samples in the early years of the Triennial shelf survey. In contrast,
+the time series for Pacific sanddab, Petrale sole, and shortbelly
+rockfish begins in 2003 with the WCGBTS. The most samples were obtained
+for sablefish (23,470), whereas the least samples were obtained for
+shortbelly rockfish (5,990).
+
+Observed temperatures decreased with depth and latitude (Figure x). At
+the shallowest depth strata of \textless{} 183 m, the average
+temperature from 2014-2018 in the northern ECV region was 7.7 C; in
+contrast, the average in the southern Conception area was 10.2 C. The
+pattern of higher temperatures in the southern regions was observed
+across all depth strata, although in the deepest depth strata of
+\textgreater{} 550 m the temperature differences across the latitude
+regions were less distinct. A drop in temperatures was observed in 1999
+in the two deepest depth strata of 184 - 550 m and \textgreater{} 550 m,
+corresponding to the 1999 La Nina event (ref). In the shallowest depth
+strata of \textless{} 183 m, increases in temperatures were observed
+between 2013 and 2014/2015. In general, however, the temperatures
+observed from the surveys have been generally stable with long-term
+directional trends.
 
 \hypertarget{results-from-the-4-modeling-approaches}{%
 \subsection{Results from the 4 modeling
@@ -553,10 +610,6 @@ released, but estimates were lower for sablefish and shortbelly rockfish
 
 \hypertarget{vb-dba-alan-mar-30}{%
 \subsubsection{VB-DBA (Alan, Mar 30)}\label{vb-dba-alan-mar-30}}
-
-\hypertarget{vast-model-christine-mar-30}{%
-\subsubsection{VAST model (Christine, Mar
-30)}\label{vast-model-christine-mar-30}}
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
@@ -612,6 +665,11 @@ Commerce, Seattle, WA}.
 Burnham, K.P., and Anderson, D.R. 2002. Model selection and multimodel
 inference: A practical information-theoretic approach. Springer-Verlag,
 New York.
+
+\leavevmode\vadjust pre{\hypertarget{ref-stan}{}}%
+Carpenter, G., B. 2017. Stan: A probabilistic programming language.
+Journal of Statistical Software \textbf{76}(1): 1--32.
+doi:\url{https://doi.org/10.18637/jss.v076.i01}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-katsanevakis08}{}}%
 Katsanevakis, S., and Maravelias, C.D. 2008. Modelling fish growth:
@@ -692,6 +750,23 @@ composition. {U}.{S}. {D}epartment of {C}ommerce, {NOAA} {T}echnical
 
 \hypertarget{tables}{%
 \section{Tables}\label{tables}}
+
+Table 3: State space size-at-age models
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+Name & Equation & Explanation \\
+\midrule
+\endhead
+\(S_1\) & \(x_a,t = \beta x_{a-1,t-1} + \varepsilon\) & Constant \\
+\(S_2\) & \(x_a,t = \beta x_{a-1,t-1} + \gamma_t + \varepsilon\) &
+Annual deviations \\
+\(S_3\) & \(x_a,t = \beta x_{a-1,t-1} + \nu_c + \varepsilon\) & Cohort
+deviations \\
+\(S_4\) & \(x_a,t = \beta x_{a-1,t-1} + \varepsilon\) & Initial size
+deviations \\
+\bottomrule
+\end{longtable}
 
 \hypertarget{figures}{%
 \section{Figures}\label{figures}}

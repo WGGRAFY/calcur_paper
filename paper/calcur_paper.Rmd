@@ -42,14 +42,14 @@ bibliography: calcur-paper.bib
 knitr::opts_chunk$set(echo = TRUE, tidy=FALSE, tidy.opts=list(width.cutoff=60), warning = FALSE, message = FALSE, fig.align = "center")
 #knitr::opts_knit$set(root.dir = '../' )
 library(knitr)
-library(tidyverse)
+#library(tidyverse)
 # library(cowplot)
 # library(ggsidekick)
 library(pander)
 library(kableExtra)
 library(png)
 library(forcats)
-library(wham)
+#library(wham)
 # library(ggplotFL)
 # library(ggsci)
 ```
@@ -104,7 +104,14 @@ Regions used in this study are a combination of the 2003 WCGBTS latitudinal and 
 Seven species were selected for analysis of length-at-age data, based on a diversity of life-history traits, habitat usage, and data availability. Length-at-age data for two deep-water species with ranges encompassing both the continental shelf and slope (darkbloched rockfish (*Sebastes crameri*) and sablefish (*Anoplopoma fimbria*)) were obtained from two surveys that collectively cover the full depth range of these species in a given year: the Triennial Shelf Survey and NWFSC Slope surveys for years 1998 and 2001,  and the WCGBTS for the years 2003 to 2018.
 Additionally, samples from the 2001 AFSC slope survey, and the 2004 Triennial shelf survey, were used for these two species. Shortbelly rockfish (*Sebastes jordani*) also occur on the slope and shelf, but limited observations restricted analysis to data from the WCGBTS. Length-at-age data for four species that occur on the continental shelf (Pacific hake (*Merluccius productus*), Pacific sanddab (*Citharichthys sordidus*), lingcod (*Ophiodon elongatus*), and petrale sole (*Eopsetta jordani*)) were obtained from two surveys: the Triennial Shelf Survey and the WCGBTS. Because marine fish stocks often change the depth and spatial locations occupied as they age, we attempted to derive temperature time series reflective of the habitats they occupy at a given age. We used the species-specific set of surveys listed above to compute the mean depth and latitude of the length-at-age samples by age (for ages 0 – 15) across years, then classified these means into the nine latitude-depth regions. The temperature time series for a given species and age was obtained from the corresponding latitude-depth region where they occurred. 
 
-## State-space growth models
+## State-space size-at-age model
+We used a slight modification of the state-space size-at-age model in @stawitzetal15. Mean length-at-age for each year for each species is calculated for fish ages with at least ten observations across the length of the time series. The mean is calculated as the difference in size-at-age for a given age and year from the mean size-at-age for that age across a 15 year reference period (1995 - 2010) to allow for comparisons between species with different time series lengths.
+
+This model assumes an autoregressive process of order 1 (AR1) represents the "true" temporal processes in size-at-age data, such that the size-at-age a+1 and year t+1 is a function of size-at-age a in year t. This process can be modeled as an AR1 process only ($S_1$) or with four additional predictors that represent year-specific ($S_2$), cohort-specific ($S_3$), or initial size ($S_4$) deviations from the AR1 process shared across age groups (Table 3). The observation equation is the same across all models, such that the observed length-at-age is normally-distributed around the "true" length-at-age. The priors and estimated parameter values for this model are provided in Appendix . The model is implemented in the Stan modeling language (@stan) via the `sarla` (State-space AutoRegressive Length-at-Age) `R` package which can be downloaded at http://github.com/wggrafy/sarla.
+
+
+
+## State-space von Bertalanffy growth models
 
 We used the same general model as @milleretal18 which assumes von Bertalanffy growth and allows annual age-specific growth rates. It can use combinations of length and weight information and simultaneously estimates allometric length-weight relationship.  We fit four alternative models for each species (Table 1). The base model assumes the same LVB growth rate and asymptotic size for all individuals. The second model allows annual AR(1) deviations in the log growth rate for a given year applied to all cohorts in that year. Allowing this AR(1) process for annual growth rates was found by @milleretal18 to be important for evaluating effects of temperature on growth rates for Georges Bank Atlantic cod. The third model expands the second model to include temperature effects on the growth rate during the first year of life. The fourth model expands the third model to allow different asymptotic lengths for cohorts originating after 2000 when there was a dramatic reduction in fishing pressure [@warlicketal18].
 
@@ -159,7 +166,19 @@ To be determined, but some organizing thoughts are:
 
 # Appendix A {-}
 
+
+
 # Tables
+
+Table 3: State space size-at-age models
+
+| Name    | Equation                                               | Explanation             |
+|---------|--------------------------------------------------------|-------------------------|
+| $S_1$   | $x_a,t = \beta x_{a-1,t-1} + \varepsilon$              | Constant                |
+| $S_2$   | $x_a,t = \beta x_{a-1,t-1} + \gamma_t + \varepsilon$   | Annual deviations       |
+| $S_3$   | $x_a,t = \beta x_{a-1,t-1} + \nu_c + \varepsilon$      | Cohort deviations       |
+| $S_4$   | $x_a,t = \beta x_{a-1,t-1} + \varepsilon$              | Initial size deviations |
+
 
 # Figures
 
