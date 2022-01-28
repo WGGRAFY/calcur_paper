@@ -6,7 +6,7 @@ require(nmfspalette)
 require(cmdstanr)
 require(bridgesampling)
 require(posterior)
-remotes::install_github("WGGRAFY/sarla")
+remotes::install_github("WGGRAFY/sarla", ref="missingdata")
 require(sarla)
 options(mc.cores = parallel::detectCores())
 
@@ -54,7 +54,7 @@ for (i in seq_len(length(spp$spp))) {
     arrange(age_years) %>%
     pivot_wider(names_from = age_years, values_from = standardl) %>%
     arrange(year) %>%
-    mutate_all(~ replace(., is.na(.), 0))
+    mutate_all(~ replace(., is.na(.), 999))
 }
 
 
@@ -65,7 +65,7 @@ lingcod_data <- t(model_data[[6]][, -c(1)])
 
 # Put lingcod data into stan format
 realdat <- vector("list")
-realdat$xaa_observed <- realdat$laa_observed <- petrale_data
+realdat$xaa_observed <- realdat$laa_observed <- petrale_data[-c(14:20),]
 realdat$Nages <- nrow(realdat$xaa_observed)
 realdat$Nyears <- ncol(realdat$xaa_observed)
 realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
