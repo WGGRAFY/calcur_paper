@@ -8,9 +8,7 @@ require(bridgesampling)
 require(posterior)
 remotes::install_github("WGGRAFY/sarla", ref="missingdata")
 require(sarla)
-options(mc.cores = parallel::detectCores())
 
-rstan_options(auto_write = TRUE)
 load("./data/WareHouse_2019.RData")
 # load the temperature data
 ex <- new.env()
@@ -61,24 +59,40 @@ for (i in seq_len(length(spp$spp))) {
 
 
 petrale_data <- t(model_data[[7]][, -c(1, 2, 22)])
-lingcod_data <- t(model_data[[6]][, -c(1)])
+lingcod_data <- t(model_data[[6]][, -c(1,13,14)])
 
 # Put lingcod data into stan format
 realdat <- vector("list")
-realdat$xaa_observed <- realdat$laa_observed <- petrale_data[-c(14:20),]
+realdat$xaa_observed <- realdat$laa_observed <- lingcod_data
 realdat$Nages <- nrow(realdat$xaa_observed)
 realdat$Nyears <- ncol(realdat$xaa_observed)
 realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
 stan_dat <- plot_and_fill_data(realdat, init_effects = 0, plot=T)
 names(stan_dat)[1] <- "laa_obs"
 
-stan_dat$laa_obs[which((stan_dat$laa_obs) == 0)] <- 999
-fit <- sarla::fit_sarla(data = stan_dat)
 
+fit <- sarla::fit_sarla(data = stan_dat)
 summ <- fit$summary()
+require(shinystan)
+stanfit <- rstan::read_stan_csv(fit$output_files())
+launch_shinystan(stanfit)
+
+
+summ[1:81,]
 unique(summ$variable)
 save(fit, file = "code/sarla_model/output/LingcodAnnual.Rds")
-readin <- load("output/LingcodAnnual.Rds")
+posterior <- fit$draws()
+gamma_draws <- subset_draws(posterior, "gamma_y")
+#Make some plots
+require(bayesplot)
+
+plot_title <- ggtitle("Posterior distributions",
+                      "with medians and 80% intervals")
+mcmc_intervals(gamma_draws,
+           pars = c(paste("gamma_y[",1:24,"]",sep="")),
+           prob = 0.8) + plot_title
+
+readin <- load("code/sarla_model/output/LingcodAnnual.Rds")
 
 # create a stanfit object - not working
 init_stanfit <- rstan::read_stan_csv(fit$output_files())
