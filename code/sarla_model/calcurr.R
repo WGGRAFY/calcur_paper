@@ -9,7 +9,7 @@ require(nmfspalette)
 require(cmdstanr)
 require(bridgesampling)
 require(posterior)
-# remotes::install_github("WGGRAFY/sarla", ref="missingdata")
+remotes::install_github("WGGRAFY/sarla", force = TRUE)
 require(sarla)
 
 load("./data/WareHouse_2019.RData")
@@ -18,7 +18,7 @@ ex <- new.env()
 load("./data/AR1_temperature_regions_2020.RData", env = ex)
 ls(ex)
 temperature_by_region <- ex$tempest
-names(temperature_by_region) <- ex$regions
+colnames(temperature_by_region) <- ex$regions
 str(WareHouse.All.Ages.Env)
 
 # Peek at which spp has the most data
@@ -55,25 +55,19 @@ for (i in seq_len(length(spp$spp))) {
     arrange(age_years) %>%
     pivot_wider(names_from = age_years, values_from = standardl) %>%
     arrange(year) %>%
-    mutate_all(~ replace(., is.na(.), 999))
+    mutate_all(~ replace(., is.na(.), 999)) %>%
+    t()
+
 }
 
-petrale_data <- t(model_data[[7]][, -c(1, 2, 22)])
-lingcod_data <- t(model_data[[6]][, -c(1,13,14)])
+i <- 1
 
 # Put lingcod data into stan format
 realdat <- vector("list")
 
-SPECIES <- "lingcod"
-SPECIES <- "petrale"
+SPECIES <- spp$spp[i]
 
-if (SPECIES == "petrale") {
-  realdat$xaa_observed <- realdat$laa_observed <- petrale_data
-} else if (SPECIES == "lingcod") {
-  realdat$xaa_observed <- realdat$laa_observed <- lingcod_data
-} else {
-  stop("Species not found")
-}
+realdat$xaa_observed <- realdat$laa_observed <- model_data[[1]][-1,]
 realdat$Nages <- nrow(realdat$xaa_observed)
 realdat$Nyears <- ncol(realdat$xaa_observed)
 realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
@@ -84,9 +78,9 @@ stan_dat$sigma_o_prior <- c(log(0.5), 0.5) # arbitrary!?
 stan_dat$sigma_p_prior <- c(log(0.2), 0.2) # arbitrary!?
 
 # quick testing, adjust path as needed:
-library(cmdstanr)
+#library(cmdstanr)
 # file.remove("../sarla/inst/stan/sarla")
-mod <- cmdstan_model("../sarla/inst/stan/sarla.stan")
+#mod <- cmdstan_model("../sarla/inst/stan/sarla.stan")
 
 # year effects:
 stan_dat$N_eta_c <- 0L
@@ -123,16 +117,23 @@ stan_dat$N_delta_c <- stan_dat$Ncohorts
 stan_dat$N_gamma_y <- stan_dat$Ncohorts
 stan_dat$N_eta_c <- stan_dat$Ncohorts
 
-fit <- mod$sample(
-  data = stan_dat,
-  chains = 4,
-  parallel_chains = parallel::detectCores(),
-  iter_warmup = 1000,
-  iter_sampling = 1000,
-  adapt_delta = 0.95,
-  max_treedepth = 10
-)
-fit
+# fit <- mod$sample(
+#   data = stan_dat,
+#   chains = 4,
+#   parallel_chains = parallel::detectCores(),
+#   iter_warmup = 1000,
+#   iter_sampling = 1000,
+#   adapt_delta = 0.95,
+#   max_treedepth = 10
+# )
+
+fit <- sarla::fit_sarla(stan_dat,
+                        chains = 4,
+                        parallel_chains = parallel::detectCores(),
+                        iter_warmup = 1000,
+                        iter_sampling = 1000,
+                        adapt_delta = 0.95,
+                        max_treedepth = 10)
 
 post <- posterior::as_draws_df(fit$draws())
 pars <- names(post)
@@ -250,39 +251,3 @@ if (stan_dat$est_year_effects) {
 cowplot::plot_grid(g1, g2, g3, ncol = 1L)
 ggsave(paste0(f, "all-effects.pdf"), width = 5, height = 7)
 
-
-# --------------
-
-# fit <- sarla::fit_sarla(
-#   data = stan_dat,
-#   chains = 4,
-#   iter = 2000,
-#   parallel_chains = parallel::detectCores(),
-#   adapt_delta = 0.95
-# )
-#
-# summ <- fit$summary()
-# require(shinystan)
-# stanfit <- rstan::read_stan_csv(fit$output_files())
-# launch_shinystan(stanfit)
-#
-#
-# summ[1:81,]
-# unique(summ$variable)
-# save(fit, file = "code/sarla_model/output/LingcodAnnual.Rds")
-# posterior <- fit$draws()
-# gamma_draws <- subset_draws(posterior, "gamma_y")
-# #Make some plots
-# require(bayesplot)
-#
-# plot_title <- ggtitle("Posterior distributions",
-#                       "with medians and 80% intervals")
-# mcmc_intervals(gamma_draws,
-#            # pars = c(paste("gamma_y[",1:24,"]",sep="")),
-#            prob = 0.8) + plot_title
-#
-# readin <- load("code/sarla_model/output/LingcodAnnual.Rds")
-#
-# # create a stanfit object - not working
-# init_stanfit <- rstan::read_stan_csv(fit$output_files())
-# bridge_sampler(samples = init_stanfit)
