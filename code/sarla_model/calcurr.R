@@ -3,6 +3,7 @@
 require(dplyr)
 require(stringr)
 require(ggplot2)
+theme_set(theme_light())
 require(tidyr)
 require(nmfspalette)
 require(cmdstanr)
@@ -62,19 +63,29 @@ lingcod_data <- t(model_data[[6]][, -c(1,13,14)])
 
 # Put lingcod data into stan format
 realdat <- vector("list")
-realdat$xaa_observed <- realdat$laa_observed <- lingcod_data
+
+SPECIES <- "lingcod"
+SPECIES <- "petrale"
+
+if (SPECIES == "petrale") {
+  realdat$xaa_observed <- realdat$laa_observed <- petrale_data
+} else if (SPECIES == "lingcod") {
+  realdat$xaa_observed <- realdat$laa_observed <- lingcod_data
+} else {
+  stop("Species not found")
+}
 realdat$Nages <- nrow(realdat$xaa_observed)
 realdat$Nyears <- ncol(realdat$xaa_observed)
 realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
 stan_dat <- plot_and_fill_data(realdat, init_effects = 0, plot=T)
 names(stan_dat)[1] <- "laa_obs"
 
-stan_dat$sigma_o_prior <- c(log(0.5), 0.5)
-stan_dat$sigma_p_prior <- c(log(0.2), 0.2)
+stan_dat$sigma_o_prior <- c(log(0.5), 0.5) # arbitrary!?
+stan_dat$sigma_p_prior <- c(log(0.2), 0.2) # arbitrary!?
 
 # quick testing, adjust path as needed:
 library(cmdstanr)
-file.remove("../sarla/inst/stan/sarla")
+# file.remove("../sarla/inst/stan/sarla")
 mod <- cmdstan_model("../sarla/inst/stan/sarla.stan")
 
 # year effects:
@@ -131,12 +142,21 @@ pars_main <- pars[unique(c(
   grep("sigma_", pars), grep("beta", pars), grep("sigma_", pars)
 ))]
 
-fit$summary(variables = c("sigma_p", "sigma_o", "beta", "xaa[1,10]", "xaa[2,10]", "gamma_y[1]", "gamma_y[2]", "X0[1]", "gamma_y_sd"))
+fit$summary(variables = c("sigma_p", "sigma_o", "beta", "xaa[1,10]", "xaa[2,10]", "gamma_y[1]", "gamma_y[2]", "gamma_y_sd"))
 fit$cmdstan_diagnose()
 
+f <- paste0("code/sarla_model/plots/", SPECIES, "/")
+dir.create(f, showWarnings = FALSE)
+bayesplot::bayesplot_theme_set(theme_light())
+
 bayesplot::mcmc_areas_ridges(fit$draws(pars_main))
+ggsave(paste0(f, "ridges.pdf"), width = 4, height = 5)
+
 bayesplot::mcmc_trace(fit$draws(pars_main))
-bayesplot::mcmc_pairs(fit$draws(pars_main), off_diag_fun = "hex")
+
+g <- bayesplot::mcmc_pairs(fit$draws(pars_main), off_diag_fun = "hex")
+g
+ggsave(paste0(f, "pairs.pdf"), plot = g, width = 8, height = 8)
 
 post_xaa <- tidybayes::gather_draws(fit, xaa[i, y]) %>%
   rename(age = i, year = y)
@@ -166,6 +186,7 @@ quantile_summary %>%
     legend.title = element_text(size = "6"),
     legend.text = element_text(size = "6")
   )
+ggsave(paste0(f, "dev-by-age.pdf"), width = 10, height = 10)
 
 quantile_summary %>%
   filter(!(lwr == 0 & upr == 0)) %>%
@@ -181,6 +202,7 @@ quantile_summary %>%
     legend.title = element_text(size = "6"),
     legend.text = element_text(size = "6")
   )
+ggsave(paste0(f, "dev-by-year.pdf"), width = 10, height = 10)
 
 if (stan_dat$est_cohort_effects) {
   post_delta_c <- tidybayes::gather_draws(fit, delta_c[y])
@@ -190,8 +212,10 @@ if (stan_dat$est_cohort_effects) {
       lwr = quantile(.value, probs = 0.1),
       upr = quantile(.value, probs = 0.9)
     )
-  ggplot(delta_hat, aes(y, med, ymin = lwr, ymax = upr)) +
-    geom_pointrange()
+  g1 <- ggplot(delta_hat, aes(y, med, ymin = lwr, ymax = upr)) +
+    geom_pointrange() + ggtitle("Cohort effects")
+  g1
+  ggsave(paste0(f, "cohort-effects.pdf"), width = 5, height = 3)
 }
 
 if (stan_dat$est_init_effects) {
@@ -202,8 +226,10 @@ if (stan_dat$est_init_effects) {
       lwr = quantile(.value, probs = 0.1),
       upr = quantile(.value, probs = 0.9)
     )
-  ggplot(eta_hat, aes(y, med, ymin = lwr, ymax = upr)) +
-    geom_pointrange()
+  g2 <- ggplot(eta_hat, aes(y, med, ymin = lwr, ymax = upr)) +
+    geom_pointrange() + ggtitle("Init effects")
+  g2
+  ggsave(paste0(f, "init-effects.pdf"), width = 5, height = 3)
 }
 
 if (stan_dat$est_year_effects) {
@@ -215,9 +241,14 @@ if (stan_dat$est_year_effects) {
       lwr = quantile(.value, probs = 0.1),
       upr = quantile(.value, probs = 0.9)
     )
-  ggplot(gamma_hat, aes(y, med, ymin = lwr, ymax = upr)) +
-    geom_pointrange()
+  g3 <- ggplot(gamma_hat, aes(y, med, ymin = lwr, ymax = upr)) +
+    geom_pointrange() + ggtitle("Year effects")
+  g3
+  ggsave(paste0(f, "year-effects.pdf"), width = 5, height = 3)
 }
+
+cowplot::plot_grid(g1, g2, g3, ncol = 1L)
+ggsave(paste0(f, "all-effects.pdf"), width = 5, height = 7)
 
 
 # --------------
