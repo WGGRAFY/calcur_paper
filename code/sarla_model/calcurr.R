@@ -87,10 +87,89 @@ fit <- mod$sample(
   parallel_chains = parallel::detectCores(),
   iter_warmup = 1000,
   iter_sampling = 1000,
-  adapt_delta = 0.90,
+  adapt_delta = 0.95,
   max_treedepth = 10
 )
 fit
+
+# Look at fitted model
+fit$summary(variables = c("sigma_p", "sigma_o", "beta", "xaa[1,10]", "xaa[2,10]", "gamma_y[1]", "gamma_y[2]", "X0[1]"))
+fit$cmdstan_diagnose()
+
+post <- posterior::as_draws_df(fit$draws())
+pars <- names(post)
+pars <- pars[!grepl("raw", pars)]
+pars_main <- pars[unique(c(
+  grep("_sd", pars),
+  grep("sigma_", pars), grep("beta", pars), grep("sigma_", pars)
+))]
+
+bayesplot::mcmc_areas_ridges(fit$draws(pars_main))
+bayesplot::mcmc_trace(fit$draws(pars_main))
+bayesplot::mcmc_pairs(fit$draws(pars_main), off_diag_fun = "hex")
+
+post_xaa <- tidybayes::gather_draws(fit, xaa[i, y]) %>%
+  rename(age = i, year = y)
+
+quantile_summary <- post_xaa %>%
+  # filter(y >= stan_dat$Nages) %>%
+  # mutate(y = y - stan_dat$Nages + 1) %>%
+  group_by(year, age) %>%
+  summarise(
+    lwr = quantile(.value, 0.1),
+    upr = quantile(.value, 0.9),
+    med = median(.value)
+  )
+
+legend_def <- c("median" = "black", "95 quantile" = "gray")
+quantile_summary %>%
+  filter(!(lwr == 0 & upr == 0)) %>%
+  ggplot(aes(age, med, ymin = lwr, ymax = upr)) +
+  facet_wrap(~year) +
+  geom_line(alpha = 1, aes(colour = "red")) +
+  geom_ribbon(alpha = 0.5) +
+  theme_minimal() +
+  scale_colour_manual(values = legend_def) +
+  theme(
+    legend.position = c(.90, .05),
+    legend.key.size = unit(0.1, "cm"),
+    legend.title = element_text(size = "6"),
+    legend.text = element_text(size = "6")
+  )
+
+# if (stan_dat$est_cohort_effects) {
+#   post_delta_c <- tidybayes::gather_draws(fit, delta_c[y])
+#   delta_hat <- post_delta_c %>%
+#     group_by(y) %>%
+#     summarise(med = median(.value))
+# }
+
+# if (stan_dat$est_init_effects) {
+#   post_eta_c <- tidybayes::gather_draws(fit, eta_c[y])
+#   eta_hat <- post_eta_c %>%
+#     group_by(y) %>%
+#     summarise(med = median(.value))
+#   eta_lwr <- post_eta_c %>%
+#     group_by(y) %>%
+#     summarise(lwr = quantile(.value, 0.025))
+#   eta_upr <- post_eta_c %>%
+#     group_by(y) %>%
+#     summarise(upr = quantile(.value, 0.975))
+# }
+
+if (stan_dat$est_year_effects) {
+  post_gamma_y <- tidybayes::gather_draws(fit, gamma_y[y])
+  gamma_hat <- post_gamma_y %>%
+    group_by(y) %>%
+    summarise(
+      med = median(.value),
+      lwr = quantile(.value, probs = 0.1),
+      upr = quantile(.value, probs = 0.9)
+    )
+  ggplot(gamma_hat, aes(y, med, ymin = lwr, ymax = upr)) +
+    geom_pointrange()
+}
+
 
 # --------------
 
