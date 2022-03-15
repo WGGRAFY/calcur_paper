@@ -1,3 +1,5 @@
+# setwd("../../")
+
 require(dplyr)
 require(stringr)
 require(ggplot2)
@@ -6,7 +8,7 @@ require(nmfspalette)
 require(cmdstanr)
 require(bridgesampling)
 require(posterior)
-remotes::install_github("WGGRAFY/sarla", ref="missingdata")
+# remotes::install_github("WGGRAFY/sarla", ref="missingdata")
 require(sarla)
 
 load("./data/WareHouse_2019.RData")
@@ -70,8 +72,36 @@ realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
 stan_dat <- plot_and_fill_data(realdat, init_effects = 0, plot=T)
 names(stan_dat)[1] <- "laa_obs"
 
+# quick testing, adjust path as needed:
+library(cmdstanr)
+file.remove("../sarla/inst/stan/sarla")
+mod <- cmdstan_model("../sarla/inst/stan/sarla.stan")
 
-fit <- sarla::fit_sarla(data = stan_dat)
+stan_dat$N_eta_c <- 0L
+stan_dat$sigma_o_prior <- c(log(0.5), 0.5)
+stan_dat$sigma_p_prior <- c(log(0.2), 0.2)
+
+fit <- mod$sample(
+  data = stan_dat,
+  chains = 4,
+  parallel_chains = parallel::detectCores(),
+  iter_warmup = 1000,
+  iter_sampling = 1000,
+  adapt_delta = 0.90,
+  max_treedepth = 10
+)
+fit
+
+# --------------
+
+# fit <- sarla::fit_sarla(
+#   data = stan_dat,
+#   chains = 4,
+#   iter = 2000,
+#   parallel_chains = parallel::detectCores(),
+#   adapt_delta = 0.95
+# )
+
 summ <- fit$summary()
 require(shinystan)
 stanfit <- rstan::read_stan_csv(fit$output_files())
@@ -89,7 +119,7 @@ require(bayesplot)
 plot_title <- ggtitle("Posterior distributions",
                       "with medians and 80% intervals")
 mcmc_intervals(gamma_draws,
-           pars = c(paste("gamma_y[",1:24,"]",sep="")),
+           # pars = c(paste("gamma_y[",1:24,"]",sep="")),
            prob = 0.8) + plot_title
 
 readin <- load("code/sarla_model/output/LingcodAnnual.Rds")
