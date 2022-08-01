@@ -1,0 +1,96 @@
+---
+title:  "Estimation of changes in growth"
+subtitle: "Using a state-space growth model"
+author: "Christine Stawitz<br>NOAA Fisheries, OST<br>Seattle, WA<br>`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: ["xaringan-themer.css", "slides-style.css", "tufte.css"]
+    lib_dir: libs
+    nature:
+      ratio: '4:3'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: |
+        <div class="progress-bar-container">
+          <div class="progress-bar" style="width: calc( (%current% - 1) / (%total% - 1) * 100%);">
+          </div>
+        </div>`
+---
+layout: true
+
+.footnote[U.S. Department of Commerce | National Oceanic and Atmospheric Administration | National Marine Fisheries Service]
+
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+require(here)
+require(dplyr)
+require(tidyr)
+require(ggplot2)
+```
+
+```{r xaringan-tile-view, echo=FALSE}
+# this gives you a tile navigation if you type "O" at any time
+xaringanExtra::use_tile_view()
+```
+
+---
+
+# Introduction
+* Different papers have come to different conclusions regarding growth change
+* Regional differences?
+* Species differences? 
+* Modeling differences?
+
+---
+# ICES/PICES Working Group on Growth Change 
+
+California current species modeled using multiple frameworks
+Acknowledge members
+
+---
+# State-space autoregressive length-at-age model
+* Stawitz et al. 2014
+* Adapted for the Stan software by Sean Anderson and Christine Stawitz
+* Added ability to estimate different variation processes simultaneously
+
+---
+
+# The California Current
+
+---
+# Estimation settings
+* Needed a strong prior on $\sigma_p$ (process error) and $\sigma_o$ (observation error) since the data can't distinguish between the two
+* 4 chains
+* 1000 warmup iterations
+
+---
+# Model types
+* Initial size
+* Cohort
+* Annual
+
+
+---
+# Results
+
+How many stocks had significant effects ow which type?
+
+---
+# Results
+
+```{r show_example, echo = FALSE}
+knitr::include_graphics("../plots/sablefish/all-effects.pdf")
+
+```
+
+
+Sablefish - giving $\sigma_p$ very narrow prior on 0.2 fixed BFMI warnings
+- removed initial size effects since these were very small
+Lingcod, even with fixed 0.2 had EBFMI less than 0.2
+---
+# Results
+---
+# Next steps
+---
