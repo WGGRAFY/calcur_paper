@@ -39,58 +39,110 @@ xaringanExtra::use_tile_view()
 
 # Introduction
 * Different papers have come to different conclusions regarding growth change
-* Regional differences?
-* Species differences? 
-* Modeling differences?
+```{r growthlit, echo = FALSE}
+knitr::include_graphics("./static/pictures/growthpapers.png")
+```
+
 
 ---
 # ICES/PICES Working Group on Growth Change 
 
-California current species modeled using multiple frameworks
-Acknowledge members
+* Co-chairs: Paul Spencer, C. Tara Marshall, Alan Baudron, John Morongiello, Shin-Ichi Ito
+* California Current groundfish species modeled using multiple frameworks
+* von Bertalanffy fit to each cohort (Alan Baudron et al 2014)
+* von Bertalanffy state-space model (Tim Miller et al 2018)
+* State-space autoregressive length-at-age model (Stawitz et al 2014)
+* Other collaborators: Melissa Haltuch (NMFS), Sean Anderson (DFO)
 
 ---
-# State-space autoregressive length-at-age model
-* Stawitz et al. 2014
+# The California Current
+```{r calcur, echo = FALSE, out.height="500px",  fig.align='center'}
+knitr::include_graphics("./static/pictures/ecosystems.jpg")
+```
+
+
+---
+# State-space autoregressive length-at-age model (sarla)
+* Based on Stawitz et al. 2014 model
 * Adapted for the Stan software by Sean Anderson and Christine Stawitz
 * Added ability to estimate different variation processes simultaneously
 
 ---
 
-# The California Current
-
----
-# Estimation settings
-* Needed a strong prior on $\sigma_p$ (process error) and $\sigma_o$ (observation error) since the data can't distinguish between the two
-* 4 chains
-* 1000 warmup iterations
-
----
-# Model types
-* Initial size
-* Cohort
+# Type of variation
+* None
 * Annual
-
-
----
-# Results
-
-How many stocks had significant effects ow which type?
+* Cohort
+* Initial size
 
 ---
-# Results
+# No changes
 
-```{r show_example, echo = FALSE}
-knitr::include_graphics("../plots/sablefish/all-effects.pdf")
+```{r none, echo=FALSE}
+knitr::include_graphics("./static/pictures/no_var.png")
+```
 
+---
+# Annual changes
+```{r annual, echo=FALSE}
+knitr::include_graphics("./static/pictures/annual_var.png")
 ```
 
 
-Sablefish - giving $\sigma_p$ very narrow prior on 0.2 fixed BFMI warnings
-- removed initial size effects since these were very small
-Lingcod, even with fixed 0.2 had EBFMI less than 0.2
 ---
-# Results
+# Cohort changes
+```{r cohort, echo=FALSE}
+knitr::include_graphics("./static/pictures/cohort_var.png")
+```
+
 ---
+# Initial size
+```{r init, echo=FALSE}
+knitr::include_graphics("./static/pictures/init_var.png")
+```
+
+---
+# Estimation settings
+* 4 models per species
+* Needed a strong prior on $\sigma_p$ (process error) and $\sigma_o$ (observation error) 
+* 4 chains, 1000 warmup iterations
+
+---
+# Preliminary Results - Sablefish
+
+```{r show_all, echo=FALSE, out.height="500px",  fig.align='center'}
+knitr::include_graphics("./static/pictures/all-effects.png")
+```
+
+
+
+---
+# Preliminary Results - Sablefish 
+
+```{r show_cohort, echo=FALSE}
+knitr::include_graphics("./static/pictures/cohort-effects.png")
+```
+
+---
+# Preliminary Results - Pacific hake 
+```{r show_hake, echo = FALSE}
+knitr::include_graphics("./static/pictures/year-effects.png")
+```
+
+
+---
+# Takeaways 
+* Variation can be aliased by different processes
+* No obvious synchrony or reaction to warming in these results
+
 # Next steps
+* Examining convergence in all effects models
+* Adapting model selection criteria for time series
+* Incorporating temperature time series applied by other WG members
+
 ---
+# References
+* Baudron et al. 2013. Warming temperatures and smaller body sizes: synchronous changes in growth of North Sea Fishes. Global Change Biology. https://doi.org/10.1111/gcb.12514 
+* Miller, T.J. et al 2018. Temporal and environmental variation in growth and maturity and effects on management reference points of Georges Bank Atlantic cod. CJFAS. https://doi.org/10.1139/cjfas-2017-0124
+* Stawitz et al 2014. A state-space approach for detecting growth variation and application to North Pacific groundfish. CJFAS. https://doi.org/10.1139/cjfas-2014-0558 
+* Denechaud et al. 2020. A century of fish growth in relation to climate change, population dynamics and exploitation. Global Change Biology. https://doi.org/10.1111/gcb.15298

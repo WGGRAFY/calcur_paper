@@ -1,4 +1,4 @@
-make_plots <- function(dir, species, fit_obj, pars_main){
+make_plots <- function(dir, species, fit_obj, pars_main, stan_dat){
   
   f <- paste0(dir, species, "\\")
   dir.create(f, showWarnings = FALSE)
@@ -101,9 +101,49 @@ make_plots <- function(dir, species, fit_obj, pars_main){
     g3
     ggsave(paste0(f, "year-effects.pdf"), width = 5, height = 3)
   }
-  
+  if(stan_dat$est_year_effects&stan_dat$est_cohort_effects&stan_dat$est_init_effects){
   cowplot::plot_grid(g1, g2, g3, ncol = 1L)
   ggsave(paste0(f, "all-effects.pdf"), width = 5, height = 7)
+  }
+  postpred <- tidybayes::gather_draws(fit_obj,laa_postpred[i,y]) %>%
+  #      ungroup() %>%
+  #     pivot_wider(names_from = c(.iteration, .draw), values_from = .value) %>%
+  #  filter(.chain==1) %>%
+  #  select(-c(i,y,.chain,.variable))
+  #%>%
+    group_by(i,y) %>%
+    summarise(
+     med = median(.value),
+      lwr = quantile(.value, probs = 0.1),
+      upr = quantile(.value, probs = 0.9)
+    )
+  #set missing values to NA
+  stan_dat$laa_obs[which(stan_dat$laa_obs==999)] <- 0
+  df <- stan_dat$laa_obs
+  df <- cbind(i = rownames(df), data.frame(df, row.names=NULL))
+
+  laa_dat <- df %>% 
+    pivot_longer(cols = starts_with("X"), names_to = "y",names_prefix="X") %>%
+    mutate(i = as.numeric(i), y = as.numeric(y))
+
+    #  ppc_stat_grouped(y = laa_dat$value,
+    #                  as.matrix(postpred),
+    #                 group = laa_dat$y,
+    #                 stat = "median")
+  
+  
+  g4 <- ggplot(data = postpred, aes(i, med, ymin = lwr, ymax = upr)) +
+    facet_wrap(~y) + 
+    geom_smooth(stat = "identity", size = 0.5) +
+    geom_point(data= laa_dat, aes(x=i, y=value), inherit.aes=FALSE,
+              alpha = 1/2) +
+    ggtitle("Postpred") + theme_minimal() 
+  g4
+  ggsave(paste0(f, "postpred.pdf"), width = 20, height = 12)
+  
+  #plot(density(extract(fit, "laa_postpred")), xlim=c(1,2000),
+  #     xlab="Loss", col=grey(0, 0.8),
+  #     main="Predicitive distribution")
   
   
 }

@@ -1,8 +1,21 @@
 run_model <- function(i, cohort_effects, init_effects, year_effects){
   # Put lingcod data into stan format
-  realdat <- vector("list")
-  
   SPECIES <- spp$spp[i]
+  filename <- paste0(".\\code\\sarla_model\\output\\",SPECIES,
+                     "y", year_effects,
+                     "i", init_effects,
+                     "c", cohort_effects,
+                     "model.RData")
+  
+  # if(file.exists(filename)){
+  #   load(filename)
+  #   stan_dat <- tosave$stan_dat
+  #   fit <- tosave$fit
+  #   post <- tosave$post
+  # } else{
+    
+  
+  realdat <- vector("list")
   
   realdat$xaa_observed <- realdat$laa_observed <- model_data[[i]][-1,]
   realdat$Nages <- nrow(realdat$xaa_observed)
@@ -50,21 +63,42 @@ run_model <- function(i, cohort_effects, init_effects, year_effects){
                           adapt_delta = 0.95,
                           max_treedepth = 10)
   
+  
+  
+  # }
+  
   post <- posterior::as_draws_df(fit$draws())
+  post_mat <- posterior::as_draws_matrix(fit$draws())
+  
+  tosave<- list("stan_dat" = stan_dat, "post" = post, "fit" = fit)
+  
+  save(tosave, file = filename)
   pars <- names(post)
   pars <- pars[!grepl("raw", pars)]
-  pars_main <- pars[unique(c(
+  pars_main <- pars[unique(c(/
     grep("_sd", pars),
     grep("sigma_", pars), grep("beta", pars), grep("sigma_", pars)
   ))]
   
-  fit$summary(variables = c("sigma_p", "sigma_o", "beta", "xaa[1,10]", "xaa[2,10]", "gamma_y[1]", "gamma_y[2]", "gamma_y_sd"))
+  summary_vars <- c("sigma_p", "sigma_o", "beta", "xaa[1,10]", "xaa[2,10]")
+  if(year_effects==1L){
+    summary_vars <- c(summary_vars, "gamma_y[1]", "gamma_y[2]", "gamma_y_sd")
+  }
+  if(cohort_effects==1L){
+    summary_vars <- c(summary_vars, "delta_c[1]", "delta_c[2]", "delta_c_sd")
+  }
+  if(init_effects==1L){
+    summary_vars <- c(summary_vars, "eta_c[1]", "eta_c[2]", "eta_c_sd")
+  }
+  
+  fit$summary(variables =  summary_vars)
+                            
   fit$cmdstan_diagnose()
   
-  tosave<- list(stan_dat, post, fit)
-  save(tosave, file = paste0("SPECIES","model.RData"))
+  make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit, 
+             species = paste0(SPECIES, "y", year_effects,"i", init_effects,
+             "c", cohort_effects), pars_main = pars_main, stan_dat = stan_dat)
   
-  
-  make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit, species = SPECIES, pars_main = pars_main)
+  return(fit)
   
 }

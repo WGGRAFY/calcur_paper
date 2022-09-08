@@ -35,7 +35,7 @@ source("./code/sarla_model/functions/run_model.R")
 spp <- read.csv("code/sarla_model/process_config.csv")
 model_data <- vector("list")
 
-for (i in seq_len(length(spp$spp))) {
+for (i in seq_len(length(spp$spp))[-1]) {
   processed_data <- preprocess_cal_curr(
     data__ = WareHouse.All.Ages.Env,
     common_ = spp[i, "spp"],
@@ -61,5 +61,31 @@ for (i in seq_len(length(spp$spp))) {
     mutate_all(~ replace(., is.na(.), 999)) %>%
     t()
 
-  run_model(i = i, 1L, 1L, 1L)
+ # fit_all <- run_model(i = i, 1L, 1L, 1L)
+#  fit_year <- run_model(i = i, 0L, 0L, 1L)
+#  fit_cohort <- run_model(i = i, 1L, 0L, 0L)
+#  fit_init <- run_model(i = i, 0L, 1L, 0L)
+ fit_null <- run_model(i = i, 0L, 0L, 0L)
+  
+ 
 }
+
+strings <- paste0("./code/sarla_model/output/",rep(spp$spp, each = 5),rep(c("y1i1c1"
+,"y0i1c0", "y1i0c0", "y0i0c1", "y0i0c0"),7),"model.RData")
+
+loo_list <- vector("list")
+loo_table <- matrix(nrow = 7, ncol=5)
+j <- k <- 1
+for(i in seq_len(length(strings))){
+  tosave <- get(load(strings[i]))
+  fit <- tosave$fit
+  loo_list[[i]]<- fit$loo(cores = 2)
+  loo_table[j,k] <- loo_list[[i]]$looic
+  if(k==5){
+    j <- j+1
+    k <- 1
+  } else{
+    k <- k+1
+  }
+}
+save(loo_table, file="lootable.RData")
