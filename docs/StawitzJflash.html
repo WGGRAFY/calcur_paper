@@ -9,6 +9,7 @@
     <script src="libs/tile-view/tile-view.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
     <link rel="stylesheet" href="slides-style.css" type="text/css" />
+    <link rel="stylesheet" href="tufte.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
@@ -92,7 +93,8 @@ layout: true
 "ratio": "4:3",
 "highlightStyle": "github",
 "highlightLines": true,
-"countIncrementalSlides": false
+"countIncrementalSlides": false,
+"slideNumberFormat": "<div class=\"progress-bar-container\">\n  <div class=\"progress-bar\" style=\"width: calc( (%current% - 1) / (%total% - 1) * 100%);\">\n  </div>\n</div>`"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));

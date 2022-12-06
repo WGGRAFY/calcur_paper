@@ -89,7 +89,7 @@ The aim of this study is to undertake a comparative analysis of four models usin
 
 # Methods
 
-## Study area, species chosen, trawl survey description (Melissa, Feb 29)
+## Study area, species chosen, trawl survey description (Melissa)
 
 Four trawl surveys conducted by the National Marine Fisheries Center’s Alaska Fisheries Science Center (AFSC) and Northwest Fisheries Science Center (NWFSC) provided data for this study. The Triennial Shelf Survey, conducted by the AFSC in 1980, 1983, 1986, 1989, 1992, 1995, 1998, and 2001 and by the NWFSC in 2004, provides the earliest time series of fishery independent temperature and biological data in the U.S. portion of the California Current continental shelf [@weinbergetal02]. Triennial survey sampling occurred along transects perpendicular to the coast over depths from 55 m to 366 m (500 m after 1992) and from the Canadian border to Monterey Bay, California (36°48' N) until 1986, then to Point Conception, California (34°30' N) from 1989 forward.
 
@@ -117,24 +117,43 @@ We used the same general model as @milleretal18 which assumes von Bertalanffy gr
 
 For models  and , we used the bottom temperature estimates for the region defined by area and depth bin where the species was predominantly found during the earliest observed ages (Table 2). We observed age 0 fish for all species except Petrale sole (minimum age is 1), and the youngest observed ages of all species predominated in depths less than 184 m.  Young sablefish and darkblotched rockfish predominated in the most northern region (Eureka-Columbia-Vancouver) and young shortbelly rockfish predominated in the most southern region (Conception). Young fish of all other species predominated in the intermediate region (Monterey).
 
+## Dynamic Factor Analysis
+
+The Dynamic Factor Analysis (DFA) [@zuur03] is a multivariate time series analysis which allows estimating underlying common trend(s) among a set of time series. DFA aims at modelling as few common trends as possible whilst still achieving a reasonable model fit, and has previously been used successfully to describe temporal variation in size among species [@zuur03; @baudron14; @goertler16; @ikpewe21]. The size of a species $s$ in year $t$ is modeled as follows:
+
+$$
+size_s(t)= Z_{1,s}x_{1,t}+\dots+Z_{i,s}x_{i,t}+ a_s+\varepsilon_{s,t} 
+$$
+
+where $i$ is the number of common trends $x$ identified in the data, $Z$ is the species-specific factor loading indicating how a common trend is related to the original time series for that species, a is an offset term, and $\varepsilon_t \sim MVN(0, \textbf{R})$ with MVN standing for Multivariate Normal and R for the error covariance matrix. 
+
+The DFA model isn’t spatially explicit but instead was applied independently in each of the three areas i.e., ECV, Monterey and Conception, to investigate growth patterns across the seven species. Two different methods were used: the first follows that of @baudron14, while the second follows that of @ikpewe21. For the first method, a von Bertalanffy growth model was fitted on a cohort basis (assuming individuals within a cohort exhibit similar growth trajectories) to each species in each area. Only $L_{\infty}$ values that were significantly estimated ($P<0.05$) were considered, and $L_{\infty}$ time series were standardized by subtracting the mean and dividing by the standard deviation. The DFA was then used to identified common trends in $L_{\infty}$ time series among species in each area. For the second method, the age at which 50% of individuals are mature ($A50$) was first obtained from the literature for each species (see Supplementary material) and considered as the maturing age. Then, the juvenile age was defined as $A50/2$, and the mature age as $(\mathrm{max age} – A50)/2$, where max age is the maximum age observed in the survey data for each species. Time series of mean length at juvenile age, maturing age, and mature age (i.e., three time series per species) were computed for each species in each area and standardized by subtracting the mean and dividing by the standard deviation. The DFA was then used to identified common trends in mean length time series among species in each area for the three life stage selected: juvenile, maturing and mature.
+
+In both methods one and two, the DFA models in each area were run with and without covariates and the best model in each area was identified as the one with the lowest AIC. Two covariates were considered: temperature anomaly, and fishing pressure. Temperature anomaly was estimated for depths greater than 550 m (ECV), depths between 184 and 550 m (ECV and Monterey), and depths less than 183 m (ECV, Monterey and Conception). Fish stocks in the California current ecosystem were all subject to high fishing pressure (F) until 2000, after which it was drastically reduced. To mimic this, a dummy F time series was computed with $F \sim 0.8$ from 1977 to 2000, and $F \sim 0.2$ from 2001 to 2018. Random noise around the values 0.2 and 0.8 was added with the “jitter” function in R to make the F time series more realistic. DFA models were run with temperature and F separately, and with both covariates combined. All DFA models were run using the MARSS [@holmes21] R package (version 3.11.4).
+
+
 # Results
 
-## Description of the size at age data, and temperature data (Paul, Feb 29)
+## Description of the size at age data, and temperature data (Paul)
 
 The number of samples, and length of time series, varied by species, owing to the different habitats and sampling rates for the various surveys. Pacific Hake has samples extending back to 1977, with large samples in the early years of the Triennial shelf survey. In contrast, the time series for Pacific sanddab, Petrale sole, and shortbelly rockfish begins in 2003 with the WCGBTS. The most samples were obtained for sablefish (23,470), whereas the least samples were obtained for shortbelly rockfish (5,990).
 
 Observed temperatures decreased with depth and latitude (Figure x). At the shallowest depth strata of < 183 m, the average temperature from 2014-2018 in the northern ECV region was 7.7 C; in contrast, the average in the southern Conception area was 10.2 C. The pattern of higher temperatures in the southern regions was observed across all depth strata, although in the deepest depth strata of > 550 m the temperature differences across the latitude regions were less distinct. A drop in temperatures was observed in 1999 in the two deepest depth strata of 184 - 550 m and > 550 m, corresponding to the 1999 La Nina event (ref). In the shallowest depth strata of < 183 m, increases in temperatures were observed between 2013 and 2014/2015. In general, however, the temperatures observed from the surveys have been generally stable with long-term directional trends.             
 
 
-## Results from the 4 modeling approaches 
+## Results from the three models
   
-### Stawitz state-space model (Christine, Mar 30)
+### Stawitz state-space model (Christine)
 
-### State-space von Bertalanffy growth model (Tim, Mar 30)
+### State-space von Bertalanffy growth model (Tim)
 
 We found that including temperature effects on growth during the first year of life improves model performance for all 7 species (Table 3).  The estimated temperature effect was positive for all species except shortbelly rockfish (Table 4, Figure 1), the species with the most southerly distribution. Allowing asymptotic size to differ for cohorts exposed to low or high fishing pressure improved model performance for 4 of the 7 species (darkblotched rockfish, Pacific hake, sablefish, and shortbelly rockfish).  Estimates of asymptotic size for darkblotched rockfish and Pacific hake were greater after fishing pressure was released, but estimates were lower for sablefish and shortbelly rockfish (Table 5).
 
-### VB-DBA (Alan, Mar 30)
+### VB-DBA (Alan)
+
+With the first method (DFA applied to $L_{\infty}$ time series), the DFA models identified a single and declining common trend in all three areas, consistent with TSR (Fig. 2). With the exception of lingcod, the $L_{\infty}$ time series for all species were positively related to the common trends in all three areas, as shown by the positive factor loadings. The common trend was best supported by the data in the Monterey area, where five out of seven species showed similar factor loading values indicating equal support for the identified trend from a majority of species. In both ECV and Conception areas the identified trends were supported by three species only. Including covariates did not improve the DFA models (Table 6). For both Monterey and Conception areas the lowest AIC was achieved by the model with no covariates. For the ECV area, the model including $F$ achieved the lowest AIC, however the difference with the AIC from the model without covariates was less than 4 indicating that the inclusion of the $F$ covariate does not significantly improve the model [@burnhamanderson02]. 
+
+With the second method (DFA applied to mean length at juvenile, maturing and mature life stages), the DFA models did not indicate a clear directional pattern across areas and life stages (Fig. S?). However, in the Monterey area where the common declining trend in $L_{\infty}$ was best supported, there was some indication of an increase in the mean length of juveniles coinciding with a decline in the mean length of mature individuals, at least in the second part of the time series (mid-1990s onwards), consistent with TSR (Fig. 3). Unfortunately, the factor loadings showed poor support across species for both these trends, with some species being highly negatively correlated to the trends identified. As with the first method, including covariates did not improve the DFA models: in all three areas and for all three life stages, the best DFA model was always the one without covariates (Table 7).
 
 
 # Discussion
@@ -178,6 +197,42 @@ Table 3: State space size-at-age models
 | $S_2$   | $x_a,t = \beta x_{a-1,t-1} + \gamma_t + \varepsilon$   | Annual deviations       |
 | $S_3$   | $x_a,t = \beta x_{a-1,t-1} + \nu_c + \varepsilon$      | Cohort deviations       |
 | $S_4$   | $x_a,t = \beta x_{a-1,t-1} + \varepsilon$              | Initial size deviations |
+
+Table 4: Comparison of AIC values achieved by the DFA models applied to $L_{\infty}$ time series (first method). The lowest AIC in each area is highlighted in bold.
+
+|Region	|ECV	|Monterey	|Conception|
+|-------|-----|-----|-----|-----|----|
+|model	|AICc |	AICc	  |AICc      |
+|-------|-----|---------|----------|
+|no covariate	|261	|215	|142|
+|temp <=183m	    | 273|	235	|163|
+|temp 184-550m	|274	|236||	
+|temp >=550m	    |275	|	||
+|all temp	|289	|252	||
+|fishing	                |258|	232	|157|
+|fishing & temp <=183m	|266|	250	|184|
+|fishing & temp 184-550m	|267|	251	||
+|fishing & temp >=550m	|266|	|	|
+|all covariates |	317|	273	|184|
+
+Table 5: Comparison of AIC values achieved by the DFA models applied to time series of mean length at juvenile, maturing and mature life stages (second method). The lowest AIC in each area and life stage is highlighted in bold.
+
+|	      |  ECV	  |	    |	        |         | Monterey|		
+|-------|---------|-----|---------|---------|---------|
+|	      |age_juv	|A50	|age_mat	|age_juv	|A50      |
+|-------|---------|-----|---------|---------|---------|	
+|model	|AICc	    |AICc	|AICc	    |AICc	    |AICc     |	
+|-------|---------|-----|---------|---------|---------|
+|no covars	|249	|249	|224	|248	|264|	
+|temp <=183m	|267	|267	|242|	265	|282|	
+|temp 184-550m	|266	|267	|242|	265	|282|	
+|temp >=550m	|266	|267	|242|	| |		
+|all temp	|284	|297	|262	|282	|291|	
+|fishing	|265	|265	|237	|265	|282|	
+|fishing & temp <=183m	| 284	|285	|250	|287	|303	|
+|fishing & temp 184-550m	|283	|285	|250	|287	|303	|
+|fishing & temp >=550m	282	|284	|250	|		|
+|all covars	|318	|334	|278	|308	|317 |	
 
 
 # Figures

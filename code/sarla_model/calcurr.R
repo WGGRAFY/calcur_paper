@@ -89,3 +89,4 @@ for(i in seq_len(length(strings))){
   }
 }
 save(loo_table, file="lootable.RData")
+load("lootable.RData")

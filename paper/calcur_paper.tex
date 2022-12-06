@@ -4,20 +4,6 @@
 %
 \documentclass[
 ]{article}
-\title{Modeling the effect of temperature on fish growth in the
-California Current}
-\author{Paul Spencer\footnote{\href{mailto:paul.spencer@noaa.gov}{\nolinkurl{paul.spencer@noaa.gov}},
-  Alaska Fisheries Science Center, National Marine Fisheries Service,
-  XXXX Sandpoint Way, Seattle, WA XXXXX, USA} \and Tara
-Marshall\footnote{UK} \and Alan Boudron\footnote{UK} \and Timothy J.
-Miller\footnote{Northeast Fisheries Science Center, National Marine
-  Fisheries Service, 166 Water Street, Woods Hole, MA 02543, USA} \and Christine
-Stawitz\footnote{Office of Science and Technology, National Marine
-  Fisheries Service, Sand Point Way, Seattle, USA} \and Melissa
-Haltuch\footnote{Northwest Fisheries Science Center, National Marine
-  Fisheries Service, Montlake Blvd, Seattle, WA XXXXX, USA}}
-\date{}
-
 \usepackage{amsmath,amssymb}
 \usepackage{lmodern}
 \usepackage{iftex}
@@ -47,14 +33,6 @@ Haltuch\footnote{Northwest Fisheries Science Center, National Marine
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Modeling the effect of temperature on fish growth in the California Current},
-  pdfauthor={Paul Spencer; Tara Marshall; Alan Boudron; Timothy J. Miller; Christine Stawitz; Melissa Haltuch},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
 \usepackage{longtable,booktabs,array}
 \usepackage{calc} % for calculating minipage widths
@@ -195,6 +173,28 @@ Haltuch\footnote{Northwest Fisheries Science Center, National Marine
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Modeling the effect of temperature on fish growth in the California Current},
+  pdfauthor={Paul Spencer; Tara Marshall; Alan Boudron; Timothy J. Miller; Christine Stawitz; Melissa Haltuch},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Modeling the effect of temperature on fish growth in the
+California Current}
+\author{Paul Spencer\footnote{\href{mailto:paul.spencer@noaa.gov}{\nolinkurl{paul.spencer@noaa.gov}},
+  Alaska Fisheries Science Center, National Marine Fisheries Service,
+  XXXX Sandpoint Way, Seattle, WA XXXXX, USA} \and Tara
+Marshall\footnote{UK} \and Alan Boudron\footnote{UK} \and Timothy J.
+Miller\footnote{Northeast Fisheries Science Center, National Marine
+  Fisheries Service, 166 Water Street, Woods Hole, MA 02543, USA} \and Christine
+Stawitz\footnote{Office of Science and Technology, National Marine
+  Fisheries Service, Sand Point Way, Seattle, USA} \and Melissa
+Haltuch\footnote{Northwest Fisheries Science Center, National Marine
+  Fisheries Service, Montlake Blvd, Seattle, WA XXXXX, USA}}
+\date{}
 
 \begin{document}
 \maketitle
@@ -403,10 +403,9 @@ models can be used for multi-model inference.
 \hypertarget{methods}{%
 \section{Methods}\label{methods}}
 
-\hypertarget{study-area-species-chosen-trawl-survey-description-melissa-feb-29}{%
+\hypertarget{study-area-species-chosen-trawl-survey-description-melissa}{%
 \subsection{Study area, species chosen, trawl survey description
-(Melissa, Feb
-29)}\label{study-area-species-chosen-trawl-survey-description-melissa-feb-29}}
+(Melissa)}\label{study-area-species-chosen-trawl-survey-description-melissa}}
 
 Four trawl surveys conducted by the National Marine Fisheries Center's
 Alaska Fisheries Science Center (AFSC) and Northwest Fisheries Science
@@ -459,7 +458,7 @@ coverage south of Point Conception, California (34°30' N).
 
 Regions used in this study are a combination of the 2003 WCGBTS
 latitudinal and depth strata. The INPFC Vancouver, Columbia, and Eureka
-latitudinal strata are combined into a single region, labeled ``ECV,''
+latitudinal strata are combined into a single region, labeled ``ECV'',
 due to ecological similarity. The combination of three INPFC latitudinal
 strata and three depth strata yield nine regions defined by latitude and
 depth. Mean bottom temperature used in situ data from the four surveys
@@ -552,13 +551,75 @@ rockfish predominated in the most southern region (Conception). Young
 fish of all other species predominated in the intermediate region
 (Monterey).
 
+\hypertarget{dynamic-factor-analysis}{%
+\subsection{Dynamic Factor Analysis}\label{dynamic-factor-analysis}}
+
+The Dynamic Factor Analysis (DFA) (Zuur et al. 2003) is a multivariate
+time series analysis which allows estimating underlying common trend(s)
+among a set of time series. DFA aims at modelling as few common trends
+as possible whilst still achieving a reasonable model fit, and has
+previously been used successfully to describe temporal variation in size
+among species (Zuur et al. 2003; Baudron et al. 2014; Goertler 2016;
+Ikpewe et al. 2021). The size of a species \(s\) in year \(t\) is
+modeled as follows:
+
+\[
+size_s(t)= Z_{1,s}x_{1,t}+\dots+Z_{i,s}x_{i,t}+ a_s+\varepsilon_{s,t} 
+\]
+
+where \(i\) is the number of common trends \(x\) identified in the data,
+\(Z\) is the species-specific factor loading indicating how a common
+trend is related to the original time series for that species, a is an
+offset term, and \(\varepsilon_t \sim MVN(0, \textbf{R})\) with MVN
+standing for Multivariate Normal and R for the error covariance matrix.
+
+The DFA model isn't spatially explicit but instead was applied
+independently in each of the three areas i.e., ECV, Monterey and
+Conception, to investigate growth patterns across the seven species. Two
+different methods were used: the first follows that of Baudron et al.
+(2014), while the second follows that of Ikpewe et al. (2021). For the
+first method, a von Bertalanffy growth model was fitted on a cohort
+basis (assuming individuals within a cohort exhibit similar growth
+trajectories) to each species in each area. Only \(L_{\infty}\) values
+that were significantly estimated (\(P<0.05\)) were considered, and
+\(L_{\infty}\) time series were standardized by subtracting the mean and
+dividing by the standard deviation. The DFA was then used to identified
+common trends in \(L_{\infty}\) time series among species in each area.
+For the second method, the age at which 50\% of individuals are mature
+(\(A50\)) was first obtained from the literature for each species (see
+Supplementary material) and considered as the maturing age. Then, the
+juvenile age was defined as \(A50/2\), and the mature age as
+\((\mathrm{max age} – A50)/2\), where max age is the maximum age
+observed in the survey data for each species. Time series of mean length
+at juvenile age, maturing age, and mature age (i.e., three time series
+per species) were computed for each species in each area and
+standardized by subtracting the mean and dividing by the standard
+deviation. The DFA was then used to identified common trends in mean
+length time series among species in each area for the three life stage
+selected: juvenile, maturing and mature.
+
+In both methods one and two, the DFA models in each area were run with
+and without covariates and the best model in each area was identified as
+the one with the lowest AIC. Two covariates were considered: temperature
+anomaly, and fishing pressure. Temperature anomaly was estimated for
+depths greater than 550 m (ECV), depths between 184 and 550 m (ECV and
+Monterey), and depths less than 183 m (ECV, Monterey and Conception).
+Fish stocks in the California current ecosystem were all subject to high
+fishing pressure (F) until 2000, after which it was drastically reduced.
+To mimic this, a dummy F time series was computed with \(F \sim 0.8\)
+from 1977 to 2000, and \(F \sim 0.2\) from 2001 to 2018. Random noise
+around the values 0.2 and 0.8 was added with the ``jitter'' function in
+R to make the F time series more realistic. DFA models were run with
+temperature and F separately, and with both covariates combined. All DFA
+models were run using the MARSS (Holmes et al. 2021) R package (version
+3.11.4).
+
 \hypertarget{results}{%
 \section{Results}\label{results}}
 
-\hypertarget{description-of-the-size-at-age-data-and-temperature-data-paul-feb-29}{%
+\hypertarget{description-of-the-size-at-age-data-and-temperature-data-paul}{%
 \subsection{Description of the size at age data, and temperature data
-(Paul, Feb
-29)}\label{description-of-the-size-at-age-data-and-temperature-data-paul-feb-29}}
+(Paul)}\label{description-of-the-size-at-age-data-and-temperature-data-paul}}
 
 The number of samples, and length of time series, varied by species,
 owing to the different habitats and sampling rates for the various
@@ -584,17 +645,17 @@ between 2013 and 2014/2015. In general, however, the temperatures
 observed from the surveys have been generally stable with long-term
 directional trends.
 
-\hypertarget{results-from-the-4-modeling-approaches}{%
-\subsection{Results from the 4 modeling
-approaches}\label{results-from-the-4-modeling-approaches}}
+\hypertarget{results-from-the-three-models}{%
+\subsection{Results from the three
+models}\label{results-from-the-three-models}}
 
-\hypertarget{stawitz-state-space-model-christine-mar-30}{%
-\subsubsection{Stawitz state-space model (Christine, Mar
-30)}\label{stawitz-state-space-model-christine-mar-30}}
+\hypertarget{stawitz-state-space-model-christine}{%
+\subsubsection{Stawitz state-space model
+(Christine)}\label{stawitz-state-space-model-christine}}
 
-\hypertarget{state-space-von-bertalanffy-growth-model-tim-mar-30}{%
-\subsubsection{State-space von Bertalanffy growth model (Tim, Mar
-30)}\label{state-space-von-bertalanffy-growth-model-tim-mar-30}}
+\hypertarget{state-space-von-bertalanffy-growth-model-tim}{%
+\subsubsection{State-space von Bertalanffy growth model
+(Tim)}\label{state-space-von-bertalanffy-growth-model-tim}}
 
 We found that including temperature effects on growth during the first
 year of life improves model performance for all 7 species (Table 3). The
@@ -608,8 +669,40 @@ rockfish and Pacific hake were greater after fishing pressure was
 released, but estimates were lower for sablefish and shortbelly rockfish
 (Table 5).
 
-\hypertarget{vb-dba-alan-mar-30}{%
-\subsubsection{VB-DBA (Alan, Mar 30)}\label{vb-dba-alan-mar-30}}
+\hypertarget{vb-dba-alan}{%
+\subsubsection{VB-DBA (Alan)}\label{vb-dba-alan}}
+
+With the first method (DFA applied to \(L_{\infty}\) time series), the
+DFA models identified a single and declining common trend in all three
+areas, consistent with TSR (Fig. 2). With the exception of lingcod, the
+\(L_{\infty}\) time series for all species were positively related to
+the common trends in all three areas, as shown by the positive factor
+loadings. The common trend was best supported by the data in the
+Monterey area, where five out of seven species showed similar factor
+loading values indicating equal support for the identified trend from a
+majority of species. In both ECV and Conception areas the identified
+trends were supported by three species only. Including covariates did
+not improve the DFA models (Table 6). For both Monterey and Conception
+areas the lowest AIC was achieved by the model with no covariates. For
+the ECV area, the model including \(F\) achieved the lowest AIC, however
+the difference with the AIC from the model without covariates was less
+than 4 indicating that the inclusion of the \(F\) covariate does not
+significantly improve the model (Burnham and Anderson 2002).
+
+With the second method (DFA applied to mean length at juvenile, maturing
+and mature life stages), the DFA models did not indicate a clear
+directional pattern across areas and life stages (Fig. S?). However, in
+the Monterey area where the common declining trend in \(L_{\infty}\) was
+best supported, there was some indication of an increase in the mean
+length of juveniles coinciding with a decline in the mean length of
+mature individuals, at least in the second part of the time series
+(mid-1990s onwards), consistent with TSR (Fig. 3). Unfortunately, the
+factor loadings showed poor support across species for both these
+trends, with some species being highly negatively correlated to the
+trends identified. As with the first method, including covariates did
+not improve the DFA models: in all three areas and for all three life
+stages, the best DFA model was always the one without covariates (Table
+7).
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
@@ -648,6 +741,12 @@ To be determined, but some organizing thoughts are:
 
 \hypertarget{refs}{}
 \begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-baudron14}{}}%
+Baudron, A.R., Needle, C.L., Rijnsdorp, A.D., and Marshall, C.T. 2014.
+Warming temperatures and smaller body sizes: Synchronous changes in
+growth of north sea fishes. Global Change Biology \textbf{20}(4):
+1023--1031.
+
 \leavevmode\vadjust pre{\hypertarget{ref-black09}{}}%
 Black, B.A. 2009. {Climate-driven synchrony across tree, bivalve, and
 rockfish growth-increment chronologies of the northeast Pacific}.\meps
@@ -670,6 +769,25 @@ New York.
 Carpenter, G., B. 2017. Stan: A probabilistic programming language.
 Journal of Statistical Software \textbf{76}(1): 1--32.
 doi:\url{https://doi.org/10.18637/jss.v076.i01}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-goertler16}{}}%
+Goertler, M.D.A.S., Pascale A. L. AND Scheuerell. 2016. Estimating
+common growth patterns in juvenile chinook salmon (oncorhynchus
+tshawytscha) from diverse genetic stocks and a large spatial extent.
+PLOS ONE \textbf{11}(10): 1--19. Public Library of Science.
+doi:\href{https://doi.org/10.1371/journal.pone.0162121}{10.1371/journal.pone.0162121}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-holmes21}{}}%
+Holmes, E.E., Ward, E.J., and Scheuerell, M.D. 2021, December. {Analysis
+of multivariate time series using the MARSS package. Version 3.11.4}.
+Zenodo.
+doi:\href{https://doi.org/10.5281/zenodo.5781847}{10.5281/zenodo.5781847}.
+
+\leavevmode\vadjust pre{\hypertarget{ref-ikpewe21}{}}%
+Ikpewe, I.E., Baudron, A.R., Ponchon, A., and Fernandes, P.G. 2021.
+Bigger juveniles and smaller adults: Changes in fish size correlate with
+warming seas. Journal of Applied Ecology \textbf{58}(4): 847--856.
+doi:\url{https://doi.org/10.1111/1365-2664.13807}.
 
 \leavevmode\vadjust pre{\hypertarget{ref-katsanevakis08}{}}%
 Katsanevakis, S., and Maravelias, C.D. 2008. Modelling fish growth:
@@ -740,6 +858,11 @@ resources: Estimates of distribution, abundance, and length and age
 composition. {U}.{S}. {D}epartment of {C}ommerce, {NOAA} {T}echnical
 {M}emorandum {NMFS-AFSC}-128.
 
+\leavevmode\vadjust pre{\hypertarget{ref-zuur03}{}}%
+Zuur, A.F., Fryer, R.J., Jolliffe, I.T., Dekker, R., and Beukema, J.J.
+2003. Estimating common trends in multivariate time series using dynamic
+factor analysis. Environmetrics: 665--685.
+
 \end{CSLReferences}
 
 \pagebreak
@@ -753,10 +876,19 @@ composition. {U}.{S}. {D}epartment of {C}ommerce, {NOAA} {T}echnical
 
 Table 3: State space size-at-age models
 
-\begin{longtable}[]{@{}lll@{}}
-\toprule
-Name & Equation & Explanation \\
-\midrule
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.1000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.6222}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.2778}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+Name
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Equation
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Explanation
+\end{minipage} \\
+\midrule()
 \endhead
 \(S_1\) & \(x_a,t = \beta x_{a-1,t-1} + \varepsilon\) & Constant \\
 \(S_2\) & \(x_a,t = \beta x_{a-1,t-1} + \gamma_t + \varepsilon\) &
@@ -765,7 +897,58 @@ Annual deviations \\
 deviations \\
 \(S_4\) & \(x_a,t = \beta x_{a-1,t-1} + \varepsilon\) & Initial size
 deviations \\
-\bottomrule
+\bottomrule()
+\end{longtable}
+
+Table 4: Comparison of AIC values achieved by the DFA models applied to
+\(L_{\infty}\) time series (first method). The lowest AIC in each area
+is highlighted in bold.
+
+\begin{longtable}[]{@{}llllll@{}}
+\toprule()
+Region & ECV & Monterey & Conception & & \\
+\midrule()
+\endhead
+model & AICc & AICc & AICc & & \\
+------- & ----- & --------- & ---------- & & \\
+no covariate & 261 & 215 & 142 & & \\
+temp \textless=183m & 273 & 235 & 163 & & \\
+temp 184-550m & 274 & 236 & & & \\
+temp \textgreater=550m & 275 & & & & \\
+all temp & 289 & 252 & & & \\
+fishing & 258 & 232 & 157 & & \\
+fishing \& temp \textless=183m & 266 & 250 & 184 & & \\
+fishing \& temp 184-550m & 267 & 251 & & & \\
+fishing \& temp \textgreater=550m & 266 & & & & \\
+all covariates & 317 & 273 & 184 & & \\
+\bottomrule()
+\end{longtable}
+
+Table 5: Comparison of AIC values achieved by the DFA models applied to
+time series of mean length at juvenile, maturing and mature life stages
+(second method). The lowest AIC in each area and life stage is
+highlighted in bold.
+
+\begin{longtable}[]{@{}llllll@{}}
+\toprule()
+& ECV & & & & Monterey \\
+\midrule()
+\endhead
+& age\_juv & A50 & age\_mat & age\_juv & A50 \\
+------- & --------- & ----- & --------- & --------- & --------- \\
+model & AICc & AICc & AICc & AICc & AICc \\
+------- & --------- & ----- & --------- & --------- & --------- \\
+no covars & 249 & 249 & 224 & 248 & 264 \\
+temp \textless=183m & 267 & 267 & 242 & 265 & 282 \\
+temp 184-550m & 266 & 267 & 242 & 265 & 282 \\
+temp \textgreater=550m & 266 & 267 & 242 & & \\
+all temp & 284 & 297 & 262 & 282 & 291 \\
+fishing & 265 & 265 & 237 & 265 & 282 \\
+fishing \& temp \textless=183m & 284 & 285 & 250 & 287 & 303 \\
+fishing \& temp 184-550m & 283 & 285 & 250 & 287 & 303 \\
+fishing \& temp \textgreater=550m 282 & 284 & 250 & & & \\
+all covars & 318 & 334 & 278 & 308 & 317 \\
+\bottomrule()
 \end{longtable}
 
 \hypertarget{figures}{%
