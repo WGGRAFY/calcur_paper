@@ -75,7 +75,7 @@ run_model <- function(i, cohort_effects, init_effects, year_effects){
   save(tosave, file = filename)
   pars <- names(post)
   pars <- pars[!grepl("raw", pars)]
-  pars_main <- pars[unique(c(/
+  pars_main <- pars[unique(c(
     grep("_sd", pars),
     grep("sigma_", pars), grep("beta", pars), grep("sigma_", pars)
   ))]

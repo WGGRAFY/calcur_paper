@@ -12,6 +12,10 @@ preprocess_cal_curr <- function(data__, common_, sex_, years_, survey_string){
     filter(common_name==common_) %>%
     filter(sex==sex_) %>%
     mutate(year = substr(datetime_utc_iso, 1, 4))
+  
+  if(common_=="lingcod"){
+    full_data <- full_data %>% filter(latitude_dd >= 40 + 1/6)
+  }
 
   surv <- eval(parse(text=survey_string))
   #Add project/date filter
