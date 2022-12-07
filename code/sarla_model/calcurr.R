@@ -104,13 +104,13 @@ stanfit <- rstan::read_stan_csv(fit$output_files())
 stanfit$call <- function(x, ...){
   x$formula
 }
-
+L = 10
 # initialize the process for i = L
 past <- 1:L
 oos <- L + 1
 df <- model_data[[i]]
-df_past <- df[past, , drop = FALSE]
-df_oos <- df[c(past, oos), , drop = FALSE]
+df_past <- df[, past, drop = FALSE]
+df_oos <- df[,c(past, oos), drop = FALSE]
 model_data[[i]] <- df_past
 fit_past <- run_model(i = i, 0L, 0L, 0L)
 ###
@@ -119,7 +119,7 @@ fit_past <- run_model(i = i, 0L, 0L, 0L)
 # this is passed to brms::prepare_predictions to tell it to compute out-of-sample
 #rather than in-sample predictions. Not sure how to do this when using fit$loo rather than 
 #log_lik
-loglik <- fit_past$loo(variables = "log_lik", newdata = df_oos)
+loglikpast <- fit_past$loo(variables = "log_lik", newdata = df_oos)
 , oos = oos)
 approx_elpds_1sap[L + 1] <- log_mean_exp(loglik[, oos])
 
