@@ -1,42 +1,45 @@
 ---
-title: 'Modeling the effect of temperature on fish growth in the California Current'
-author: 
-  - Paul Spencer^[paul.spencer@noaa.gov, Alaska Fisheries Science Center, National Marine Fisheries Service, XXXX Sandpoint Way, Seattle, WA XXXXX, USA]
-  - Tara Marshall^[UK]
-  - Alan Boudron^[UK]
-  - Timothy J. Miller^[Northeast Fisheries Science Center, National Marine Fisheries Service, 166 Water Street, Woods Hole, MA 02543, USA]
-  - Christine Stawitz^[Office of Science and Technology, National Marine Fisheries Service, Sand Point Way, Seattle, USA]
-  - Melissa Haltuch^[Northwest Fisheries Science Center, National Marine Fisheries Service, Montlake Blvd, Seattle, WA XXXXX, USA]
+title: "Modeling the effect of temperature on fish growth in the California Current"
+author:
+- Paul Spencer^[paul.spencer@noaa.gov, Alaska Fisheries Science Center, National Marine
+  Fisheries Service, 7600 Sandpoint Way, Seattle, WA 98115, USA]
+- Tara Marshall^[UK]
+- Alan Boudron^[UK]
+- Timothy J. Miller^[Northeast Fisheries Science Center, National Marine Fisheries
+  Service, 166 Water Street, Woods Hole, MA 02543, USA]
+- Christine Stawitz^[Office of Science and Technology, National Marine Fisheries Service,
+  7600 Sandpoint Way, Seattle, WA 98115 USA]
+- Melissa Haltuch^[Alaska Fisheries Science Center, National Marine Fisheries Service,
+  7600 Sandpoint Way, Seattle, WA 98115, USA]
 date: ''
 output:
+  word_document: default
+  html_document:
+    df_print: paged
   pdf_document:
     fig_caption: yes
     includes:
-      in_header: 
+      in_header:
       - options.sty
       - journalshortcuts.tex
     keep_tex: yes
     number_sections: yes
-    #citation_package: natbib
-  html_document:
-    df_print: paged
 header-includes:
-  - \usepackage{xspace}
-  - \usepackage{bm}
-  - \usepackage{caption,graphics}
-  - \usepackage{graphicx}
-  - \usepackage{makecell}
-  - \renewcommand\figurename{Fig.}
-  - \captionsetup{labelsep=period, singlelinecheck=false}
-  - \usepackage{footmisc}
-  - \newcommand{\changesize}[1]{\fontsize{#1pt}{#1pt}\selectfont}
-  - \renewcommand{\arraystretch}{1.5}
-  - \renewcommand\theadfont{}
-csl: canadian-journal-of-fisheries-and-aquatic-sciences.csl
+- \usepackage{xspace}
+- \usepackage{bm}
+- \usepackage{caption,graphics}
+- \usepackage{graphicx}
+- \usepackage{makecell}
+- \renewcommand\figurename{Fig.}
+- \captionsetup{labelsep=period, singlelinecheck=false}
+- \usepackage{footmisc}
+- \newcommand{\changesize}[1]{\fontsize{#1pt}{#1pt}\selectfont}
+- \renewcommand{\arraystretch}{1.5}
+- \renewcommand\theadfont{}
+csl: "canadian-journal-of-fisheries-and-aquatic-sciences.csl"
 biblio-style: cjfas2.bst
-bibliography: calcur-paper.bib
+bibliography: "calcur-paper.bib"
 ---
-
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE, tidy=FALSE, tidy.opts=list(width.cutoff=60), warning = FALSE, message = FALSE, fig.align = "center")
@@ -56,66 +59,61 @@ library(forcats)
 
 \pagebreak
 
-## Abstract {-}
+## Abstract {.unnumbered}
 
-
-
-### Keywords {-}
+### Keywords {.unnumbered}
 
 growth; climate; stock assessment; reference points
 
 \pagebreak
 
-# Introduction  
+# Introduction
 
-The somatic growth of individual fish, from larval to adult stages, underpins the size structuring of aquatic ecosystems and is also subject to environmental influences [@black09]. Growth is an inherently non-linear process resulting from dynamic fluxes between anabolism and catabolism [@quinnderiso99]. Consequently, abrupt changes in growth rates can occur throughout the lifespan of an individual fish, most notably during the transition between the rapid growth of juvenile stages and the slower growth during adult stages [@lesteretal04;quinceetal08]. Dynamic changes in size-at-age can have direct impacts on rates of harvest and fishery management reference points because fisheries management is often based on limiting mortality (i.e., based on abundance) via biomass-based harvest quotas and the assumption of an average growth relationship through time [@milleretal18]. However, if growth fluctuates well above or below the long term average growth relationship then realized biomass-based harvest quotas may be lower or higher than quotas set as a function of an average growth relationship. The dominant patterns in and magnitudes of somatic growth variation over long time scales have not been quantified for many commercially important fish stocks [@stawitzetal15]. Therefore, quantifying the basic characteristics and dominant scales of variation in growth is the necessary first step towards predicting growth responses to biotic and abiotic factors [@stawitzetal15].
+The somatic growth of individual fish, from larval to adult stages, underpins the size structuring of aquatic ecosystems and is also subject to environmental influences [@black09]. Growth is an inherently non-linear process resulting from dynamic fluxes between anabolism and catabolism [@quinnderiso99]. Consequently, abrupt changes in growth rates can occur throughout the lifespan of an individual fish, most notably during the transition between the rapid growth of juvenile stages and the slower growth during adult stages [@lesteretal04; @quinceetal08]. Dynamic changes in size-at-age can have direct impacts on rates of harvest and fishery management reference points because fisheries management is often based on limiting mortality (i.e., based on abundance) via biomass-based harvest quotas and the assumption of an average growth relationship through time [@milleretal18]. However, if growth fluctuates well above or below the long term average growth relationship then realized biomass-based harvest quotas may be lower or higher than quotas set as a function of an average growth relationship. The dominant patterns in and magnitudes of somatic growth variation over long time scales have not been quantified for many commercially important fish stocks [@stawitzetal15]. Therefore, quantifying the basic characteristics and dominant scales of variation in growth is the necessary first step towards predicting growth responses to biotic and abiotic factors [@stawitzetal15].
 
-Individual growth rates vary on a range of temporal and biological scales, including across species and populations of the same species (Brander 1995, Brunel and Dickey-Collas 2010). Within a given system, variation in size-at-age may occur between cohorts of a single population (Baudron et al. 2011, Baudron et al. 2014), between years, or between juveniles of cohorts [@stawitzetal15]. Understanding the variation in size-at-age can help refine mechanistic hypotheses. Density-independent annual changes in growth may occur from processes such as upwelling, affecting all ages within a year. Alternatively, density-dependent processes such as intracohort competition may affect strong cohorts; in this case, environmental processes that lead to strong recruitment may result in reduced growth rates (Whitten et al. 2013). A third mechanism is that variability in growth is related to only the size-at-age of juvenile fish, with growth rates of older ages unaffected by the environment, which is consistent with juvenile intracohort competition being the dominant process. Stawitz et al. (2015) examined these hypotheses for North Pacific groundfish, and found that about 40% of the stocks studied showed density-independent annual growth variation between years.
+Individual growth rates vary on a range of temporal and biological scales, including across species and populations of the same species [ @brander95, @brunel10). Within a given system, variation in size-at-age may occur between cohorts (intracohort) of a single population [@baudronetal11, @baudron14], between years (annual changes), or between juveniles of cohorts (initial size) [@stawitzetal15]. Understanding the variation in size-at-age can help refine mechanistic hypotheses. Density-independent annual changes in growth may occur from processes such as upwelling, affecting all ages within a year. Alternatively, density-dependent processes such as intracohort competition may affect strong cohorts; in this case, environmental processes that lead to strong recruitment may result in reduced growth rates [@whitten13]. A third mechanism is that variability in growth is related to only the size-at-age of juvenile fish, with growth rates of older ages unaffected by the environment, which is consistent with juvenile intracohort competition being the dominant process. @stawitzetal15 examined these hypotheses for North Pacific groundfish, and found that about 40% of the stocks studied showed density-independent annual growth variation between years.
 
-Because temperature is an important determinant of growth for ectothermic species, the temperature size rule (TSR) provides the basis for an important hypothesis relevant to climate change. The temperature size rule (TSR) proposes that juvenile growth rates are higher in warmer waters due to higher metabolic rates with rapid early growth leading to a lower maximum (adult) size-at-age (Angilletta et al. 2004, Daufresne et al. 2009, Forster and Hirst 2012, Forster et al. 2011). In the context of warming regional seas, the TSR has the potential for imposing a low-frequency signal into variability in individual growth rates of fish. For example, warming temperatures in the North Sea imposed a synchronous cross-species trend in growth rates of 6 of 8 commercial fish stocks consistent with the TSR (Baudron et al. 2014). A combination of temperature-related reductions in body size and distributional shifts has been estimated to reduce fisheries yields by as much as 25% (Cheung et al. 2013).
+Because temperature is an important determinant of growth for ectothermic species, the temperature size rule (TSR) provides the basis for an important hypothesis relevant to climate change. The temperature size rule (TSR) proposes that juvenile growth rates are higher in warmer waters due to higher metabolic rates with rapid early growth leading to a lower maximum (adult) size-at-age [@angilletta04; @daufresne; @forster12; @forster11]. In the context of warming regional seas, the TSR has the potential for imposing a low-frequency signal into variability in individual growth rates of fish. For example, warming temperatures in the North Sea imposed a synchronous cross-species trend in growth rates of 6 of 8 commercial fish stocks consistent with the TSR [@baudron14]. A combination of temperature-related reductions in body size and distributional shifts has been estimated to reduce fisheries yields by as much as 25% [@cheung13].
 
-The von Bertalanffy growth function (VBGF; von Bertalanffy 1938), developed from physiological concepts such as catabolism and anabolism (Essington et al. 2001), can be used to test how temperature may affect size-at-age and potentially particular aspects (e.g., parameters) of the growth process. Simple correlations between temperature and the VBGF have been undertaken (Brunel and Dickey-Collas 2010), an approach that would require temperature impacts to be strong relative to other sources of variation. Adaptations of the VBGF have been developed to incorporate the effect of temperature and other environmental factors directly into the VBGF parameters $L_\infty$ (asymptotic size) and K (rate at which $L_\infty$ is approached) (Fontoura and Agostinho 1996, Shin and Rochet 1998). Kimura (2008) developed an extended form of the VBGF which could include any explanatory variable as a covariate, which (Baudron et al. 2011) used to determine that temperature was a statistically significant covariate in the cohort-specific VBGF fit for North Sea haddock stock. Although the VBGF has the advantage of allowing consideration of how environmental variability affects specific aspects of growth, estimation of changes in both the k and $L_\infty$ parameters is difficult because they are highly correlated (Schnute and Fournier 1980).
+The von Bertalanffy growth function (VBGF; @vonbert38), developed from physiological concepts such as catabolism and anabolism [@essington01] can be used to test how temperature may affect size-at-age and potentially particular aspects (e.g., parameters) of the growth process. Simple correlations between temperature and the VBGF have been undertaken [@brunel10], an approach that would require temperature impacts to be strong relative to other sources of variation. Adaptations of the VBGF have been developed to incorporate the effect of temperature and other environmental factors directly into the VBGF parameters $L_\infty$ (asymptotic size) and k (rate at which $L_\infty$ is approached) [@fontoura; @shin]. @kimura08 developed an extended form of the VBGF which could include any explanatory variable as a covariate, which @baudronetal11 used to determine that temperature was a statistically significant covariate in the cohort-specific VBGF fit for North Sea haddock stock. Although the VBGF has the advantage of allowing consideration of how environmental variability affects specific aspects of growth, estimation of changes in both the k and $L_\infty$ parameters is difficult because they are highly correlated [@schnutefournier].
 
-Rapid and variable local responses of fish size to warming can also make temperature responses difficult to diagnose and predict at the ecosystem scale (Audzijonyte et al. 2020). Testing for a coherent (sensu consistent with established physiology of ectotherms and widely observed across different species) biological response to temperature at the ecosystem scale requires using a statistical model suited to isolating the impacts of a single, external factor (i.e., temperature) on fish growth rates in addition to other possible sources of variation (e.g., density, prey abundance, fisheries-induced changes in life history). Coherent and synchronous annual growth trends across species that are consistent with physiological principles (e.g., TSR) would imply there is a component of growth variation that is a shared response to ecosystem-scale warming (Baudron et al. 2014, Stawitz et al. 2015). Isolating such a response at the stock- or ecosystem-level would provide the necessary empirical support for models developed to forecast future fish yields (e.g., Cheung et al. 2013).
+Rapid and variable local responses of fish size to warming can also make temperature responses difficult to diagnose and predict at the ecosystem scale [@audzijonyte20]. Testing for a coherent (sensu consistent with established physiology of ectotherms and widely observed across different species) biological response to temperature at the ecosystem scale requires using a statistical model suited to isolating the impacts of a single, external factor (i.e., temperature) on fish growth rates in addition to other possible sources of variation (e.g., density, prey abundance, fisheries-induced changes in life history). Coherent and synchronous annual growth trends across species that are consistent with physiological principles (e.g., TSR) would imply there is a component of growth variation that is a shared response to ecosystem-scale warming [@baudron14; @stawitzetal15]. Isolating such a response at the stock- or ecosystem-level would provide the necessary empirical support for models developed to forecast future fish yields (e.g., @cheung13)
+
 Because ecosystem observations do not come from controlled experiments in which variables of interest can be isolated, more complex statistical methods will be necessary to evaluate any potential coherent, cross-species signal in the effect of temperature on growth. An additional consideration is whether to model observation errors, which is particularly relevant because the data available are typically observations of size-at-age from individual fish (i.e., multiple observations of size-at-age from a single fish that would more clearly show individual growth are typically not available). Temporal trends in size-at-age data could reflect trends in gear selectivity, sampling locations, ageing bias and precision, and other factors. A closely related concept is whether to employ Bayesian or random-effects methods that would model observations and/or estimated parameters as random variables. For example, changes in sampling location or the effect of environmental covariates on size can be modeled as random variables to account for unobserved heterogeneity not explained by the structural model.
 
-A variety of advanced statistical techniques have been applied recently to evaluate variation in fish size-at-age. (Baudron et al. 2014) used Dynamic Factor Analysis (DFA; Zuur et al 2003) to estimate common “latent” trends in the cohort-specific $L_\infty$ time series for eight North Sea stocks with long time series of size-at-age. DFA is a multivariate extension of structural time series, with the time series for a particular stock being a function of underlying latent trends and stock-specific observation error. An alternative framework applied by (Stawitz et al. 2015) are autoregressive state-space models consisting of process and observation models that fit to observed time series of standardized length-at-age data without a mechanistic growth model. Miller et al. (2018) also used a state-space model, but the process model is based on a generalized VBGF that allowed process errors in the k parameter. Finally, spatio-temporal models such as VAST (Vector Autoregressive Spatio-Temporal model; www.github.com/james-thorson/VAST) are mixed-effect models in which model spatial variation as random effects given a pattern of spatial correlation, and a number of covariates can be modeled as fixed effects. Although VAST models are often applied to data on fish density from resource surveys (Thorson 2019), they can be potentially useful for cases where fish size-at-age may vary over space in patterns not related to the modeled fixed effects.              
+A variety of advanced statistical techniques have been applied recently to evaluate variation in fish size-at-age. @baudron14 used Dynamic Factor Analysis (DFA; @zuur03) to estimate common "latent" trends in the cohort-specific $L_\infty$ time series for eight North Sea stocks with long time series of size-at-age. DFA is a multivariate extension of structural time series, with the time series for a particular stock being a function of underlying latent trends and stock-specific observation error. An alternative framework applied by @stawitzetal15 is an autoregressive state-space model consisting of process and observation models that fit to observed time series of standardized length-at-age data without a mechanistic growth model. @milleretal18 also used a state-space model, but the process model is based on a generalized VBGF that allowed process errors in the k parameter. State-space models simultaneously estimate model parameters using two equations: the autoregressive process representing abiotic and biotic covariates and the unobserved processes including space and time covariates.
 
-An alternative framework that has been applied to modelling individual growth is autoregressive state-space models that compare the relative importance of different scales of variation (e.g., annual, cohort) and extract underlying growth trends across species [@stawitzetal15]. State-space models simultaneously estimate model parameters using two equations: the autoregressive process representing abiotic and biotic covariates and the unobserved processes including space and time covariates.  
+The inferences that can be made regarding how temperature affects fish growth are influenced by the choice of model structure. In particular, evaluation of a series of models may help illuminate modeling approaches that have utility when any coherent response of fish growth to temperature may be subtle relative to asynchronous or stock-specific factors (e.g., food availability, density). Although the models mentioned above all have a common property of recognizing variation other than the "process" variation of interest, they apportion variance very differently because of differences in model structure. Multi-model inference is the process whereby the response variable is estimated using several candidate models rather than a single 'best' model [@burnhamanderson02] and has been previously applied to growth modelling [@katsanevakis08]. In our study the intent was not necessarily to predict the response variable with the greatest accuracy but to identify the strengths and weaknesses of alternative modelling framework(s) for assessing whether there was a synchronous impact of temperature once other sources of variation have been accounted for (state-space models) or once asynchronous sources of variation had been excluded (DFA). Comparative analysis of models can also help to identify biases in model performance (e.g. whether a model systematically underestimates random noise in the data) or shortcomings in model fitting (e.g., estimation of process or observation error). For example, @brodie20 compared several types of species distribution models and identified which models were appropriate for specific purposes. Ultimately model purpose must be given due consideration when deciding on the most appropriate modelling framework [@brodie20; @Guillera-Arroita15].
 
-The inferences that can be made regarding how temperature affects fish growth are influenced by the choice of model structure. In particular, evaluation of a series of models may help illuminate modeling approaches that have utility when any coherent response of fish growth to temperature may be subtle relative to asynchronous or stock-specific factors (e.g., food availability, density). Although the models mentioned above all have a common property of recognizing variation other than the “process” variation of interest, they apportion variance very differently because of differences in model structure. Multi-model inference is the process whereby the response variable is estimated using several candidate models rather than a single ‘best’ model [@burnhamanderson02] and has been previously applied to growth modelling [@katsanevakis08]. In our study the intent was not necessarily to predict the response variable with the greatest accuracy but to identify the modelling framework(s) best suited to assessing whether there was a synchronous impact of temperature once other sources of variation have been accounted for (state-space models) or once asynchronous sources of variation had been excluded (DFA). Comparative analysis of models can also help to identify biases in model performance (e.g. whether a model systematically underestimates random noise in the data) or shortcomings in model fitting (e.g., estimation of process or observation error). For example, Brodie et al. (2020) compared several types of species distribution models and identified which models were appropriate for specific purposes. Ultimately model purpose must be given due consideration when deciding on the most appropriate modelling framework (Brodie et al. 2020, Guillera-Arroita et al. 2015).
-
-The aim of this study is to undertake a comparative analysis of four models using empirical data for temperature and size-at-age for seven fish stocks in the California Current large marine ecosystem. A common metric for the models is to evaluate the degree to which size-at-age is related to temperature. Estimates of uncertainties, parameter correlations, and any potential aliasing (i.e., erroneously attributing variation size-at-age to non-causal mechanisms or covariates). We consider the relative strength and weakness of the models in describing how temperature may affect size-at-age, and how the combination of models can be used for multi-model inference.         
+The aim of this study is to undertake a comparative analysis of four models using empirical data for temperature and size-at-age for seven fish stocks in the California Current large marine ecosystem. A common metric for the models is to evaluate the degree to which size-at-age is related to temperature. Estimates of uncertainties, parameter correlations, and any potential aliasing (i.e., erroneously attributing variation size-at-age to non-causal mechanisms or covariates). We consider the relative strength and weakness of the models in describing how temperature may affect size-at-age, and how the combination of models can be used for multi-model inference.
 
 # Methods
 
 ## Study area, species chosen, trawl survey description (Melissa)
 
-Four trawl surveys conducted by the National Marine Fisheries Center’s Alaska Fisheries Science Center (AFSC) and Northwest Fisheries Science Center (NWFSC) provided data for this study. The Triennial Shelf Survey, conducted by the AFSC in 1980, 1983, 1986, 1989, 1992, 1995, 1998, and 2001 and by the NWFSC in 2004, provides the earliest time series of fishery independent temperature and biological data in the U.S. portion of the California Current continental shelf [@weinbergetal02]. Triennial survey sampling occurred along transects perpendicular to the coast over depths from 55 m to 366 m (500 m after 1992) and from the Canadian border to Monterey Bay, California (36°48' N) until 1986, then to Point Conception, California (34°30' N) from 1989 forward.
+Four trawl surveys conducted by the National Marine Fisheries Center's Alaska Fisheries Science Center (AFSC) and Northwest Fisheries Science Center (NWFSC) provided data for this study. The Triennial Shelf Survey, conducted by the AFSC in 1980, 1983, 1986, 1989, 1992, 1995, 1998, and 2001 and by the NWFSC in 2004, provides the earliest time series of fishery independent temperature and biological data in the U.S. portion of the California Current continental shelf [@weinbergetal02]. Triennial survey sampling occurred along transects perpendicular to the coast over depths from 55 m to 366 m (500 m after 1992) and from the Canadian border to Monterey Bay, California (36°48' N) until 1986, then to Point Conception, California (34°30' N) from 1989 forward.
 
-The transect-based AFSC Slope Survey was conducted in 1997, 1999, 2000, and 2001, over depths from 184 m to 1,280 m in waters north of Point Conception, California (34°30' N) to the US – Canada border [@lauth99; @lauth00; @lauth01]. Sampling in earlier years was spatially limited, covering small and inconsistent portions of the coast; however, this survey had a high degree of biological sampling. 
+The transect-based AFSC Slope Survey was conducted in 1997, 1999, 2000, and 2001, over depths from 184 m to 1,280 m in waters north of Point Conception, California (34°30' N) to the US -- Canada border [@lauth99; @lauth00; @lauth01]. Sampling in earlier years was spatially limited, covering small and inconsistent portions of the coast; however, this survey had a high degree of biological sampling.
 
-The transect-based NWFSC Slope survey, conducted in 1998, 1999, 2000, 2001, and 2002, covered depths ranging from 184 m to 1,280 m using chartered commercial fishing vessels <93 feet  [@kelleretal17]. Prior to 2000 the NWFSC Slope survey sampled from the Morro Bay, California (lat 35°00'N), to the U.S.–Canada border, the survey area was expanded south to Point Conception, California (34°30' N) in 2001, then to the U.S. Mexico border in 2002. This survey consists of fewer tows compared to other survey data sets, with a lower fraction of tows sampled for ages.
+The transect-based NWFSC Slope survey, conducted in 1998, 1999, 2000, 2001, and 2002, covered depths ranging from 184 m to 1,280 m using chartered commercial fishing vessels \<93 feet [@kelleretal17]. Prior to 2000 the NWFSC Slope survey sampled from the Morro Bay, California (lat 35°00'N), to the U.S.--Canada border, the survey area was expanded south to Point Conception, California (34°30' N) in 2001, then to the U.S. Mexico border in 2002. This survey consists of fewer tows compared to other survey data sets, with a lower fraction of tows sampled for ages.
 
-The NWFSC West Coast Groundfish Bottom Trawl Survey (WCGBTS), operating annually from 2003 through 2019, implements a stratified random-grid survey design that spans both continental shelf and slope habitats, depths from 55m to 1,280 m, and covers U.S. waters between the Canada and Mexico borders  [@bradburnetal11; @kelleretal17]. Strata include three depth strata (55 m to 183 m, 184 m to 549 m, and 550 m to1280 m) and two spatial strata (north and south of Point Conception, California (34°30' N)) for all years except 2003. In 2003 five spatial strata delineated by the boundaries of the International North Pacific Fisheries Commission (INPFC) statistical areas were used. These INPFC statistical areas are, from north to south, Vancouver, Columbia, Eureka, Monterey, and Conception. Generally, four chartered industry vessels conduct tows from late-May to early-October, in randomly selected grid cells, during two north to south passes along the U.S. west coast. Randomly sampled lengths and ages are collected; age structures are sampled from a subset of the fish that have been measured for length. Major changes in the WCGBTS, compared to prior surveys, include implementing a stratified random survey design and consistent spatial coverage south of Point Conception, California (34°30' N). 
+The NWFSC West Coast Groundfish Bottom Trawl Survey (WCGBTS), operating annually from 2003 through 2019, implements a stratified random-grid survey design that spans both continental shelf and slope habitats, depths from 55m to 1,280 m, and covers U.S. waters between the Canada and Mexico borders [@bradburnetal11; @kelleretal17]. Strata include three depth strata (55 m to 183 m, 184 m to 549 m, and 550 m to1280 m) and two spatial strata (north and south of Point Conception, California (34°30' N)) for all years except 2003. In 2003 five spatial strata delineated by the boundaries of the International North Pacific Fisheries Commission (INPFC) statistical areas were used. These INPFC statistical areas are, from north to south, Vancouver, Columbia, Eureka, Monterey, and Conception. Generally, four chartered industry vessels conduct tows from late-May to early-October, in randomly selected grid cells, during two north to south passes along the U.S. west coast. Randomly sampled lengths and ages are collected; age structures are sampled from a subset of the fish that have been measured for length. Major changes in the WCGBTS, compared to prior surveys, include implementing a stratified random survey design and consistent spatial coverage south of Point Conception, California (34°30' N).
 
-Regions used in this study are a combination of the 2003 WCGBTS latitudinal and depth strata. The INPFC Vancouver, Columbia, and Eureka latitudinal strata are combined into a single region, labeled “ECV”, due to ecological similarity.  The combination of three INPFC latitudinal strata and three depth strata yield nine regions defined by latitude and depth. Mean bottom temperature used in situ data from the four surveys for each of the nine region-year strata with at least five observations, with data from the AFSC slope survey restricted to September – October to provide a similar sampling period to the remaining surveys (i.e., May – October).         
+Regions used in this study are a combination of the 2003 WCGBTS latitudinal and depth strata. The INPFC Vancouver, Columbia, and Eureka latitudinal strata are combined into a single region, labeled "ECV", due to ecological similarity. The combination of three INPFC latitudinal strata and three depth strata yield nine regions defined by latitude and depth. Mean bottom temperature used in situ data from the four surveys for each of the nine region-year strata with at least five observations, with data from the AFSC slope survey restricted to September -- October to provide a similar sampling period to the remaining surveys (i.e., May -- October).
 
-Seven species were selected for analysis of length-at-age data, based on a diversity of life-history traits, habitat usage, and data availability. Length-at-age data for two deep-water species with ranges encompassing both the continental shelf and slope (darkbloched rockfish (*Sebastes crameri*) and sablefish (*Anoplopoma fimbria*)) were obtained from two surveys that collectively cover the full depth range of these species in a given year: the Triennial Shelf Survey and NWFSC Slope surveys for years 1998 and 2001,  and the WCGBTS for the years 2003 to 2018.
-Additionally, samples from the 2001 AFSC slope survey, and the 2004 Triennial shelf survey, were used for these two species. Shortbelly rockfish (*Sebastes jordani*) also occur on the slope and shelf, but limited observations restricted analysis to data from the WCGBTS. Length-at-age data for four species that occur on the continental shelf (Pacific hake (*Merluccius productus*), Pacific sanddab (*Citharichthys sordidus*), lingcod (*Ophiodon elongatus*), and petrale sole (*Eopsetta jordani*)) were obtained from two surveys: the Triennial Shelf Survey and the WCGBTS. Because marine fish stocks often change the depth and spatial locations occupied as they age, we attempted to derive temperature time series reflective of the habitats they occupy at a given age. We used the species-specific set of surveys listed above to compute the mean depth and latitude of the length-at-age samples by age (for ages 0 – 15) across years, then classified these means into the nine latitude-depth regions. The temperature time series for a given species and age was obtained from the corresponding latitude-depth region where they occurred. 
+Seven species were selected for analysis of length-at-age data, based on a diversity of life-history traits, habitat usage, and data availability. Length-at-age data for two deep-water species with ranges encompassing both the continental shelf and slope (darkbloched rockfish (*Sebastes crameri*) and sablefish (*Anoplopoma fimbria*)) were obtained from two surveys that collectively cover the full depth range of these species in a given year: the Triennial Shelf Survey and NWFSC Slope surveys for years 1998 and 2001, and the WCGBTS for the years 2003 to 2018. Additionally, samples from the 2001 AFSC slope survey, and the 2004 Triennial shelf survey, were used for these two species. Shortbelly rockfish (*Sebastes jordani*) also occur on the slope and shelf, but limited observations restricted analysis to data from the WCGBTS. Length-at-age data for four species that occur on the continental shelf (Pacific hake (*Merluccius productus*), Pacific sanddab (*Citharichthys sordidus*), lingcod (*Ophiodon elongatus*), and petrale sole (*Eopsetta jordani*)) were obtained from two surveys: the Triennial Shelf Survey and the WCGBTS. Because marine fish stocks often change the depth and spatial locations occupied as they age, we attempted to derive temperature time series reflective of the habitats they occupy at a given age. We used the species-specific set of surveys listed above to compute the mean depth and latitude of the length-at-age samples by age (for ages 0 -- 15) across years, then classified these means into the nine latitude-depth regions. The temperature time series for a given species and age was obtained from the corresponding latitude-depth region where they occurred.
 
 ## State-space size-at-age model
+
 We used a slight modification of the state-space size-at-age model in @stawitzetal15. Mean length-at-age for each year for each species is calculated for fish ages with at least ten observations across the length of the time series. The mean is calculated as the difference in size-at-age for a given age and year from the mean size-at-age for that age across a 15 year reference period (1995 - 2010) to allow for comparisons between species with different time series lengths.
 
-This model assumes an autoregressive process of order 1 (AR1) represents the "true" temporal processes in size-at-age data, such that the size-at-age a+1 and year t+1 is a function of size-at-age a in year t. This process can be modeled as an AR1 process only ($S_1$) or with four additional predictors that represent year-specific ($S_2$), cohort-specific ($S_3$), or initial size ($S_4$) deviations from the AR1 process shared across age groups (Table 3). The observation equation is the same across all models, such that the observed length-at-age is normally-distributed around the "true" length-at-age. The priors and estimated parameter values for this model are provided in Appendix . The model is implemented in the Stan modeling language (@stan) via the `sarla` (State-space AutoRegressive Length-at-Age) `R` package which can be downloaded at http://github.com/wggrafy/sarla.
-
-
+This model assumes an autoregressive process of order 1 (AR1) represents the "true" temporal processes in size-at-age data, such that the size-at-age a+1 and year t+1 is a function of size-at-age a in year t. This process can be modeled as an AR1 process only ($S_1$) or with four additional predictors that represent year-specific ($S_2$), cohort-specific ($S_3$), or initial size ($S_4$) deviations from the AR1 process shared across age groups, or all three types of deviations ($S_5$) (Table 3). The observation equation is the same across all models, such that the observed length-at-age is normally-distributed around the "true" length-at-age. The priors and estimated parameter values for this model are provided in Appendix . The model is implemented in the Stan modeling language (@stan) via the `sarla` (State-space AutoRegressive Length-at-Age) `R` package which can be downloaded at <http://github.com/wggrafy/sarla>. Model convergence was assessed by visual examination of trace plots, posterior estimates, and posterior predictive interval checks against the data. E-BFMI and R-hat statistics provided by Stan were also satisfactory. We used the approximate leave-future-out cross-validation statistic presented in @burkner20 to perform model selection.
 
 ## State-space von Bertalanffy growth models
 
-We used the same general model as @milleretal18 which assumes von Bertalanffy growth and allows annual age-specific growth rates. It can use combinations of length and weight information and simultaneously estimates allometric length-weight relationship.  We fit four alternative models for each species (Table 1). The base model assumes the same LVB growth rate and asymptotic size for all individuals. The second model allows annual AR(1) deviations in the log growth rate for a given year applied to all cohorts in that year. Allowing this AR(1) process for annual growth rates was found by @milleretal18 to be important for evaluating effects of temperature on growth rates for Georges Bank Atlantic cod. The third model expands the second model to include temperature effects on the growth rate during the first year of life. The fourth model expands the third model to allow different asymptotic lengths for cohorts originating after 2000 when there was a dramatic reduction in fishing pressure [@warlicketal18].
+We used the same general model as @milleretal18 which assumes von Bertalanffy growth and allows annual age-specific growth rates. It can use combinations of length and weight information and simultaneously estimates allometric length-weight relationship. We fit four alternative models for each species (Table 1). The base model ($G_1$) assumes the same LVB growth rate and asymptotic size for all individuals. The second model ($G_2$) allows annual AR(1) deviations in the log growth rate for a given year applied to all cohorts in that year. Allowing this AR(1) process for annual growth rates was found by @milleretal18 to be important for evaluating effects of temperature on growth rates for Georges Bank Atlantic cod. The third model ($G_3$) expands the second model to include temperature effects on the growth rate during the first year of life. The fourth model ($G_4$) expands the third model to allow different asymptotic lengths for cohorts originating after 2000 when there was a dramatic reduction in fishing pressure [@warlicketal18].
 
-For models  and , we used the bottom temperature estimates for the region defined by area and depth bin where the species was predominantly found during the earliest observed ages (Table 2). We observed age 0 fish for all species except Petrale sole (minimum age is 1), and the youngest observed ages of all species predominated in depths less than 184 m.  Young sablefish and darkblotched rockfish predominated in the most northern region (Eureka-Columbia-Vancouver) and young shortbelly rockfish predominated in the most southern region (Conception). Young fish of all other species predominated in the intermediate region (Monterey).
+For models $G_3$ and $G_4$, we used the bottom temperature estimates for the region defined by area and depth bin where the species was predominantly found during the earliest observed ages (Table 2). We observed age 0 fish for all species except petrale sole (minimum age is 1), and the youngest observed ages of all species predominated in depths less than 184 m. Young sablefish and darkblotched rockfish predominated in the most northern region (Eureka-Columbia-Vancouver) and young shortbelly rockfish predominated in the most southern region (Conception). Young fish of all other species predominated in the intermediate region (Monterey).
 
 ## Dynamic Factor Analysis
 
@@ -125,135 +123,133 @@ $$
 size_s(t)= Z_{1,s}x_{1,t}+\dots+Z_{i,s}x_{i,t}+ a_s+\varepsilon_{s,t} 
 $$
 
-where $i$ is the number of common trends $x$ identified in the data, $Z$ is the species-specific factor loading indicating how a common trend is related to the original time series for that species, a is an offset term, and $\varepsilon_t \sim MVN(0, \textbf{R})$ with MVN standing for Multivariate Normal and R for the error covariance matrix. 
+where $i$ is the number of common trends $x$ identified in the data, $Z$ is the species-specific factor loading indicating how a common trend is related to the original time series for that species, a is an offset term, and $\varepsilon_t \sim MVN(0, \textbf{R})$ with MVN standing for Multivariate Normal and R for the error covariance matrix.
 
-The DFA model isn’t spatially explicit but instead was applied independently in each of the three areas i.e., ECV, Monterey and Conception, to investigate growth patterns across the seven species. Two different methods were used: the first follows that of @baudron14, while the second follows that of @ikpewe21. For the first method, a von Bertalanffy growth model was fitted on a cohort basis (assuming individuals within a cohort exhibit similar growth trajectories) to each species in each area. Only $L_{\infty}$ values that were significantly estimated ($P<0.05$) were considered, and $L_{\infty}$ time series were standardized by subtracting the mean and dividing by the standard deviation. The DFA was then used to identified common trends in $L_{\infty}$ time series among species in each area. For the second method, the age at which 50% of individuals are mature ($A50$) was first obtained from the literature for each species (see Supplementary material) and considered as the maturing age. Then, the juvenile age was defined as $A50/2$, and the mature age as $(\mathrm{max age} – A50)/2$, where max age is the maximum age observed in the survey data for each species. Time series of mean length at juvenile age, maturing age, and mature age (i.e., three time series per species) were computed for each species in each area and standardized by subtracting the mean and dividing by the standard deviation. The DFA was then used to identified common trends in mean length time series among species in each area for the three life stage selected: juvenile, maturing and mature.
+The DFA model isn't spatially explicit but instead was applied independently in each of the three areas i.e., ECV, Monterey and Conception, to investigate growth patterns across the seven species. Two different methods were used: the first follows that of @baudron14, while the second follows that of @ikpewe21. For the first method, a von Bertalanffy growth model was fitted on a cohort basis (assuming individuals within a cohort exhibit similar growth trajectories) to each species in each area. Only $L_{\infty}$ values that were significantly estimated ($P<0.05$) were considered, and $L_{\infty}$ time series were standardized by subtracting the mean and dividing by the standard deviation. The DFA was then used to identified common trends in $L_{\infty}$ time series among species in each area. For the second method, the age at which 50% of individuals are mature ($A50$) was first obtained from the literature for each species (see Supplementary material) and considered as the maturing age. Then, the juvenile age was defined as $A50/2$, and the mature age as $(\mathrm{max age} – A50)/2$, where max age is the maximum age observed in the survey data for each species. Time series of mean length at juvenile age, maturing age, and mature age (i.e., three time series per species) were computed for each species in each area and standardized by subtracting the mean and dividing by the standard deviation. The DFA was then used to identified common trends in mean length time series among species in each area for the three life stage selected: juvenile, maturing and mature.
 
-In both methods one and two, the DFA models in each area were run with and without covariates and the best model in each area was identified as the one with the lowest AIC. Two covariates were considered: temperature anomaly, and fishing pressure. Temperature anomaly was estimated for depths greater than 550 m (ECV), depths between 184 and 550 m (ECV and Monterey), and depths less than 183 m (ECV, Monterey and Conception). Fish stocks in the California current ecosystem were all subject to high fishing pressure (F) until 2000, after which it was drastically reduced. To mimic this, a dummy F time series was computed with $F \sim 0.8$ from 1977 to 2000, and $F \sim 0.2$ from 2001 to 2018. Random noise around the values 0.2 and 0.8 was added with the “jitter” function in R to make the F time series more realistic. DFA models were run with temperature and F separately, and with both covariates combined. All DFA models were run using the MARSS [@holmes21] R package (version 3.11.4).
-
+In both methods one and two, the DFA models in each area were run with and without covariates and the best model in each area was identified as the one with the lowest AIC. Two covariates were considered: temperature anomaly, and fishing pressure. Temperature anomaly was estimated for depths greater than 550 m (ECV), depths between 184 and 550 m (ECV and Monterey), and depths less than 183 m (ECV, Monterey and Conception). Fish stocks in the California current ecosystem were all subject to high fishing pressure (F) until 2000, after which it was drastically reduced [@richards17]. To mimic this, a dummy F time series was computed with $F \sim 0.8$ from 1977 to 2000, and $F \sim 0.2$ from 2001 to 2018. Random noise around the values 0.2 and 0.8 was added with the "jitter" function in R to make the F time series more realistic. DFA models were run with temperature and F separately, and with both covariates combined. All DFA models were run using the MARSS [@holmes21] R package (version 3.11.4).
 
 # Results
 
-## Description of the size at age data, and temperature data (Paul)
+## Description of the size-at-age data, and temperature data (Paul)
 
 The number of samples, and length of time series, varied by species, owing to the different habitats and sampling rates for the various surveys. Pacific Hake has samples extending back to 1977, with large samples in the early years of the Triennial shelf survey. In contrast, the time series for Pacific sanddab, Petrale sole, and shortbelly rockfish begins in 2003 with the WCGBTS. The most samples were obtained for sablefish (23,470), whereas the least samples were obtained for shortbelly rockfish (5,990).
 
-Observed temperatures decreased with depth and latitude (Figure x). At the shallowest depth strata of < 183 m, the average temperature from 2014-2018 in the northern ECV region was 7.7 C; in contrast, the average in the southern Conception area was 10.2 C. The pattern of higher temperatures in the southern regions was observed across all depth strata, although in the deepest depth strata of > 550 m the temperature differences across the latitude regions were less distinct. A drop in temperatures was observed in 1999 in the two deepest depth strata of 184 - 550 m and > 550 m, corresponding to the 1999 La Nina event (ref). In the shallowest depth strata of < 183 m, increases in temperatures were observed between 2013 and 2014/2015. In general, however, the temperatures observed from the surveys have been generally stable with long-term directional trends.             
-
+Observed temperatures decreased with depth and latitude (Figure x). At the shallowest depth strata of \< 183 m, the average temperature from 2014-2018 in the northern ECV region was 7.7 C; in contrast, the average in the southern Conception area was 10.2 C. The pattern of higher temperatures in the southern regions was observed across all depth strata, although in the deepest depth strata of \> 550 m the temperature differences across the latitude regions were less distinct. A drop in temperatures was observed in 1999 in the two deepest depth strata of 184 - 550 m and \> 550 m, corresponding to the 1999 La Nina event (ref). In the shallowest depth strata of \< 183 m, increases in temperatures were observed between 2013 and 2014/2015. In general, however, the temperatures observed from the surveys have been generally stable with long-term directional trends.
 
 ## Results from the three models
-  
+
 ### Stawitz state-space model (Christine)
 
 ### State-space von Bertalanffy growth model (Tim)
 
-We found that including temperature effects on growth during the first year of life improves model performance for all 7 species (Table 3).  The estimated temperature effect was positive for all species except shortbelly rockfish (Table 4, Figure 1), the species with the most southerly distribution. Allowing asymptotic size to differ for cohorts exposed to low or high fishing pressure improved model performance for 4 of the 7 species (darkblotched rockfish, Pacific hake, sablefish, and shortbelly rockfish).  Estimates of asymptotic size for darkblotched rockfish and Pacific hake were greater after fishing pressure was released, but estimates were lower for sablefish and shortbelly rockfish (Table 5).
+We found that including temperature effects on growth during the first year of life improves model performance for all 7 species (Table 3). The estimated temperature effect was positive for all species except shortbelly rockfish (Table 4, Figure 1), the species with the most southerly distribution. Allowing asymptotic size to differ for cohorts exposed to low or high fishing pressure improved model performance for 4 of the 7 species (darkblotched rockfish, Pacific hake, sablefish, and shortbelly rockfish). Estimates of asymptotic size for darkblotched rockfish and Pacific hake were greater after fishing pressure was released, but estimates were lower for sablefish and shortbelly rockfish (Table 5).
 
 ### VB-DBA (Alan)
 
-With the first method (DFA applied to $L_{\infty}$ time series), the DFA models identified a single and declining common trend in all three areas, consistent with TSR (Fig. 2). With the exception of lingcod, the $L_{\infty}$ time series for all species were positively related to the common trends in all three areas, as shown by the positive factor loadings. The common trend was best supported by the data in the Monterey area, where five out of seven species showed similar factor loading values indicating equal support for the identified trend from a majority of species. In both ECV and Conception areas the identified trends were supported by three species only. Including covariates did not improve the DFA models (Table 6). For both Monterey and Conception areas the lowest AIC was achieved by the model with no covariates. For the ECV area, the model including $F$ achieved the lowest AIC, however the difference with the AIC from the model without covariates was less than 4 indicating that the inclusion of the $F$ covariate does not significantly improve the model [@burnhamanderson02]. 
+With the first method (DFA applied to $L_{\infty}$ time series), the DFA models identified a single and declining common trend in all three areas, consistent with TSR (Fig. 2). With the exception of lingcod, the $L_{\infty}$ time series for all species were positively related to the common trends in all three areas, as shown by the positive factor loadings. The common trend was best supported by the data in the Monterey area, where five out of seven species showed similar factor loading values indicating equal support for the identified trend from a majority of species. In both ECV and Conception areas the identified trends were supported by three species only. Including covariates did not improve the DFA models (Table 6). For both Monterey and Conception areas the lowest AIC was achieved by the model with no covariates. For the ECV area, the model including $F$ achieved the lowest AIC, however the difference with the AIC from the model without covariates was less than 4 indicating that the inclusion of the $F$ covariate does not significantly improve the model [@burnhamanderson02].
 
 With the second method (DFA applied to mean length at juvenile, maturing and mature life stages), the DFA models did not indicate a clear directional pattern across areas and life stages (Fig. S?). However, in the Monterey area where the common declining trend in $L_{\infty}$ was best supported, there was some indication of an increase in the mean length of juveniles coinciding with a decline in the mean length of mature individuals, at least in the second part of the time series (mid-1990s onwards), consistent with TSR (Fig. 3). Unfortunately, the factor loadings showed poor support across species for both these trends, with some species being highly negatively correlated to the trends identified. As with the first method, including covariates did not improve the DFA models: in all three areas and for all three life stages, the best DFA model was always the one without covariates (Table 7).
-
 
 # Discussion
 
 To be determined, but some organizing thoughts are:
 
-1) Potential for attribution (and maybe misattribution) of sources of variability with differing modeling approaches (i.e., spatial vs. non-spatial models)		
+1)  Potential for attribution (and maybe misattribution) of sources of variability with differing modeling approaches (i.e., spatial vs. non-spatial models)
 
-2) Advantages/disadvantages of mechanistic models vs non-mechanistic models
+2)  Advantages/disadvantages of mechanistic models vs non-mechanistic models
 
-3) The ability of the modeling approaches to be able to distinguish between the hypotheses of fish growth
+3)  The ability of the modeling approaches to be able to distinguish between the hypotheses of fish growth
 
-4) The role of biology in affecting the influence of temperature on size at age (i.e., ontogenetic depth movement, timing of spawning  
-    
+4)  The role of biology in affecting the influence of temperature on size-at-age (i.e., ontogenetic depth movement, timing of spawning
+
+5)  Finally, spatio-temporal models such as VAST (Vector Autoregressive Spatio-Temporal model; www.github.com/james-thorson/VAST) are mixed-effect models in which model spatial variation as random effects given a pattern of spatial correlation, and a number of covariates can be modeled as fixed effects. Although VAST models are often applied to data on fish density from resource surveys (Thorson 2019), they can be potentially useful for cases where fish size-at-age may vary over space in patterns not related to the modeled fixed effects.
 
 # Conclusion
 
-
-# Acknowledgements {-}
-
+# Acknowledgements {.unnumbered}
 
 \pagebreak
 
-## References {-}
+## References {.unnumbered}
 
-<div id="refs"></div>
+::: {#refs}
+:::
 
 \pagebreak
 
-# Appendix A {-}
-
-
+# Appendix A {.unnumbered}
 
 # Tables
 
 Table 3: State space size-at-age models
 
-| Name    | Equation                                               | Explanation             |
-|---------|--------------------------------------------------------|-------------------------|
-| $S_1$   | $x_a,t = \beta x_{a-1,t-1} + \varepsilon$              | Constant                |
-| $S_2$   | $x_a,t = \beta x_{a-1,t-1} + \gamma_t + \varepsilon$   | Annual deviations       |
-| $S_3$   | $x_a,t = \beta x_{a-1,t-1} + \nu_c + \varepsilon$      | Cohort deviations       |
-| $S_4$   | $x_a,t = \beta x_{a-1,t-1} + \varepsilon$              | Initial size deviations |
+| Name  | Equation                                             | Explanation             |
+|---------------|----------------------------------------|-----------------|
+| $S_1$ | $x_a,t = \beta x_{a-1,t-1} + \varepsilon$            | Constant                |
+| $S_2$ | $x_a,t = \beta x_{a-1,t-1} + \gamma_t + \varepsilon$ | Annual deviations       |
+| $S_3$ | $x_a,t = \beta x_{a-1,t-1} + \nu_c + \varepsilon$    | Cohort deviations       |
+| $S_4$ | $x_a,t = \beta x_{a-1,t-1} + \varepsilon$            | Initial size deviations |
 
 Table 4: Comparison of AIC values achieved by the DFA models applied to $L_{\infty}$ time series (first method). The lowest AIC in each area is highlighted in bold.
 
-|Region	|ECV	|Monterey	|Conception|
-|-------|-----|-----|-----|-----|----|
-|model	|AICc |	AICc	  |AICc      |
-|-------|-----|---------|----------|
-|no covariate	|261	|215	|142|
-|temp <=183m	    | 273|	235	|163|
-|temp 184-550m	|274	|236||	
-|temp >=550m	    |275	|	||
-|all temp	|289	|252	||
-|fishing	                |258|	232	|157|
-|fishing & temp <=183m	|266|	250	|184|
-|fishing & temp 184-550m	|267|	251	||
-|fishing & temp >=550m	|266|	|	|
-|all covariates |	317|	273	|184|
+| Region                  | ECV   | Monterey  | Conception |     |     |
+|-------------------------|-------|-----------|------------|-----|-----|
+| model                   | AICc  | AICc      | AICc       |     |     |
+| -------                 | ----- | --------- | ---------- |     |     |
+| no covariate            | 261   | 215       | 142        |     |     |
+| temp \<=183m            | 273   | 235       | 163        |     |     |
+| temp 184-550m           | 274   | 236       |            |     |     |
+| temp \>=550m            | 275   |           |            |     |     |
+| all temp                | 289   | 252       |            |     |     |
+| fishing                 | 258   | 232       | 157        |     |     |
+| fishing & temp \<=183m  | 266   | 250       | 184        |     |     |
+| fishing & temp 184-550m | 267   | 251       |            |     |     |
+| fishing & temp \>=550m  | 266   |           |            |     |     |
+| all covariates          | 317   | 273       | 184        |     |     |
 
 Table 5: Comparison of AIC values achieved by the DFA models applied to time series of mean length at juvenile, maturing and mature life stages (second method). The lowest AIC in each area and life stage is highlighted in bold.
 
-|	      |  ECV	  |	    |	        |         | Monterey|		
-|-------|---------|-----|---------|---------|---------|
-|	      |age_juv	|A50	|age_mat	|age_juv	|A50      |
-|-------|---------|-----|---------|---------|---------|	
-|model	|AICc	    |AICc	|AICc	    |AICc	    |AICc     |	
-|-------|---------|-----|---------|---------|---------|
-|no covars	|249	|249	|224	|248	|264|	
-|temp <=183m	|267	|267	|242|	265	|282|	
-|temp 184-550m	|266	|267	|242|	265	|282|	
-|temp >=550m	|266	|267	|242|	| |		
-|all temp	|284	|297	|262	|282	|291|	
-|fishing	|265	|265	|237	|265	|282|	
-|fishing & temp <=183m	| 284	|285	|250	|287	|303	|
-|fishing & temp 184-550m	|283	|285	|250	|287	|303	|
-|fishing & temp >=550m	282	|284	|250	|		|
-|all covars	|318	|334	|278	|308	|317 |	
-
+|                            | ECV       |       |           |           | Monterey  |
+|----------------------------|-----------|-------|-----------|-----------|-----------|
+|                            | age_juv   | A50   | age_mat   | age_juv   | A50       |
+| -------                    | --------- | ----- | --------- | --------- | --------- |
+| model                      | AICc      | AICc  | AICc      | AICc      | AICc      |
+| -------                    | --------- | ----- | --------- | --------- | --------- |
+| no covars                  | 249       | 249   | 224       | 248       | 264       |
+| temp \<=183m               | 267       | 267   | 242       | 265       | 282       |
+| temp 184-550m              | 266       | 267   | 242       | 265       | 282       |
+| temp \>=550m               | 266       | 267   | 242       |           |           |
+| all temp                   | 284       | 297   | 262       | 282       | 291       |
+| fishing                    | 265       | 265   | 237       | 265       | 282       |
+| fishing & temp \<=183m     | 284       | 285   | 250       | 287       | 303       |
+| fishing & temp 184-550m    | 283       | 285   | 250       | 287       | 303       |
+| fishing & temp \>=550m 282 | 284       | 250   |           |           |           |
+| all covars                 | 318       | 334   | 278       | 308       | 317       |
 
 # Figures
 
+```{=tex}
 \begin{figure}
 \caption{Effects of bottom temperature anomaly on the von Bertelanffy growth parameter $k$ for each species.}\label{temp_effect_k}
 \begin{center}
 \includegraphics[height = 0.8\textheight]{../results/ss_lvb_temp/temp_effect_by_species.pdf}
 \end{center}
 \end{figure}
-
+```
+```{=tex}
 \begin{figure}
 \caption{Annual spawning biomass, fully-selected fishing mortality rate, and recruitment for Petrale sole.}\label{SSB_F_R}
 \begin{center}
 \includegraphics[height = 0.8\textheight]{../results/ssm_temp/petrale_SSB_F_R.pdf}
 \end{center}
 \end{figure}
-
+```
+```{=tex}
 \begin{figure}
 \caption{Annual SSB$_{40}$ and $F_{40}$, reference points for Petrale sole.}\label{BRPs}
 \begin{center}
 \includegraphics[height = 0.8\textheight]{../results/ssm_temp/petrale_BRPs.pdf}
 \end{center}
 \end{figure}
+```

@@ -9,7 +9,7 @@ require(nmfspalette)
 require(cmdstanr)
 require(bridgesampling)
 require(posterior)
-remotes::install_github("WGGRAFY/sarla", force = TRUE, ref="missingdata")
+remotes::install_github("WGGRAFY/sarla", force = TRUE)
 require(sarla)
 require(loo)
 
@@ -119,7 +119,8 @@ fit_past <- run_model(i = i, 0L, 0L, 0L)
 # this is passed to brms::prepare_predictions to tell it to compute out-of-sample
 #rather than in-sample predictions. Not sure how to do this when using fit$loo rather than 
 #log_lik
-loglik <- fit_past$loo(variables = "log_lik", newdata = df_oos, oos = oos)
+loglik <- fit_past$loo(variables = "log_lik", newdata = df_oos)
+, oos = oos)
 approx_elpds_1sap[L + 1] <- log_mean_exp(loglik[, oos])
 
 # iterate over i > L
