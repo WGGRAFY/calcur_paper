@@ -1,8 +1,8 @@
-run_model <- function(i, cohort_effects, init_effects, year_effects){
+run_model <- function(i, cohort_effects, init_effects, year_effects, year_cov){
   # Put lingcod data into stan format
   SPECIES <- spp$spp[i]
   filename <- paste0(".\\code\\sarla_model\\output\\",SPECIES,
-                     "y", year_effects,
+                     "y", year_effects, ifelse(length(year_cov)>0,1,0),
                      "i", init_effects,
                      "c", cohort_effects,
                      "model.RData")
@@ -21,6 +21,9 @@ run_model <- function(i, cohort_effects, init_effects, year_effects){
   realdat$Nages <- nrow(realdat$xaa_observed)
   realdat$Nyears <- ncol(realdat$xaa_observed)
   realdat$Ncohorts <- realdat$Nages + realdat$Nyears - 1
+  #We need a temp for every cohort which means going back longer in time
+  extra_temps <- rep(mean(year_temp), realdat$Ncohorts - length(year_temp))
+  realdat$year_effect_cov <- c(extra_temps,year_cov)
   stan_dat <- plot_and_fill_data(realdat, init_effects = init_effects,
                                  year_effects = year_effects, cohort_effects = cohort_effects,
                                  plot=T)
@@ -90,13 +93,16 @@ run_model <- function(i, cohort_effects, init_effects, year_effects){
   if(init_effects==1L){
     summary_vars <- c(summary_vars, "eta_c[1]", "eta_c[2]", "eta_c_sd")
   }
+  if(length(year_cov)>0){
+    summary_vars <- c(summary_vars, "beta_y")
+  }
   
   fit$summary(variables =  summary_vars)
                             
   fit$cmdstan_diagnose()
   
   make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit, 
-             species = paste0(SPECIES, "y", year_effects,"i", init_effects,
+             species = paste0(SPECIES, "y", year_effects,ifelse(length(year_cov)>0,1,0), "i", init_effects,
              "c", cohort_effects), pars_main = pars_main, stan_dat = stan_dat)
   
   return(fit)

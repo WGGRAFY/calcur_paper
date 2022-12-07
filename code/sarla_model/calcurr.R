@@ -9,7 +9,7 @@ require(nmfspalette)
 require(cmdstanr)
 require(bridgesampling)
 require(posterior)
-remotes::install_github("WGGRAFY/sarla", force = TRUE)
+remotes::install_github("WGGRAFY/sarla", force = TRUE, ref = "addcovars")
 require(sarla)
 require(loo)
 
@@ -17,6 +17,8 @@ load("./data/WareHouse_2019.RData")
 # load the temperature data
 ex <- new.env()
 load("./data/AR1_temperature_regions_2020.RData", env = ex)
+load("./data/temp_objects_for_ss_lvb_temp.RData", env = ex)
+
 ls(ex)
 temperature_by_region <- ex$tempest
 colnames(temperature_by_region) <- ex$regions
@@ -65,9 +67,12 @@ for (i in seq_len(length(spp$spp))[-1]) {
     arrange(year) %>%
     mutate_all(~ replace(., is.na(.), 999)) %>%
     t()
+  total_years <- 1977:2018
+  ind <- which(total_years %in% model_data[[i]][1,])
+  year_temp <- temperature_by_region[,2]
 
 fit_all <- run_model(i = i, 1L, 1L, 1L)
-fit_year <- run_model(i = i, 0L, 0L, 1L)
+fit_year <- run_model(i = i, 0L, 0L, 1L, year_cov = year_temp)
 fit_cohort <- run_model(i = i, 1L, 0L, 0L)
 fit_init <- run_model(i = i, 0L, 1L, 0L)
  fit_null <- run_model(i = i, 0L, 0L, 0L)
