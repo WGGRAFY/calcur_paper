@@ -18,6 +18,8 @@ load("./data/WareHouse_2019.RData")
 ex <- new.env()
 load("./data/AR1_temperature_regions_2020.RData", env = ex)
 load("./data/temp_objects_for_ss_lvb_temp.RData", env = ex)
+match_area <- read.csv("./results/ss_lvb_temp/first_age_area_depth.csv") %>%
+  mutate(region = paste(area,depth, sep="_"))
 
 ls(ex)
 temperature_by_region <- ex$tempest
@@ -40,6 +42,7 @@ source("./code/sarla_model/functions/make_plots.R")
 source("./code/sarla_model/functions/run_model.R")
 
 spp <- read.csv("code/sarla_model/process_config.csv")
+spp <- left_join(x = spp, match_area, by = c("spp" = "comname"))
 model_data <- vector("list")
 
 for (i in seq_len(length(spp$spp))[-1]) {
@@ -67,13 +70,13 @@ for (i in seq_len(length(spp$spp))[-1]) {
     arrange(year) %>%
     mutate_all(~ replace(., is.na(.), 999)) %>%
     t()
-  total_years <- 1977:2018
-  ind <- which(total_years %in% model_data[[i]][1,])
-  year_temp <- temperature_by_region[,2]
+  
+  cohort_temp <- temperature_by_region[,spp[i,"region"]]
+  
 
 fit_all <- run_model(i = i, 1L, 1L, 1L)
-fit_year <- run_model(i = i, 0L, 0L, 1L, year_cov = year_temp)
-fit_cohort <- run_model(i = i, 1L, 0L, 0L)
+fit_year <- run_model(i = i, 0L, 0L, 1L)
+fit_cohort <- run_model(i = i, 1L, 0L, 0L, cohort_cov = cohort_temp)
 fit_init <- run_model(i = i, 0L, 1L, 0L)
  fit_null <- run_model(i = i, 0L, 0L, 0L)
   
