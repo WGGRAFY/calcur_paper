@@ -9,6 +9,7 @@ require(nmfspalette)
 require(cmdstanr)
 require(bridgesampling)
 require(posterior)
+detach("package:sarla", unload = TRUE)
 remotes::install_github("WGGRAFY/sarla", force = TRUE, ref = "addcovars")
 require(sarla)
 require(loo)
@@ -23,7 +24,10 @@ match_area <- read.csv("./results/ss_lvb_temp/first_age_area_depth.csv") %>%
 
 ls(ex)
 temperature_by_region <- ex$tempest
+temperature_by_region <- data.frame(temperature_by_region)
+
 colnames(temperature_by_region) <- ex$regions
+temperature_by_region$year <- 1977:2018
 str(WareHouse.All.Ages.Env)
 
 # Peek at which spp has the most data
@@ -34,7 +38,7 @@ WareHouse.All.Ages.Env %>%
 #8527 total for lingcod
 #Look at lingcod
 WareHouse.All.Ages.Env %>%
-  filter(common_name=="lingcod", latitude_dd > 40+1/6) 
+  filter(common_name=="lingcod", latitude_dd > 40+1/2) 
 
 source("./code/sarla_model/functions/preprocess_cal_curr.R")
 
@@ -62,20 +66,21 @@ for (i in seq_len(length(spp$spp))[-1]) {
   )
 
   # widen data so it is by row = age and columns = year
-  model_data[[i]] <- processed_data %>%
-    select(age_years, year, standardl) %>%
-    unique() %>%
-    arrange(age_years) %>%
-    pivot_wider(names_from = age_years, values_from = standardl) %>%
-    arrange(year) %>%
-    mutate_all(~ replace(., is.na(.), 999)) %>%
+  model_data[[i]] <- processed_data |>
+    select(age_years, year, standardl) |>
+    unique() |>
+    arrange(age_years) |>
+    pivot_wider(names_from = age_years, values_from = standardl) |>
+    arrange(year) |>
+    mutate_all(~ replace(., is.na(.), 999)) |>
     t()
   
-  cohort_temp <- temperature_by_region[,spp[i,"region"]]
+  ind <- which(temperature_by_region$year %in% model_data[[i]]["year",])
+  cohort_temp <- temperature_by_region[ind,spp[i,"region"]]
   
 
-fit_all <- run_model(i = i, 1L, 1L, 1L)
-fit_year <- run_model(i = i, 0L, 0L, 1L)
+fit_all <- run_model(i = i, 1L, 1L, 1L, cohort_cov = cohort_temp)
+fit_year <- run_model(i = i, 0L, 0L, 1L, cohort_cov = cohort_temp)
 fit_cohort <- run_model(i = i, 1L, 0L, 0L, cohort_cov = cohort_temp)
 fit_init <- run_model(i = i, 0L, 1L, 0L)
  fit_null <- run_model(i = i, 0L, 0L, 0L)
