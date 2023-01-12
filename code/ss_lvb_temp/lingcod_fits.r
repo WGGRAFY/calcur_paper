@@ -10,7 +10,7 @@ nyears = length(modyears)
 dat = subset(dat, common_name == comname)# & project == "Groundfish Slope and Shelf Combination Survey")
 dat = subset(dat, yc %in% modyears) #only model obs where we can follow cohort from age 0
 dat = subset(dat, age_years >0) #only allow estimation of of temperature effects as early as age 0! Not before!
-
+dat = subset(dat, latitude_dd > 40.5)
 #get tempdat, regions, tdat.obs, tdat.sd
 load(file = "data/temp_objects_for_ss_lvb_temp.RData")
 
@@ -68,7 +68,6 @@ temp$par$beta_Linf = rep(temp$par$beta_Linf,2)
 m3 = MakeADFun(temp$dat,temp$par,random=c("Ecov_re", "k_re"),DLL=dll_name, map = temp$map)
 m3 = fit.tmb.fn(m3, 3)
 saveRDS(m3, file = paste0('results/ss_lvb_temp/', sp, "_m3.RDS"))
-
 
 aic = cbind(sapply(0:3, function(x) 2*(get(paste0("m",x))$opt$obj + length(get(paste0("m",x))$opt$par))))
 rownames(aic) = paste0("m",0:3)

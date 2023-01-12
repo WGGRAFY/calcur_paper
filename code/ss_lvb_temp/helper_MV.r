@@ -306,9 +306,8 @@ plot.Ecov.res.fn = function(model, yrange, years, ylab = "Bottom temperature ano
   mtext(side = 1, outer = TRUE, line = 2, "Year", cex = 1.5)
 }
 
-plot.Ecov.res.fn = function(model, yrange, years, ylab = "Bottom temperature anomaly", ylab2, xrange, regions, depths)
+plot.Ecov.res.fn = function(model, yrange, years, ylab = "Bottom temperature anomaly", ylab2, xrange)
 {
-  library(ggplot2)
   tcol <- col2rgb('black')
   tcol <- paste(rgb(tcol[1,],tcol[2,], tcol[3,], maxColorValue = 255), "55", sep = '')
   if(missing(xrange)) xrange = range(years)
@@ -316,7 +315,6 @@ plot.Ecov.res.fn = function(model, yrange, years, ylab = "Bottom temperature ano
   n_Ecov = NCOL(model$env$data$Ecov_obs)
   print(n_Ecov)
   if(missing(years)) years = 1:NROW(model$env$data$Ecov_obs)
-  Ecov <- cbind.data.frame(est = numeric(), sd = numeric(), region = regions, depths = depths)
   Ecov = array(NA, dim = c(3, length(years), n_Ecov))
   temp = summary(model$sdrep)
   temp = temp[which(rownames(temp) == "Ecov_y"),]

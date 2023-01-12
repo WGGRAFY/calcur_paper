@@ -93,10 +93,11 @@ for(i in 1:length(sps)) {
     mtext(side = 2, "Length (cm) at age 1", line = 3)
   dev.off()
 }
-x = matrix(NA, 4, 4)
+x = matrix(NA, 5, 4)
 for(i in which(best == "m3")) {
+  print(i)
   temp = readRDS(paste0("results/ss_lvb_temp/", sps[i], "_", best[i], ".RDS"))
-  x[which(best == "m3")==i,] = c(exp(temp$parList$beta_Linf), as.list(temp$sdrep, "Std. Error")$beta_Linf)
+  x[which(best == "m3")==i,] <- c(exp(temp$parList$beta_Linf), as.list(temp$sdrep, "Std. Error")$beta_Linf)
 }
 x[,3:4] = x[,1:2]*x[,3:4]
 x = round(x,2)
