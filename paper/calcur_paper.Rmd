@@ -107,7 +107,7 @@ Seven species were selected for analysis of length-at-age data, based on a diver
 
 We used a slight modification of the state-space size-at-age model in @stawitzetal15. Mean length-at-age for each year for each species is calculated for fish ages with at least ten observations across the length of the time series. The mean is calculated as the difference in size-at-age for a given age and year from the mean size-at-age for that age across a 15 year reference period (1995 - 2010) to allow for comparisons between species with different time series lengths.
 
-This model assumes an autoregressive process of order 1 (AR1) represents the "true" temporal processes in size-at-age data, such that the size-at-age $a+1$ and year $t+1$ is a function of size-at-age $a$ in year $t$. This process can be modeled as an AR1 process only ($S_1$) or with four additional predictors that represent year-specific ($S_2$), cohort-specific ($S_3$), or initial size ($S_4$) deviations from the AR1 process shared across age groups, or all three types of deviations ($S_5$) (Table 3). An additional three models include a temperature covariate added to the annual variation model ($S_6$), to the cohort variation model ($S_7$) or to the initial size variation model ($S_8$). The annual temperature model ($S_6$) uses the temperature at time $t-1$ to predict size in year $t$. The cohort temperature model ($S_7$) and  initial size temperature model ($S_8$) uses temperature in the first year of life, which is zero for all species with the exception of petrale sole, who have a first age of one. The effect of using the same cohort temperature in both $S_7$ and $S_8$ is to test if the temperature at the birth year affects growth only in the first year of life or in subsequent years.
+This model assumes an autoregressive process of order 1 (AR1) represents the "true" temporal processes in size-at-age data, such that the size-at-age $a+1$ and year $t+1$ is a function of size-at-age $a$ in year $t$. This process can be modeled as an AR1 process only ($S_1$) or with four additional predictors that represent year-specific ($S_2$), cohort-specific ($S_3$), or initial size ($S_4$) deviations from the AR1 process shared across age groups, or all three types of deviations ($S_5$) (Table 3). An additional three models include a temperature covariate added to the annual variation model ($S_6$), to the cohort variation model ($S_7$) or to the initial size variation model ($S_8$). The annual temperature model ($S_6$) uses the temperature at time $t-1$ to predict size in year $t$. The cohort temperature model ($S_7$) and initial size temperature model ($S_8$) uses temperature in the first year of life, which is zero for all species with the exception of petrale sole, who have a first age of one. The effect of using the same cohort temperature in both $S_7$ and $S_8$ is to test if the temperature at the birth year affects growth only in the first year of life or in subsequent years.
 
 The observation equation is the same across all models, such that the observed length-at-age is normally-distributed around the "true" length-at-age. The priors and estimated parameter values for this model are provided in Appendix . The model is implemented in the Stan modeling language (@stan) via the `sarla` (State-space AutoRegressive Length-at-Age) `R` package which can be downloaded at <http://github.com/wggrafy/sarla>. Model convergence was assessed by visual examination of trace plots, posterior estimates, and posterior predictive interval checks against the data. E-BFMI and R-hat statistics provided by Stan were also satisfactory. We used the approximate leave-future-out cross-validation statistic presented in @burkner20 to perform model selection.
 
@@ -186,31 +186,31 @@ To be determined, but some organizing thoughts are:
 
 Table 3: State space size-at-age models
 
-+-------------+------------------------------------------------------------------------------------+--------------------------------------------------+
-| Name        | Equation                                                                           | Explanation                                      |
-+=============+====================================================================================+==================================================+
-| $S_1$       | $x_{a,t} = \beta x_{a-1,t-1} + \varepsilon$                                        | Constant                                         |
-+-------------+------------------------------------------------------------------------------------+--------------------------------------------------+
-| $S_2$       | $x_{a,t} = \beta x_{a-1,t-1} + \gamma_t + \varepsilon$                             | Annual deviations                                |
-+-------------+------------------------------------------------------------------------------------+--------------------------------------------------+
-| $S_3$       | $x_{a,t} = \beta x_{a-1,t-1} + \nu_c + \varepsilon$                                | Cohort deviations                                |
-+-------------+------------------------------------------------------------------------------------+--------------------------------------------------+
-| $S_4$       | $x_{a,t} = \beta x_{a-1,t-1} + \varepsilon$                                        | Initial size deviations                          |
-|             |                                                                                    |                                                  |
-|             | $x_{0,t} \sim N(x_c, \sigma_c^2)$                                                  |                                                  |
-+-------------+------------------------------------------------------------------------------------+--------------------------------------------------+
-| $S_5$       | \$x\_{a,t} = \beta x\_{a-1,t-1} + \gamma\_t + \nu\_c + \varepsilon\$               | Annual, cohort, and initial size deviations      |
-|             |                                                                                    |                                                  |
-|             | $x_{0,t} \sim N(x_c, \sigma_c^2)$                                                  |                                                  |
-+-------------+------------------------------------------------------------------------------------+--------------------------------------------------+
-| $S_6$       | \$x\_{a,t} = \\beta x\_{a-1,t-1} + \\gamma_t + \\beta_y T\_{y-a} + \\varepsilon \$ | Annual deviations with temperature effects       |
-+-------------+------------------------------------------------------------------------------------+--------------------------------------------------+
-| $S_7$       | $x_{a,t} = \beta x_{a-1,t-1} + \nu_c + \beta_c T_{y-a} + \varepsilon$              | Cohort deviations with temperature effects       |
-+-------------+------------------------------------------------------------------------------------+--------------------------------------------------+
-| $S_8$       | $x_{a,t} = \beta x_{a-1,t-1} + \varepsilon$                                        | Initial size deviations with temperature effects |
-|             |                                                                                    |                                                  |
-|             | \$x\_{0,t} \\sim N(x_c+\\beta_iT\_{y-a}, \\sigma_c\^2) \\forall t\$                |                                                  |
-+-------------+------------------------------------------------------------------------------------+--------------------------------------------------+
++-------------+-------------------------------------------------------------------------------------+--------------------------------------------------+
+| Name        | Equation                                                                            | Explanation                                      |
++=============+=====================================================================================+==================================================+
+| $S_1$       | $x_{a,t} = \beta x_{a-1,t-1} + \varepsilon$                                         | Constant                                         |
++-------------+-------------------------------------------------------------------------------------+--------------------------------------------------+
+| $S_2$       | $x_{a,t} = \beta x_{a-1,t-1} + \gamma_t + \varepsilon$                              | Annual deviations                                |
++-------------+-------------------------------------------------------------------------------------+--------------------------------------------------+
+| $S_3$       | $x_{a,t} = \beta x_{a-1,t-1} + \nu_c + \varepsilon$                                 | Cohort deviations                                |
++-------------+-------------------------------------------------------------------------------------+--------------------------------------------------+
+| $S_4$       | $x_{a,t} = \beta x_{a-1,t-1} + \varepsilon$                                         | Initial size deviations                          |
+|             |                                                                                     |                                                  |
+|             | $x_{0,t} \sim N(x_c, \sigma_c^2)$                                                   |                                                  |
++-------------+-------------------------------------------------------------------------------------+--------------------------------------------------+
+| $S_5$       | \$x\_{a,t} = \beta x\_{a-1,t-1} + \gamma\_t + \nu\_c + \varepsilon\$                | Annual, cohort, and initial size deviations      |
+|             |                                                                                     |                                                  |
+|             | $x_{0,t} \sim N(x_c, \sigma_c^2)$                                                   |                                                  |
++-------------+-------------------------------------------------------------------------------------+--------------------------------------------------+
+| $S_6$       | \$ x\_{a,t} = \\beta x\_{a-1,t-1} + \\gamma_t + \\beta_y T\_{y-1} + \\varepsilon \$ | Annual deviations with temperature effects       |
++-------------+-------------------------------------------------------------------------------------+--------------------------------------------------+
+| $S_7$       | $x_{a,t} = \beta x_{a-1,t-1} + \nu_c + \beta_c T_{y-a} + \varepsilon$               | Cohort deviations with temperature effects       |
++-------------+-------------------------------------------------------------------------------------+--------------------------------------------------+
+| $S_8$       | $x_{a,t} = \beta x_{a-1,t-1} + \varepsilon$                                         | Initial size deviations with temperature effects |
+|             |                                                                                     |                                                  |
+|             | \$ x\_{0,t} \\sim N(x_c+\\beta_i T\_{y-a}, \\sigma_c\^2) \\forall t\$               |                                                  |
++-------------+-------------------------------------------------------------------------------------+--------------------------------------------------+
 
 Table 4: Comparison of AIC values achieved by the DFA models applied to $L_{\infty}$ time series (first method). The lowest AIC in each area is highlighted in bold.
 
