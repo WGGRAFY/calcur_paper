@@ -10,7 +10,7 @@ require(cmdstanr)
 require(bridgesampling)
 require(posterior)
 detach("package:sarla", unload = TRUE)
-remotes::install_github("WGGRAFY/sarla", force = TRUE, ref = "addcovars",
+remotes::install_github("WGGRAFY/sarla", force = TRUE,
                         dependencies = FALSE)
 require(sarla)
 require(loo)
@@ -29,27 +29,18 @@ temperature_by_region <- data.frame(temperature_by_region)
 
 colnames(temperature_by_region) <- ex$regions
 temperature_by_region$year <- 1977:2018
-str(WareHouse.All.Ages.Env)
 
-# Peek at which spp has the most data
-WareHouse.All.Ages.Env %>%
-  group_by(common_name) %>%
-  count() 
-
-#8527 total for lingcod
-#Look at lingcod
-WareHouse.All.Ages.Env %>%
-  filter(common_name=="lingcod", latitude_dd > 40+1/2) 
-
+#source helper functions that are in the functions/ folder
 source("./code/sarla_model/functions/preprocess_cal_curr.R")
-
 source("./code/sarla_model/functions/make_plots.R")
 source("./code/sarla_model/functions/run_model.R")
 
+# process config sets up the model inputs
 spp <- read.csv("code/sarla_model/process_config.csv")
 spp <- left_join(x = spp, match_area, by = c("spp" = "comname"))
 model_data <- vector("list")
 
+#Loop through the data, process it, and fit the model
 for (i in seq_len(length(spp$spp))[-1]) {
   processed_data <- preprocess_cal_curr(
     data__ = WareHouse.All.Ages.Env,

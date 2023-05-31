@@ -94,8 +94,10 @@ run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov,
   if(init_effects==1L){
     summary_vars <- c(summary_vars, "eta_c[1]", "eta_c[2]", "eta_c_sd")
   }
-  if(length(year_cov)>0){
+  if(exists("year_cov")){
+    if(length(year_cov)>0){
     summary_vars <- c(summary_vars, "beta_y")
+  }
   }
   
   fit$summary(variables =  summary_vars)
