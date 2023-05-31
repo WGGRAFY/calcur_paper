@@ -10,14 +10,15 @@ require(cmdstanr)
 require(bridgesampling)
 require(posterior)
 detach("package:sarla", unload = TRUE)
-remotes::install_github("WGGRAFY/sarla", force = TRUE, ref = "addcovars")
+remotes::install_github("WGGRAFY/sarla", force = TRUE, ref = "addcovars",
+                        dependencies = FALSE)
 require(sarla)
 require(loo)
 
 load("./data/WareHouse_2019.RData")
 # load the temperature data
 ex <- new.env()
-load("./data/AR1_temperature_regions_2020.RData", env = ex)
+load("./results/AR1_temperature_regions_2023.RData", env = ex)
 load("./data/temp_objects_for_ss_lvb_temp.RData", env = ex)
 match_area <- read.csv("./results/ss_lvb_temp/first_age_area_depth.csv") %>%
   mutate(region = paste(area,depth, sep="_"))
@@ -80,10 +81,12 @@ for (i in seq_len(length(spp$spp))[-1]) {
   
 
 fit_all <- run_model(i = i, 1L, 1L, 1L, cohort_cov = cohort_temp)
-fit_year <- run_model(i = i, 0L, 0L, 1L, cohort_cov = cohort_temp)
-fit_cohort <- run_model(i = i, 1L, 0L, 0L, cohort_cov = cohort_temp)
+fit_year <- run_model(i = i, 0L, 0L, 1L, cov_effects = 1, cohort_cov = cohort_temp)
+fit_cohort <- run_model(i = i, cohort_effects = 1L, 
+                        year_effects = 0L, init_effects = 0L,
+                        cov_effects = 1, cohort_cov = cohort_temp)
 fit_init <- run_model(i = i, 0L, 1L, 0L)
- fit_null <- run_model(i = i, 0L, 0L, 0L)
+fit_null <- run_model(i = i, 0L, 0L, 0L)
   
  
 }
@@ -91,6 +94,10 @@ fit_init <- run_model(i = i, 0L, 1L, 0L)
 strings <- paste0("./code/sarla_model/output/",rep(spp$spp, each = 5),rep(c("y1i1c1"
 ,"y0i1c0", "y1i0c0", "y0i0c1", "y0i0c0"),7),"model.RData")
 
+
+
+
+# not using this
 loo_list <- vector("list")
 loo_table <- matrix(nrow = 7, ncol=5)
 j <- k <- 1
@@ -110,6 +117,9 @@ for(i in seq_len(length(strings))){
 save(loo_table, file="lootable.RData")
 load("lootable.RData")
 
+
+### Everything below this is for LFO, which I am trying to avoid having to figure out.
+
 k_thres = 0.7
 approx_elpds_1sap <- rep(NA, N)
 N <- length(model_data[[i]])
@@ -117,6 +127,7 @@ stanfit <- rstan::read_stan_csv(fit$output_files())
 stanfit$call <- function(x, ...){
   x$formula
 }
+
 L = 10
 # initialize the process for i = L
 past <- 1:L
@@ -133,7 +144,6 @@ fit_past <- run_model(i = i, 0L, 0L, 0L)
 #rather than in-sample predictions. Not sure how to do this when using fit$loo rather than 
 #log_lik
 loglikpast <- fit_past$loo(variables = "log_lik", newdata = df_oos)
-, oos = oos)
 approx_elpds_1sap[L + 1] <- log_mean_exp(loglik[, oos])
 
 # iterate over i > L

@@ -1,10 +1,10 @@
-run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov = NULL){
+run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov, cov_effects){
   # Put lingcod data into stan format
   SPECIES <- spp$spp[i]
   filename <- paste0(".\\code\\sarla_model\\output\\",SPECIES,
                      "y", year_effects, 
                      "i", init_effects,
-                     "c", cohort_effects, ifelse(length(cohort_cov)>0,1,0),
+                     "c", cohort_effects, cohort_effects,
                      "model.RData")
   
   # if(file.exists(filename)){
@@ -24,7 +24,7 @@ run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov 
   #We need a temp for every cohort which means going back longer in time
   #now calculating inside stan
   #extra_temps <- rep(mean(cohort_temp), realdat$Ncohorts - length(cohort_temp))
-  realdat$cohort_effect_cov <- cohort_cov
+  realdat$cov_effect <- cohort_cov
   stan_dat <- plot_and_fill_data(realdat, init_effects = init_effects,
                                  year_effects = year_effects, cohort_effects = cohort_effects,
                                  plot=T)
@@ -56,9 +56,6 @@ run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov 
   #   adapt_delta = 0.95,
   #   max_treedepth = 10
   # )
-  
-  stan_dat$mean_c <- mean(cohort_cov, na.rm = T)
-  stan_dat$sigma_c <- sqrt(sd(cohort_cov, na.rm = T))
   
   
   
