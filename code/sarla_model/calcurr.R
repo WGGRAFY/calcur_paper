@@ -15,12 +15,12 @@ remotes::install_github("WGGRAFY/sarla", force = TRUE,
 require(sarla)
 require(loo)
 
-load("./data/WareHouse_2019.RData")
+load("../../data/WareHouse_2019.RData")
 # load the temperature data
 ex <- new.env()
-load("./results/AR1_temperature_regions_2023.RData", env = ex)
-load("./data/temp_objects_for_ss_lvb_temp.RData", env = ex)
-match_area <- read.csv("./results/ss_lvb_temp/first_age_area_depth.csv") %>%
+load("../../results/AR1_temperature_regions_2023.RData", env = ex)
+load("../../data/temp_objects_for_ss_lvb_temp.RData", env = ex)
+match_area <- read.csv("../../results/ss_lvb_temp/first_age_area_depth.csv") %>%
   mutate(region = paste(area,depth, sep="_"))
 
 ls(ex)
@@ -31,12 +31,12 @@ colnames(temperature_by_region) <- ex$regions
 temperature_by_region$year <- 1977:2018
 
 #source helper functions that are in the functions/ folder
-source("./code/sarla_model/functions/preprocess_cal_curr.R")
-source("./code/sarla_model/functions/make_plots.R")
-source("./code/sarla_model/functions/run_model.R")
+source("../../code/sarla_model/functions/preprocess_cal_curr.R")
+source("../../code/sarla_model/functions/make_plots.R")
+source("../../code/sarla_model/functions/run_model.R")
 
 # process config sets up the model inputs
-spp <- read.csv("code/sarla_model/process_config.csv")
+spp <- read.csv("../../code/sarla_model/process_config.csv")
 spp <- left_join(x = spp, match_area, by = c("spp" = "comname"))
 model_data <- vector("list")
 
@@ -66,20 +66,20 @@ for (i in seq_len(length(spp$spp))[-1]) {
     arrange(year) |>
     mutate_all(~ replace(., is.na(.), 999)) |>
     t()
-  
+
   ind <- which(temperature_by_region$year %in% model_data[[i]]["year",])
   cohort_temp <- temperature_by_region[ind,spp[i,"region"]]
-  
+
 
 fit_all <- run_model(i = i, 1L, 1L, 1L, cohort_cov = cohort_temp)
 fit_year <- run_model(i = i, 0L, 0L, 1L, cov_effects = 1, cohort_cov = cohort_temp)
-fit_cohort <- run_model(i = i, cohort_effects = 1L, 
+fit_cohort <- run_model(i = i, cohort_effects = 1L,
                         year_effects = 0L, init_effects = 0L,
                         cov_effects = 1, cohort_cov = cohort_temp)
 fit_init <- run_model(i = i, 0L, 1L, 0L)
 fit_null <- run_model(i = i, 0L, 0L, 0L)
-  
- 
+
+
 }
 
 strings <- paste0("./code/sarla_model/output/",rep(spp$spp, each = 5),rep(c("y1i1c1"
@@ -132,7 +132,7 @@ fit_past <- run_model(i = i, 0L, 0L, 0L)
 #Stopping point 12/6 - there's no oos argument to fit$loo
 # when passed to the brms::log_lik function via ...
 # this is passed to brms::prepare_predictions to tell it to compute out-of-sample
-#rather than in-sample predictions. Not sure how to do this when using fit$loo rather than 
+#rather than in-sample predictions. Not sure how to do this when using fit$loo rather than
 #log_lik
 loglikpast <- fit_past$loo(variables = "log_lik", newdata = df_oos)
 approx_elpds_1sap[L + 1] <- log_mean_exp(loglik[, oos])
@@ -148,7 +148,7 @@ for (i in (L + 1):(N - 1)) {
   df_oos <- df[c(past, oos), , drop = FALSE]
 
   loglik <- log_lik(fit_past, newdata = df_oos, oos = oos)
-  
+
   logratio <- sum_log_ratios(loglik, (i_refit + 1):i)
   psis_obj <- suppressWarnings(psis(logratio))
   k <- pareto_k_values(psis_obj)
@@ -164,14 +164,14 @@ for (i in (L + 1):(N - 1)) {
     lw <- weights(psis_obj, normalize = TRUE)[, 1]
     approx_elpds_1sap[i + 1] <- log_sum_exp(lw + loglik[, oos])
   }
-} 
+}
 
 plot_ks <- function(ks, ids, thres = 0.6) {
     dat_ks <- data.frame(ks = ks, ids = ids)
-    ggplot(dat_ks, aes(x = ids, y = ks)) + 
-      geom_point(aes(color = ks > thres), shape = 3, show.legend = FALSE) + 
-      geom_hline(yintercept = thres, linetype = 2, color = "red2") + 
-      scale_color_manual(values = c("cornflowerblue", "darkblue")) + 
-      labs(x = "Data point", y = "Pareto k") + 
+    ggplot(dat_ks, aes(x = ids, y = ks)) +
+      geom_point(aes(color = ks > thres), shape = 3, show.legend = FALSE) +
+      geom_hline(yintercept = thres, linetype = 2, color = "red2") +
+      scale_color_manual(values = c("cornflowerblue", "darkblue")) +
+      labs(x = "Data point", y = "Pareto k") +
       ylim(-0.5, 1.5)
   }
