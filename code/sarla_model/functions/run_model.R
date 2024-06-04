@@ -2,7 +2,7 @@ run_model <- function(i, cohort_effects, init_effects, year_effects,
                       cohort_cov = NULL, cov_effects = NULL){
   # Put lingcod data into stan format
   SPECIES <- spp$spp[i]
-  filename <- paste0("..\\..\\code\\sarla_model\\output\\",SPECIES,
+  filename <- paste0("pers-git\\calcur_model\\code\\sarla_model\\output\\",SPECIES,
                      "y", year_effects,
                      "i", init_effects,
                      "c", cohort_effects, "t", cov_effects,
@@ -71,16 +71,6 @@ run_model <- function(i, cohort_effects, init_effects, year_effects,
   post_mat <- posterior::as_draws_matrix(fit$draws())
 
 
-
-
-  # }
-
-  post <- posterior::as_draws_df(fit$draws())
-  post_mat <- posterior::as_draws_matrix(fit$draws())
-
-  tosave<- list("stan_dat" = stan_dat, "post" = post, "fit" = fit)
-
-  save(tosave, file = filename)
   pars <- names(post)
   pars <- pars[!grepl("raw", pars)]
   pars_main <- pars[unique(c(
