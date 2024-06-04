@@ -1,10 +1,11 @@
-run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov, cov_effects){
+run_model <- function(i, cohort_effects, init_effects, year_effects, 
+                      cohort_cov = NULL, cov_effects = NULL, year_cov = NULL){
   # Put lingcod data into stan format
   SPECIES <- spp$spp[i]
   filename <- paste0(".\\code\\sarla_model\\output\\",SPECIES,
                      "y", year_effects, 
                      "i", init_effects,
-                     "c", cohort_effects, cohort_effects,
+                     "c", cohort_effects, "t", cov_effects,
                      "model.RData")
   
   # if(file.exists(filename)){
@@ -26,11 +27,12 @@ run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov,
   #extra_temps <- rep(mean(cohort_temp), realdat$Ncohorts - length(cohort_temp))
   realdat$cov_effect <- cohort_cov
   stan_dat <- plot_and_fill_data(realdat, init_effects = init_effects,
-                                 year_effects = year_effects, cohort_effects = cohort_effects,
+                                 year_effects = year_effects, 
+                                 cohort_effects = cohort_effects,
                                  plot=T)
   names(stan_dat)[1] <- "laa_obs"
   
-  stan_dat$sigma_o_prior <- c(log(0.5), 0.5) # arbitrary!?
+  stan_dat$sigma_o_prior <- c(log(0.5), 0.05) # arbitrary!?
   stan_dat$sigma_p_prior <- c(log(0.2), 0.05) # arbitrary!?
   
   # quick testing, adjust path as needed:
@@ -57,8 +59,6 @@ run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov,
   #   max_treedepth = 10
   # )
   
-  
-  
   fit <- sarla::fit_sarla(stan_dat,
                           chains = 4,
                           parallel_chains = parallel::detectCores(),
@@ -67,22 +67,20 @@ run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov,
                           adapt_delta = 0.95,
                           max_treedepth = 10)
   
-  
-  
-  # }
-  
   post <- posterior::as_draws_df(fit$draws())
   post_mat <- posterior::as_draws_matrix(fit$draws())
   
-  tosave<- list("stan_dat" = stan_dat, "post" = post, "fit" = fit)
-  
-  save(tosave, file = filename)
   pars <- names(post)
   pars <- pars[!grepl("raw", pars)]
   pars_main <- pars[unique(c(
     grep("_sd", pars),
     grep("sigma_", pars), grep("beta", pars), grep("sigma_", pars)
   ))]
+  
+  tosave<- list("stan_dat" = stan_dat, "post" = post, "fit" = fit, "pars_main" = pars_main)
+  
+  save(tosave, file = filename)
+  
   
   summary_vars <- c("sigma_p", "sigma_o", "beta", "xaa[1,10]", "xaa[2,10]")
   if(year_effects==1L){
@@ -99,13 +97,9 @@ run_model <- function(i, cohort_effects, init_effects, year_effects, cohort_cov,
   }
   
   fit$summary(variables =  summary_vars)
-                            
+  
   fit$cmdstan_diagnose()
   
-  make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit, 
-             species = paste0(SPECIES, "y", year_effects,ifelse(length(year_cov)>0,1,0), "i", init_effects,
-             "c", cohort_effects), pars_main = pars_main, stan_dat = stan_dat)
-  
-  return(fit)
+  return(tosave)
   
 }

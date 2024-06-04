@@ -10,8 +10,10 @@ require(cmdstanr)
 require(bridgesampling)
 require(posterior)
 detach("package:sarla", unload = TRUE)
+devtools::load_all("../sarla")
 remotes::install_github("WGGRAFY/sarla", force = TRUE, ref = "addcovars",
                         dependencies = FALSE)
+
 require(sarla)
 require(loo)
 
@@ -80,11 +82,29 @@ for (i in seq_len(length(spp$spp))[-1]) {
   cohort_temp <- temperature_by_region[ind,spp[i,"region"]]
   
 
-fit_all <- run_model(i = i, 1L, 1L, 1L, cohort_cov = cohort_temp)
-fit_year <- run_model(i = i, 0L, 0L, 1L, cov_effects = 1, cohort_cov = cohort_temp)
+fit_all <- run_model(i = i, 1L, 1L, 1L, cov_effects = 0, cohort_cov = cohort_temp)
+make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit_all, 
+           species = paste0(spp$spp[i], "y", 1L,0, "i", 1L,
+                            "c", 1L))
+
+fit_year <- run_model(i = i, 0L, 0L, year_effects = 1L, 
+                      cov_effects = 1, cohort_cov = cohort_temp)
+
+
+make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit_year, 
+           species = paste0(spp$spp[i], "y", 1L,0, "i", 0L,
+                            "c", 0L))
+
 fit_cohort <- run_model(i = i, cohort_effects = 1L, 
                         year_effects = 0L, init_effects = 0L,
                         cov_effects = 1, cohort_cov = cohort_temp)
+
+
+make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit_cohort, 
+           species = paste0(spp$spp[i], "y", 0L,0, "i", 0L,
+                            "c", 1L))
+
+
 fit_init <- run_model(i = i, 0L, 1L, 0L)
 fit_null <- run_model(i = i, 0L, 0L, 0L)
   

@@ -1,20 +1,26 @@
-make_plots <- function(dir, species, fit_obj, pars_main, stan_dat){
+make_plots <- function(dir, species, fit_obj){
   
+  stan_dat <- fit_obj$stan_dat
+
   f <- paste0(dir, species, "\\")
   dir.create(f, showWarnings = FALSE)
   bayesplot::bayesplot_theme_set(theme_light())
   
-  bayesplot::mcmc_areas_ridges(fit_obj$draws(pars_main))
+  bayesplot::mcmc_areas_ridges(fit_obj$fit$draws(fit_obj$pars_main))
   ggsave(paste0(f, "ridges.pdf"), width = 4, height = 5)
   
-  bayesplot::mcmc_trace(fit_obj$draws(pars_main))
+  bayesplot::mcmc_trace(fit_obj$fit$draws(fit_obj$pars_main))
   
-  g <- bayesplot::mcmc_pairs(fit_obj$draws(pars_main), off_diag_fun = "hex")
+  g <- bayesplot::mcmc_pairs(fit_obj$fit$draws(fit_obj$pars_main), off_diag_fun = "hex")
   g
   ggsave(paste0(f, "pairs.pdf"), plot = g, width = 8, height = 8)
-  
-  post_xaa <- tidybayes::gather_draws(fit_obj, xaa[i, y]) %>%
+
+  post_xaa <- tidybayes::gather_draws(fit_obj$fit, xaa[i, y]) %>%
     rename(age = i, year = y)
+  
+  #add actual age and birth year to the tibble
+  post_xaa$ageyear <- as.numeric(dimnames(model_data[[i]])[[1]][-1])[post_xaa$age] 
+  post_xaa$birthyear <- post_xaa$age+post_xaa$year-stan_dat$Nages + max(model_data[[i]][1,]) - stan_dat$Ncohorts
   
   quantile_summary <- post_xaa %>%
     # filter(y >= stan_dat$Nages) %>%
@@ -42,6 +48,7 @@ make_plots <- function(dir, species, fit_obj, pars_main, stan_dat){
       legend.text = element_text(size = "6")
     )
   ggsave(paste0(f, "dev-by-age.pdf"), width = 10, height = 10)
+  yearlabels <- as.character(seq(1980,2020,10))
   
   quantile_summary %>%
     filter(!(lwr == 0 & upr == 0)) %>%
@@ -60,27 +67,30 @@ make_plots <- function(dir, species, fit_obj, pars_main, stan_dat){
   ggsave(paste0(f, "dev-by-year.pdf"), width = 10, height = 10)
   
   if (stan_dat$est_cohort_effects) {
-    post_delta_c <- tidybayes::gather_draws(fit_obj, delta_c[y])
+    post_delta_c <- tidybayes::gather_draws(fit_obj$fit, delta_c[y])
     delta_hat <- post_delta_c %>%
       group_by(y) %>%
       summarise(med = median(.value),
                 lwr = quantile(.value, probs = 0.1),
                 upr = quantile(.value, probs = 0.9)
       )
+    delta_hat$y <- 1940:2018
     g1 <- ggplot(delta_hat, aes(y, med, ymin = lwr, ymax = upr)) +
-      geom_pointrange() + ggtitle("Cohort effects")
+      geom_pointrange() + ggtitle("Cohort effects") 
     g1
     ggsave(paste0(f, "cohort-effects.pdf"), width = 5, height = 3)
   }
   
   if (stan_dat$est_init_effects) {
-    post_eta_c <- tidybayes::gather_draws(fit_obj, eta_c[y])
+    post_eta_c <- tidybayes::gather_draws(fit_obj$fit, eta_c[y])
     eta_hat <- post_eta_c %>%
       group_by(y) %>%
       summarise(med = median(.value),
                 lwr = quantile(.value, probs = 0.1),
                 upr = quantile(.value, probs = 0.9)
       )
+    
+    eta_hat$y <- 1940:2018
     g2 <- ggplot(eta_hat, aes(y, med, ymin = lwr, ymax = upr)) +
       geom_pointrange() + ggtitle("Init effects")
     g2
@@ -88,7 +98,8 @@ make_plots <- function(dir, species, fit_obj, pars_main, stan_dat){
   }
   
   if (stan_dat$est_year_effects) {
-    post_gamma_y <- tidybayes::gather_draws(fit_obj, gamma_y[y])
+    post_gamma_y <- tidybayes::gather_draws(fit_obj$fit, gamma_y[y])
+    #post_gamma_y$birthyear <- post_gamma_y$age+post_gamma_y$year-stan_dat$Nages + max(model_data[[i]][1,]) - stan_dat$Ncohorts
     gamma_hat <- post_gamma_y %>%
       group_by(y) %>%
       summarise(
@@ -96,8 +107,9 @@ make_plots <- function(dir, species, fit_obj, pars_main, stan_dat){
         lwr = quantile(.value, probs = 0.1),
         upr = quantile(.value, probs = 0.9)
       )
+    gamma_hat$y <- seq(1940,2018)
     g3 <- ggplot(gamma_hat, aes(y, med, ymin = lwr, ymax = upr)) +
-      geom_pointrange() + ggtitle("Year effects")
+      geom_pointrange() + ggtitle("Year effects")  + xlim(c(1977, 2020))
     g3
     ggsave(paste0(f, "year-effects.pdf"), width = 5, height = 3)
   }
@@ -105,7 +117,7 @@ make_plots <- function(dir, species, fit_obj, pars_main, stan_dat){
   cowplot::plot_grid(g1, g2, g3, ncol = 1L)
   ggsave(paste0(f, "all-effects.pdf"), width = 5, height = 7)
   }
-  postpred <- tidybayes::gather_draws(fit_obj,laa_postpred[i,y]) %>%
+  postpred <- tidybayes::gather_draws(fit_obj$fit,laa_postpred[i,y]) %>%
   #      ungroup() %>%
   #     pivot_wider(names_from = c(.iteration, .draw), values_from = .value) %>%
   #  filter(.chain==1) %>%
