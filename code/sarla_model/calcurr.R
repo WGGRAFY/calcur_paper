@@ -1,4 +1,4 @@
-# setwd("../../")
+setwd("../../")
 
 require(dplyr)
 require(stringr)
@@ -20,12 +20,14 @@ remotes::install_github("WGGRAFY/sarla", force = TRUE, ref = "addcovars",
 require(sarla)
 require(loo)
 
-load("../../data/WareHouse_2019.RData")
+
+load("pers-git/calcur_paper/data/WareHouse_2019.RData")
 # load the temperature data
 ex <- new.env()
-load("../../results/AR1_temperature_regions_2023.RData", env = ex)
-load("../../data/temp_objects_for_ss_lvb_temp.RData", env = ex)
-match_area <- read.csv("../../results/ss_lvb_temp/first_age_area_depth.csv") %>%
+load("pers-git/calcur_paper/results/AR1_temperature_regions_2023.RData", env = ex)
+
+load("pers-git/calcur_paper/data/temp_objects_for_ss_lvb_temp.RData", env = ex)
+match_area <- read.csv("pers-git/calcur_paper/results/ss_lvb_temp/first_age_area_depth.csv") %>%
   mutate(region = paste(area,depth, sep="_"))
 
 ls(ex)
@@ -36,12 +38,12 @@ colnames(temperature_by_region) <- ex$regions
 temperature_by_region$year <- 1977:2018
 
 #source helper functions that are in the functions/ folder
-source("../../code/sarla_model/functions/preprocess_cal_curr.R")
-source("../../code/sarla_model/functions/make_plots.R")
-source("../../code/sarla_model/functions/run_model.R")
+source("pers-git/calcur_paper/code/sarla_model/functions/preprocess_cal_curr.R")
+source("pers-git/calcur_paper/code/sarla_model/functions/make_plots.R")
+source("pers-git/calcur_paper/code/sarla_model/functions/run_model.R")
 
 # process config sets up the model inputs
-spp <- read.csv("../../code/sarla_model/process_config.csv")
+spp <- read.csv("pers-git/calcur_paper/code/sarla_model/process_config.csv")
 spp <- left_join(x = spp, match_area, by = c("spp" = "comname"))
 model_data <- vector("list")
 
