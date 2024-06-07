@@ -13,7 +13,7 @@ detach("package:sarla", unload = TRUE)
 
 ## This is the script version that has temperature covariates
 
-devtools::load_all("../sarla")
+devtools::load_all("pers-git/sarla")
 remotes::install_github("WGGRAFY/sarla", force = TRUE, ref = "addcovars",
                         dependencies = FALSE)
 
@@ -79,7 +79,7 @@ for (i in seq_len(length(spp$spp))[-1]) {
 
 
 fit_all <- run_model(i = i, 1L, 1L, 1L, cov_effects = 0, cohort_cov = cohort_temp)
-make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit_all, 
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_all, 
            species = paste0(spp$spp[i], "y", 1L,0, "i", 1L,
                             "c", 1L))
 
@@ -87,7 +87,7 @@ fit_year <- run_model(i = i, 0L, 0L, year_effects = 1L,
                       cov_effects = 1, cohort_cov = cohort_temp)
 
 
-make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit_year, 
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_year, 
            species = paste0(spp$spp[i], "y", 1L,0, "i", 0L,
                             "c", 0L))
 
@@ -96,7 +96,7 @@ fit_cohort <- run_model(i = i, cohort_effects = 1L,
                         cov_effects = 1, cohort_cov = cohort_temp)
 
 
-make_plots(dir = ".\\code\\sarla_model\\plots\\", fit_obj = fit_cohort, 
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_cohort, 
            species = paste0(spp$spp[i], "y", 0L,0, "i", 0L,
                             "c", 1L))
 

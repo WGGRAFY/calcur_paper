@@ -5,7 +5,6 @@ make_plots <- function(dir, species, fit_obj){
   f <- paste0(dir, species, "\\")
   dir.create(f, showWarnings = FALSE)
   bayesplot::bayesplot_theme_set(theme_light())
-  browser()
   bayesplot::mcmc_areas_ridges(fit_obj$fit$draws(fit_obj$pars_main))
   ggsave(paste0(f, "ridges.pdf"), width = 4, height = 5)
   

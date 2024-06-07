@@ -2,7 +2,7 @@ run_model <- function(i, cohort_effects, init_effects, year_effects,
                       cohort_cov = NULL, cov_effects = NULL){
   # Put lingcod data into stan format
   SPECIES <- spp$spp[i]
-  filename <- paste0("pers-git\\calcur_model\\code\\sarla_model\\output\\",SPECIES,
+  filename <- paste0(".\\pers-git\\calcur_paper\\code\\sarla_model\\output\\",SPECIES,
                      "y", year_effects,
                      "i", init_effects,
                      "c", cohort_effects, "t", cov_effects,
