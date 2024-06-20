@@ -73,7 +73,8 @@ make_plots <- function(dir, species, fit_obj){
                 lwr = quantile(.value, probs = 0.1),
                 upr = quantile(.value, probs = 0.9)
       )
-    delta_hat$y <- 1940:2018
+    start_yr <- 2018-(max(delta_hat$y)-1)
+    delta_hat$y <- start_yr:2018
     g1 <- ggplot(delta_hat, aes(y, med, ymin = lwr, ymax = upr)) +
       geom_pointrange() + ggtitle("Cohort effects") 
     g1
@@ -88,8 +89,8 @@ make_plots <- function(dir, species, fit_obj){
                 lwr = quantile(.value, probs = 0.1),
                 upr = quantile(.value, probs = 0.9)
       )
-    
-    eta_hat$y <- 1940:2018
+    start_yr <- 2018-(max(eta_hat$y)-1)
+    eta_hat$y <- start_yr:2018
     g2 <- ggplot(eta_hat, aes(y, med, ymin = lwr, ymax = upr)) +
       geom_pointrange() + ggtitle("Init effects")
     g2
@@ -106,7 +107,8 @@ make_plots <- function(dir, species, fit_obj){
         lwr = quantile(.value, probs = 0.1),
         upr = quantile(.value, probs = 0.9)
       )
-    gamma_hat$y <- seq(1940,2018)
+    start_yr <- 2018-(max(gamma_hat$y)-1)
+    gamma_hat$y <- seq(start_yr,2018)
     g3 <- ggplot(gamma_hat, aes(y, med, ymin = lwr, ymax = upr)) +
       geom_pointrange() + ggtitle("Year effects")  + xlim(c(1977, 2020))
     g3
