@@ -84,7 +84,7 @@ make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj =
                             "c", 1L))
 
 fit_year <- run_model(i = i, 0L, 0L, year_effects = 1L, 
-                      cov_effects = 1, cohort_cov = cohort_temp)
+                      cov_effects = 0, cohort_cov = cohort_temp)
 
 
 make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_year, 
