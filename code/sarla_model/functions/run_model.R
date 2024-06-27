@@ -45,6 +45,7 @@ run_model <- function(i, cohort_effects, init_effects, year_effects,
   stan_dat$est_cohort_effects <- cohort_effects
   stan_dat$est_init_effects <- init_effects
   stan_dat$est_year_effects <- year_effects
+  stan_dat$est_cov_effects <- cov_effects
   stan_dat$N_delta_c <- stan_dat$Ncohorts*cohort_effects
   stan_dat$N_gamma_y <- stan_dat$Ncohorts*year_effects
   stan_dat$N_eta_c <- stan_dat$Ncohorts*init_effects
