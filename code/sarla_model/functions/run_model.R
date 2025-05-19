@@ -1,4 +1,4 @@
-run_model <- function(i, cohort_effects, init_effects, year_effects, 
+run_model <- function(i, cohort_effects, init_effects, year_effects,
                       cohort_cov = NULL, cov_effects = NULL){
   # Put lingcod data into stan format
   SPECIES <- spp$spp[i]
@@ -27,20 +27,21 @@ run_model <- function(i, cohort_effects, init_effects, year_effects,
   #extra_temps <- rep(mean(cohort_temp), realdat$Ncohorts - length(cohort_temp))
   realdat$cov_effect <- cohort_cov
   stan_dat <- plot_and_fill_data(realdat, init_effects = init_effects,
-                                 year_effects = year_effects, 
+                                 year_effects = year_effects,
                                  cohort_effects = cohort_effects,
                                  plot=T)
   names(stan_dat)[1] <- "laa_obs"
 
-  stan_dat$sigma_o_prior <- c(log(0.5), 0.5) # arbitrary!?
-  stan_dat$sigma_p_prior <- c(log(0.2), 0.05) # arbitrary!?
+  stan_dat$sigma_o_prior <- c(log(0.15), 0.05) # arbitrary!?
+  stan_dat$sigma_p_prior <- c(log(0.2), 0.5) # arbitrary!?
 
   # quick testing, adjust path as needed:
   #library(cmdstanr)
   # file.remove("../sarla/inst/stan/sarla")
   #mod <- cmdstan_model("../sarla/inst/stan/sarla.stan")
 
-
+  stan_dat$NFcohorts <- stan_dat$Ncohorts
+  stan_dat$Ncohorts <- max(stan_dat$cohort_id, na.rm = TRUE)
   # cohort effects:
   stan_dat$est_cohort_effects <- cohort_effects
   stan_dat$est_init_effects <- init_effects
@@ -49,6 +50,7 @@ run_model <- function(i, cohort_effects, init_effects, year_effects,
   stan_dat$N_delta_c <- stan_dat$Ncohorts*cohort_effects
   stan_dat$N_gamma_y <- stan_dat$Ncohorts*year_effects
   stan_dat$N_eta_c <- stan_dat$Ncohorts*init_effects
+  
 
   # fit <- mod$sample(
   #   data = stan_dat,
@@ -64,10 +66,11 @@ run_model <- function(i, cohort_effects, init_effects, year_effects,
                           parallel_chains = parallel::detectCores(),
                           iter_warmup = 1000,
                           iter_sampling = 1000,
-                          adapt_delta = 0.95,
-                          max_treedepth = 10)
+                          adapt_delta = 0.98,
+                          max_treedepth = 10,
+                          )
 
-  
+
   post <- posterior::as_draws_df(fit$draws())
   post_mat <- posterior::as_draws_matrix(fit$draws())
 
@@ -78,11 +81,11 @@ run_model <- function(i, cohort_effects, init_effects, year_effects,
     grep("_sd", pars),
     grep("sigma_", pars), grep("beta", pars), grep("sigma_", pars)
   ))]
-  
+
   tosave<- list("stan_dat" = stan_dat, "post" = post, "fit" = fit, "pars_main" = pars_main)
-  
+
   save(tosave, file = filename)
-  
+
   summary_vars <- c("sigma_p", "sigma_o", "beta", "xaa[1,10]", "xaa[2,10]")
   if(year_effects==1L){
     summary_vars <- c(summary_vars, "gamma_y[1]", "gamma_y[2]", "gamma_y_sd")
@@ -95,7 +98,7 @@ run_model <- function(i, cohort_effects, init_effects, year_effects,
   }
 
   fit$cmdstan_diagnose()
-  
+
   return(tosave)
-  
+
 }

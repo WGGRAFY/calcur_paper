@@ -34,7 +34,7 @@ ls(ex)
 temperature_by_region <- ex$tempest
 temperature_by_region <- data.frame(temperature_by_region)
 
-colnames(temperature_by_region) <- ex$regions
+colnames(temperature_by_region) <- dimnames(ex$tempest)[[2]]
 temperature_by_region$year <- 1977:2018
 
 #source helper functions that are in the functions/ folder
@@ -48,7 +48,7 @@ spp <- left_join(x = spp, match_area, by = c("spp" = "comname"))
 model_data <- vector("list")
 
 #Loop through the data, process it, and fit the model
-for (i in seq_len(length(spp$spp))[-1]) {
+for (i in 1:length(spp$spp)) {
   processed_data <- preprocess_cal_curr(
     data__ = WareHouse.All.Ages.Env,
     common_ = spp[i, "spp"],
@@ -78,60 +78,90 @@ for (i in seq_len(length(spp$spp))[-1]) {
   cohort_temp <- temperature_by_region[ind,spp[i,"region"]]
 
 
-#fit_all <- run_model(i = i, 1L, 1L, 1L, cov_effects = 0, cohort_cov = cohort_temp)
-#make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_all, 
-#           species = paste0(spp$spp[i], "y", 1L,0, "i", 1L,
-#                            "c", 1L))
+fit_all <- run_model(i = i, 1L, 1L, 1L, cov_effects = 0, cohort_cov = cohort_temp)
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_all,
+          species = paste0(spp$spp[i], "y", 1L,"t",0, "i", 1L,
+                           "c", 1L, "a", 1L))
 
-fit_year <- run_model(i = i, 0L, 0L, year_effects = 1L, 
+fit_year <- run_model(i = i, 0L, 0L, year_effects = 1L,
                       cov_effects = 0, cohort_cov = rep(0,length(cohort_temp)))
 
 
-make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_year, 
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_year,
            species = paste0(spp$spp[i], "y", 1L, "t", 0, "i", 0L,
-                            "c", 0L))
+                            "c", 0L, "a", 1L))
 
-fit_year_temp <- run_model(i = i, 0L, 0L, year_effects = 1L, 
-                      cov_effects = 1, cohort_cov = cohort_temp)
+fit_year_temp <- run_model(i = i, 0L, 0L, year_effects = 1L,
+                    cov_effects = 1, cohort_cov = cohort_temp)
 
 
-make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_year, 
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_year_temp,
            species = paste0(spp$spp[i], "y", 1L,"t", 1L, "i", 0L,
-                            "c", 0L))
+                            "c", 0L, "a", "1L", "dec"))
 
-#fit_cohort <- run_model(i = i, cohort_effects = 1L, 
-#                        year_effects = 0L, init_effects = 0L,
-#                        cov_effects = 1, cohort_cov = cohort_temp)
+fit_cohort <- run_model(i = i, cohort_effects = 1L,
+                        year_effects = 0L, init_effects = 0L,
+                        cov_effects = 0L, cohort_cov = cohort_temp)
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_cohort,
+           species = paste0(spp$spp[i], "y", 0L,0, "i", 0L,
+                            "c", 1L, "a", 1L))
 
 
-#make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_cohort, 
- #          species = paste0(spp$spp[i], "y", 0L,0, "i", 0L,
- #                           "c", 1L))
-#
+fit_init <- run_model(i = i, 0L, 1L, 0L, cov_effects = 0, cohort_cov = rep(0,length(cohort_temp)))
 
-#fit_init <- run_model(i = i, 0L, 1L, 0L)
-#fit_null <- run_model(i = i, 0L, 0L, 0L)
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_init,
+          species = paste0(spp$spp[i], "y", 0L, "i", 1L,"t",0,
+                           "c", 0L, "a", 1))
 
+fit_init_temp <- run_model(i = i, 0L, 1L, 0L, cov_effects = 1, cohort_cov = cohort_temp)
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_init_temp,
+           species = paste0(spp$spp[i], "y", 0L, "i", 1L,"t",1L,
+                            "c", 0L, "a", 1))
+fit_null <- run_model(i = i, 0L, 0L, 0L, cov_effects = 0, cohort_cov = cohort_temp)
+
+make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = fit_null,
+           species = paste0(spp$spp[i], "y", 0L, "i", 0L,"t",0L,
+                            "c", 0L, "a", 1))
 
 }
 
-strings <- paste0("./code/sarla_model/output/",rep(spp$spp, each = 5),rep(c("y1i1c1"
-,"y0i1c0", "y1i0c0", "y0i0c1", "y0i0c0"),7),"model.RData")
 
 
+strings <- paste0("./pers-git/calcur_paper/code/sarla_model/output/",rep(spp$spp, each = 7),rep(c("y1i1c1t0"
+,"y0i1c0t0","y0i1c0t1", "y1i0c0t0", "y1i0c0t1", "y0i0c1t0","y0i0c0t0"),7),"model.RData")
 
-
-# not using this
-loo_list <- vector("list")
-loo_table <- matrix(nrow = 7, ncol=5)
-j <- k <- 1
-L <- 10
-for(i in seq_len(length(strings))){
+##Plot only
+j<- k <- 1
+for(i in 1:length(strings)){
   tosave <- get(load(strings[i]))
+  make_plots(dir = "pers-git\\calcur_paper\\code\\sarla_model\\plots\\", fit_obj = tosave,
+             species = paste0(spp$spp[j], "model", k))
+  if(k==7){
+    j <- j+1
+    k <- 1
+  } else{
+    k <- k+1
+  }
+}
+
+
+loo_list <- vector("list")
+loo_table <- matrix(nrow = 7, ncol=7)
+diags <- vector("list")
+j <- k <- 1
+for(i in 1:length(strings)){
+  tosave <- get(load(strings[i]))
+  # if('try-error' %in% class(tosave)){
+  #   loo_list[[i]] <- NULL
+  #   loo_table[j,k] <- NA
+  #   print(i)
+  # } else{
   fit <- tosave$fit
   loo_list[[i]]<- fit$loo(variables = "log_lik")
+  #diags[[i]] <- fit$sampler_diagnostics()
   loo_table[j,k] <- loo_list[[i]]$looic
-  if(k==5){
+#  }
+  if(k==7){
     j <- j+1
     k <- 1
   } else{
@@ -140,6 +170,9 @@ for(i in seq_len(length(strings))){
 }
 save(loo_table, file="lootable.RData")
 load("lootable.RData")
+
+
+apply(loo_table, 1,which.min)
 
 
 ### Everything below this is for LFO, which I am trying to avoid having to figure out.
